@@ -1,0 +1,8 @@
+# 全仓库统一 LF(框架要求:文本文件一律用 LF;Windows 上 core.autocrlf=true 也按这里)
+* text=auto eol=lf
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.xlsx binary
