@@ -1,0 +1,20 @@
+// OpenCode 的项目设置(docs/运营规则.md 10 章)。DeepSeek 的 API Key 不写在这里:用 /connect 登记(保存在本机)。
+// 模型名以 DeepSeek 官方文档和 /models 里显示的为准;Agent 各自的模型由 scripts/dev/gen_adapters.py 写进 .opencode/agents/。
+{
+  "$schema": "https://opencode.ai/config.json",
+  "model": "deepseek/deepseek-flash",
+  "default_agent": "build",
+  "permission": {
+    "edit": "allow",
+    "webfetch": "deny",           // OpenCode 不能按域名限制;project.toml 的 web_domains 非空、要用 skills/research 时改成 allow(引导手册)
+    "bash": {                      // 后面的规则优先(最后匹配的生效),所以 deny 放在 ask 之后
+      "*": "allow",
+      "git push*": "ask",
+      "git push --force*": "deny",
+      "git push -f*": "deny",
+      "git rebase*": "deny",
+      "git reset --hard*": "deny",
+      "git clean*": "deny"
+    }
+  }
+}

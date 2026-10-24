@@ -1,0 +1,61 @@
+# PR 的必过检查 gate(docs/运营规则.md 1、4.1、9 章):定版(人或自动)、D2 和范围的指纹、评审 App 的批准、测试通过、PM 通过(都对最新提交)。
+# 结果作为提交状态 "gate" 写到 PR 的最新提交上(规则集要求它)。
+# 安全:用 pull_request_target / issue_comment / issues 触发,工作流和 gates.py 都来自默认分支,不检出 PR 的代码,
+# 所以 PR 改不了这里的判断。评审、测试、PM 写完结论后在 PR 上写一条 [进度] 评论,由 issue_comment 触发重新判断;
+# Issue 上的评论(D1、D2、[定版])和标签的变化,重新判断这个 Issue 的分支上开着的 PR。另外每 15 分钟全部重新判断一次。
+name: Gate
+on:
+  pull_request_target:
+    branches: [main]
+    types: [opened, synchronize, reopened, edited]
+  issue_comment:
+    types: [created]
+  issues:
+    types: [labeled, unlabeled]
+  schedule:
+    - cron: "*/15 * * * *"        # 自动定版的时间到了、评审后又退回等没有事件的变化,也定期重新判断
+permissions:
+  contents: read
+  issues: read
+  pull-requests: read
+  statuses: write
+concurrency:
+  group: gate-${{ github.event.pull_request.number || github.event.issue.number || 'all' }}   # 同一个 PR / Issue 一次只跑一个
+  cancel-in-progress: false
+jobs:
+  evaluate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: 判断并写提交状态 gate
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVENT: ${{ github.event_name }}
+          PR: ${{ github.event.pull_request.number || github.event.issue.number }}
+          ISSUE: ${{ github.event.issue.number }}
+          IS_PR: ${{ github.event.issue.pull_request != null }}
+          REPO: ${{ github.repository }}
+        run: |
+          if [ "$EVENT" = schedule ]; then
+            prs="$(gh pr list --repo "$REPO" --state open --json number --jq '.[].number')"
+          elif [ "$EVENT" = issues ] || { [ "$EVENT" = issue_comment ] && [ "$IS_PR" != true ]; }; then
+            # Issue 的标签变了:重新判断这个 Issue 的分支(feat|fix/<编号>-…)上开着的 PR
+            prs="$(gh pr list --repo "$REPO" --state open --json number,headRefName \
+                   --jq ".[] | select(.headRefName | test(\"^(feat|fix)/${ISSUE}-\")) | .number")"
+          else
+            prs="$PR"
+          fi
+          for pr in $prs; do
+            sha="$(gh api "repos/$REPO/pulls/$pr" --jq .head.sha)"
+            rc=0; out="$(python scripts/github/gates.py pr --pr "$pr" --expect-head "$sha" 2>&1)" || rc=$?   # 步骤默认 bash -e,不通过也要往下写状态
+            [ $rc -eq 2 ] && { echo "== PR #$pr: $out(跳过)"; continue; }
+            if [ $rc -eq 0 ]; then state=success; else state=failure; fi
+            echo "== PR #$pr"; echo "$out"
+            desc="$(printf '%s\n' "$out" | tail -n 1 | cut -c1-120)"
+            gh api "repos/$REPO/statuses/$sha" -f state="$state" -f context=gate -f description="$desc" >/dev/null
+          done

@@ -1,0 +1,519 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>方向 · CrossPilot</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="assets/cp2.css">
+<style>
+  .sec-no{font:600 13px var(--font-mono);color:var(--primary-strong);background:var(--primary-bg);border-radius:6px;padding:3px 7px;letter-spacing:.06em}
+  .lbl{font-size:14px;color:var(--text-2);font-weight:500;margin-bottom:8px;display:flex;align-items:center;gap:8px}
+  .lbl .r{margin-left:auto;font-weight:400;color:var(--text-3)}
+  .cats{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+  [hidden]{display:none!important}
+  .cat{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:12px;border:1px solid var(--border-strong);background:var(--surface);cursor:pointer;text-align:left;min-width:0}
+  .cat .thumb{width:34px;height:34px;border-radius:9px}
+  .cat b{display:block;font-size:15px;font-weight:600;line-height:1.3}
+  .cat small{display:block;font-size:13px;color:var(--text-3);line-height:1.3}
+  .cat[aria-pressed=true]{background:var(--primary-bg);border-color:transparent;box-shadow:inset 0 0 0 1.5px var(--primary)}
+  .cat[aria-pressed=true] b{color:var(--primary-strong)}
+  .cat[disabled]{cursor:not-allowed;background:var(--surface-2);border-style:dashed}
+  .cat[disabled] .thumb{filter:grayscale(1);opacity:.55}
+  .cat[disabled] b{color:var(--text-3)}
+  .cat .ck{margin-left:auto;width:18px;height:18px;border-radius:50%;border:1.5px solid var(--border-strong);flex:none;display:grid;place-items:center}
+  .cat[aria-pressed=true] .ck{background:var(--primary);border-color:var(--primary)}
+  .cat[aria-pressed=true] .ck::after{content:"";width:8px;height:4px;border-left:2px solid var(--on-primary);border-bottom:2px solid var(--on-primary);transform:rotate(-45deg) translate(1px,-1px)}
+  .pb .chart svg{width:100%}
+  .pb .chart text{display:none}
+  .dual{position:relative;height:26px;margin-top:-4px}
+  .dual .track{position:absolute;left:9px;right:9px;top:11px;height:4px;border-radius:2px;background:var(--surface-3)}
+  .dual .fill{position:absolute;top:0;bottom:0;background:var(--primary);border-radius:2px}
+  .dual input[type=range]{position:absolute;left:0;top:3px;width:100%;margin:0;height:20px;background:none;pointer-events:none;-webkit-appearance:none;appearance:none}
+  .dual input[type=range]::-webkit-slider-runnable-track{background:transparent;height:20px}
+  .dual input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;pointer-events:auto;width:18px;height:18px;margin-top:1px;border-radius:50%;background:var(--surface);border:2px solid var(--primary);box-shadow:0 1px 3px rgba(0,0,0,.25);cursor:grab}
+  .dual input[type=range]::-moz-range-thumb{pointer-events:auto;width:16px;height:16px;border-radius:50%;background:var(--surface);border:2px solid var(--primary);cursor:grab}
+  .ticks{display:flex;justify-content:space-between;font-size:13px;color:var(--text-3);padding:0 2px}
+  .pbv{display:flex;align-items:center;gap:8px;font-size:15px}
+  .pbv .input{width:92px;text-align:right}
+  .tagin{display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding:6px;border:1px solid var(--border-strong);border-radius:10px;background:var(--surface);min-height:42px}
+  .tagin .chip{height:26px;padding:0 4px 0 10px;cursor:default}
+  .tagin .chip b{font-weight:400;color:var(--text-3);font-size:13px}
+  .tagin .x{border:0;background:transparent;color:var(--text-3);width:20px;height:20px;border-radius:50%;cursor:pointer;display:grid;place-items:center;font-size:16px;line-height:1}
+  .tagin .x:hover{background:var(--surface-3);color:var(--text)}
+  .tagin input{border:0;outline:0;background:transparent;flex:1;min-width:120px;height:26px;padding:0 6px}
+  .nums{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+  .numf{background:var(--surface-2);border-radius:12px;padding:12px 14px}
+  .numf label{font-size:14px;color:var(--text-2);display:block;margin-bottom:6px}
+  .numf .input{width:100%;font-size:20px;font-weight:600;height:38px}
+  .numf .hint{font-size:13px;color:var(--text-3);margin-top:4px;display:block}
+  .floorbox{display:grid;grid-template-columns:1fr;gap:14px;align-items:start;margin-top:16px;padding-top:16px;border-top:1px solid var(--border)}
+  .floorbox .big{display:flex;align-items:baseline;gap:6px}
+  .floorbox .big .input{width:78px;font-size:26px;font-weight:600;height:44px;text-align:right}
+  .floorbox .big span{font-size:20px;color:var(--text-2)}
+  .floorbox .input.bad{border-color:var(--block);box-shadow:0 0 0 3px color-mix(in srgb,var(--block) 18%,transparent)}
+  #curve svg{width:100%;height:auto;display:block;overflow:visible}
+  #curve text{font-size:13px;fill:var(--text-3);font-family:var(--font-latin),var(--font-zh),sans-serif}
+  #curve text.val{fill:var(--text);font-weight:600}
+  .wrow{display:grid;grid-template-columns:86px minmax(0,1fr) 44px 64px;gap:12px;align-items:center;padding:6px 0}
+  .wrow label{font-size:15px;font-weight:500;display:flex;align-items:center;gap:7px}
+  .wrow label i{width:10px;height:10px;border-radius:3px;display:inline-block}
+  .wrow b{text-align:right;font-size:17px}
+  .wrow .def{font-size:13px;color:var(--text-3)}
+  .rank{list-style:none;margin:0;padding:0}
+  .rank li{display:grid;grid-template-columns:18px 32px minmax(0,1fr) auto 42px;gap:8px;align-items:center;padding:6px 0;border-top:1px solid var(--border);font-size:14px}
+  .rank li:first-child{border-top:0}
+  .rank .no{font:600 14px var(--font-mono);color:var(--text-3)}
+  .rank .nm{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:500}
+  .rank .mv{font-size:13px;font-weight:600;text-align:right}
+  .mv.up{color:var(--ok)} .mv.dn{color:var(--block)} .mv.eq{color:var(--text-3)}
+  .pend{background:var(--wait-bg);border-radius:16px;padding:18px 20px;color:var(--text)}
+  .pend .hd{display:flex;align-items:center;gap:8px;color:var(--wait);font-weight:600;font-size:15px}
+  .pend .chg{display:flex;align-items:baseline;gap:10px;margin:10px 0 2px}
+  .pend .chg s{color:var(--text-3);font-size:22px}
+  .pend .chg b{font-size:32px;font-weight:600;color:var(--wait);letter-spacing:-.02em}
+  .pend .meter{background:color-mix(in srgb,var(--wait-solid) 22%,transparent);margin:12px 0 6px}
+  .funnel{display:grid;grid-template-columns:1fr 18px 1fr 18px 1fr;align-items:end;gap:4px;margin:4px 0 14px}
+  .funnel .f{background:var(--surface-2);border-radius:12px;padding:10px 10px 8px;text-align:center}
+  .funnel .f .v{font-size:28px;font-weight:600;line-height:1.1;letter-spacing:-.02em}
+  .funnel .f .k{font-size:13px;color:var(--text-3)}
+  .funnel .f.hl{background:var(--primary-bg)} .funnel .f.hl .v{color:var(--primary-strong)}
+  .funnel .ar{color:var(--text-3);text-align:center;padding-bottom:22px}
+  .ex{display:grid;grid-template-columns:44px minmax(0,1fr);gap:10px;align-items:center;padding:9px 0;border-top:1px solid var(--border)}
+  .ex .t{font-size:15px;font-weight:600;line-height:1.35;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .ex .s{font-size:14px;color:var(--text-3);line-height:1.4;margin-top:2px}
+  .ex.no .thumb{filter:grayscale(1);opacity:.6}
+  .chg-list{list-style:none;margin:0;padding:0;font-size:14px}
+  .chg-list li{display:flex;gap:8px;align-items:center;padding:7px 0;border-top:1px solid var(--border)}
+  .chg-list li:first-child{border-top:0}
+  .chg-list li span:first-child{flex:1;min-width:0}
+  .vh .diff{margin:6px 0 2px;display:grid;gap:4px}
+  .vh .diff div{display:flex;gap:6px;align-items:center;font-size:14px;flex-wrap:wrap}
+  .vh .diff s{color:var(--text-3)}
+  .vh .diff .to{font-weight:600}
+  .footbar{position:sticky;bottom:0;z-index:4;margin:20px -32px -64px;padding:12px 32px;background:color-mix(in srgb,var(--surface) 94%,transparent);backdrop-filter:blur(10px);border-top:1px solid var(--border);display:flex;align-items:center;gap:12px;font-size:15px}
+  .footbar b{font-weight:600}
+  #save-hint{font-size:14px;color:var(--block);max-width:260px;text-align:right;line-height:1.4}
+  
+</style>
+</head>
+<body data-page="direction" data-crumb="流水线 / 方向">
+<template id="main-tpl">
+  <div class="page-head">
+    <div>
+      <span class="eyebrow">Direction · 方向卡 v7</span>
+      <h1>方向</h1>
+      <p>告诉系统做什么、要多少、怎么排。改动的后果在右侧实时预估；收紧立即生效，放宽 24 小时后生效。</p>
+    </div>
+    <div class="actions">
+      <span id="save-hint" aria-live="polite"></span>
+      <button class="help" data-toast="操作手册：方向页（演示）" aria-label="帮助">?</button>
+      <button class="btn primary lg" id="save" data-toast="方向 v8 已保存：收紧项立即生效，放宽项 24 小时后生效（演示）">保存方向</button>
+    </div>
+  </div>
+
+  <div class="alert block" id="warn" hidden style="margin-bottom:16px"><span><b>不能保存</b>　<span id="warn-t"></span></span></div>
+
+  <div class="g-main">
+    <div class="stack">
+      <!-- 做什么 -->
+      <section class="card" aria-labelledby="h-what">
+        <div class="card-head"><span class="sec-no">01</span><h2 id="h-what">做什么</h2><span class="meta">只在白名单内选；新增类目属于放宽</span></div>
+
+        <div class="lbl">类目 <span class="r">白名单 4 项 · <a href="10-settings.html">去设置登记新类目</a></span></div>
+        <div class="cats" id="cats">
+          <button class="cat" data-cat="home" aria-pressed="true"><span class="thumb" data-art="box"></span><span><b>家居收纳</b><small data-cn="home">今日候选 7</small></span><span class="ck"></span></button>
+          <button class="cat" data-cat="kitchen" aria-pressed="true"><span class="thumb" data-art="spoons"></span><span><b>厨房小工具</b><small data-cn="kitchen">今日候选 8</small></span><span class="ck"></span></button>
+          <button class="cat" data-cat="pet" aria-pressed="true"><span class="thumb" data-art="brush"></span><span><b>宠物用品</b><small data-cn="pet">今日候选 2</small></span><span class="ck"></span></button>
+          <button class="cat" data-cat="desk" aria-pressed="true"><span class="thumb" data-art="cable"></span><span><b>桌面办公</b><small data-cn="desk">今日候选 2</small></span><span class="ck"></span></button>
+          <button class="cat" disabled data-tip="未登记的类目不可选；先在设置里登记并附出处"><span class="thumb" data-art="earbuds"></span><span><b>数码配件</b><small>未登记 · 不可选</small></span></button>
+          <button class="cat" disabled data-tip="未登记的类目不可选；先在设置里登记并附出处"><span class="thumb" data-art="serum"></span><span><b>美妆个护</b><small>未登记 · 不可选</small></span></button>
+          <button class="cat" disabled data-tip="未登记的类目不可选；先在设置里登记并附出处"><span class="thumb" data-art="snack"></span><span><b>食品</b><small>未登记 · 不可选</small></span></button>
+        </div>
+
+        <div class="divider" style="margin:18px 0 16px"></div>
+
+        <div class="lbl">价格带（税込，日元）<span class="r">背景：今日导入榜单 62 个在售商品的价格分布</span></div>
+        <div class="pb">
+          <div class="chart" id="hist"></div>
+          <div class="dual" aria-label="价格带">
+            <div class="track"><div class="fill" id="pfill"></div></div>
+            <input type="range" id="pmin" min="500" max="5000" step="100" value="1000" aria-label="价格下限">
+            <input type="range" id="pmax" min="500" max="5000" step="100" value="3000" aria-label="价格上限">
+          </div>
+          <div class="ticks"><span>¥500</span><span>¥1,500</span><span>¥2,500</span><span>¥3,500</span><span>¥5,000</span></div>
+        </div>
+        <div class="row wrap" style="margin-top:10px;gap:10px 16px">
+          <div class="pbv"><span class="faint">从</span><input class="input" id="pmin-n" inputmode="numeric" value="1,000" aria-label="价格下限（数字）"><span class="faint">至</span><input class="input" id="pmax-n" inputmode="numeric" value="3,000" aria-label="价格上限（数字）"></div>
+          <span class="small muted" id="pb-cover">覆盖榜单商品 46 / 62（74%）</span>
+        </div>
+
+        <div class="divider" style="margin:18px 0 16px"></div>
+
+        <div class="lbl">避开关键词 / 品牌 <span class="r">命中即不入候选 · 删除一项属于放宽</span></div>
+        <div class="tagin" id="avoid">
+          <span class="chip" data-av="ディズニー" lang="ja" data-tip="近 7 天拦下 3 个候选">ディズニー <b>3</b><button class="x" aria-label="移除 ディズニー">×</button></span>
+          <span class="chip" data-av="サンリオ" lang="ja" data-tip="近 7 天拦下 1 个候选">サンリオ <b>1</b><button class="x" aria-label="移除 サンリオ">×</button></span>
+          <span class="chip" data-av="ポケモン" lang="ja" data-tip="近 7 天拦下 2 个候选">ポケモン <b>2</b><button class="x" aria-label="移除 ポケモン">×</button></span>
+          <span class="chip" data-av="除菌" lang="ja" data-tip="功效宣称词；近 7 天拦下 4 个候选">除菌 <b>4</b><button class="x" aria-label="移除 除菌">×</button></span>
+          <span class="chip" data-av="医療用" lang="ja" data-tip="近 7 天未命中">医療用 <b>0</b><button class="x" aria-label="移除 医療用">×</button></span>
+          <input id="avoid-in" placeholder="输入后回车添加" aria-label="添加避开关键词或品牌">
+        </div>
+      </section>
+
+      <!-- 要多少 -->
+      <section class="card" aria-labelledby="h-qty">
+        <div class="card-head"><span class="sec-no">02</span><h2 id="h-qty">要多少</h2><span class="meta">数量上限与利润门槛</span></div>
+        <div class="nums">
+          <div class="numf"><label for="daily">每日候选上限</label><input class="input" id="daily" type="number" min="1" max="100" value="30"><span class="hint">默认 30 · 今日实际 24</span></div>
+          <div class="numf"><label for="cap">同意 1 单批上限</label><input class="input" id="cap" type="number" min="1" max="10" value="10"><span class="hint">默认 10 · 上限 10</span></div>
+          <div class="numf"><label for="target">毛利目标（%）</label><input class="input" id="target" type="number" min="1" max="80" value="32"><span class="hint">不填 = 底线 + 20 个百分点</span></div>
+        </div>
+        <div class="floorbox">
+          <div>
+            <label for="floor-n" class="req" style="font-size:14px;color:var(--text-2);font-weight:500">毛利底线</label>
+            <div class="row" style="gap:16px;margin-top:6px">
+              <div class="big"><input class="input" id="floor-n" inputmode="decimal" value="12" aria-describedby="floor-h"><span>%</span></div>
+              <div style="flex:1;min-width:0"><input type="range" id="floor" min="5" max="40" step="1" value="12" aria-label="毛利底线滑块"><div class="ticks"><span>5%</span><span>40%</span></div></div>
+            </div>
+            <p class="small" id="floor-h" style="margin:10px 0 0;color:var(--text-3)">低于它的候选不会进入可选。必填。</p>
+            <div style="margin-top:8px"><span class="badge wait" data-tip="v7 把底线从 15% 降到 12%，属于放宽，2026-10-21 10:02 生效">生效中 15% · 12% 待生效</span></div>
+          </div>
+          <div>
+            <div class="row" style="margin-bottom:4px"><b style="font-size:15px">毛利底线 → 可选候选数</b><span class="small faint right">按今日候选与当前类目、价格带</span></div>
+            <div id="curve"></div>
+            <p class="small faint" style="margin:4px 0 0" id="curve-read">读法：竖线是当前底线；曲线左侧平坦，说明再降底线也不会多出候选。</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- 怎么排 -->
+      <section class="card" aria-labelledby="h-rank">
+        <div class="card-head"><span class="sec-no">03</span><h2 id="h-rank">怎么排</h2><span class="meta">四项权重之和必须为 100</span><div class="tools" id="sum-b"></div></div>
+        <div class="stack" style="gap:18px">
+          <div>
+            <div class="wrow"><label for="w1"><i style="background:var(--s1)"></i>需求</label><input type="range" id="w1" min="0" max="100" value="35" data-w><b id="w1v">35</b><span class="def">默认 35</span></div>
+            <div class="wrow"><label for="w2"><i style="background:var(--s2)"></i>利润</label><input type="range" id="w2" min="0" max="100" value="35" data-w><b id="w2v">35</b><span class="def">默认 35</span></div>
+            <div class="wrow"><label for="w3"><i style="background:var(--s3)"></i>竞争空档</label><input type="range" id="w3" min="0" max="100" value="15" data-w><b id="w3v">15</b><span class="def">默认 15</span></div>
+            <div class="wrow"><label for="w4"><i style="background:var(--s4)"></i>风险扣分</label><input type="range" id="w4" min="0" max="100" value="15" data-w><b id="w4v">15</b><span class="def">默认 15</span></div>
+            <div id="wstack" style="margin-top:12px"></div>
+            <div class="row" style="margin-top:14px;gap:10px">
+              <label for="ship" class="small muted" style="white-space:nowrap">运费占比警告线</label>
+              <input class="input" id="ship" type="number" value="20" style="width:72px;flex:none"><span class="small faint">% · 国际运费 ÷ 售价超过它只警告，不拦截</span>
+            </div>
+            <button class="btn sm" style="margin-top:12px" id="wreset" data-toast="已恢复默认权重 35 / 35 / 15 / 15（演示）">恢复默认权重</button>
+          </div>
+          <div class="g2" style="align-items:start;padding-top:16px;border-top:1px solid var(--border)">
+          <div>
+            <div class="row"><b style="font-size:15px">权重形状</b><span class="legend right"><span><i style="background:var(--s1)"></i>当前</span><span><i style="background:var(--s2)"></i>默认</span></span></div>
+            <div id="radar" class="chart" style="display:flex;justify-content:center"></div>
+          </div>
+          <div>
+            <div class="row" style="margin:0 0 2px"><b style="font-size:15px">今日前 5（按当前权重）</b><span class="small faint right">对比默认权重</span></div>
+            <ul class="rank" id="rank"></ul>
+          </div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <div class="stack">
+      <section class="pend" aria-labelledby="h-pend">
+        <div class="hd" id="h-pend"><span class="badge wait">待生效</span>1 项放宽 · 已放宽</div>
+        <div class="small muted" style="margin-top:8px">毛利底线</div>
+        <div class="chg"><s>15%</s><span class="faint">→</span><b>12%</b></div>
+        <div class="small muted">提交 <span class="mono">2026-10-20 10:02</span> · 生效 <span class="mono">2026-10-21 10:02</span></div>
+        <div class="meter wait" role="progressbar" aria-valuenow="4" aria-valuemin="0" aria-valuemax="100" aria-label="放宽生效进度"><i style="width:4%"></i></div>
+        <div class="row small" style="color:var(--text-2)"><span>已过 1 小时</span><span class="right">共 24 小时</span></div>
+        <p class="small" style="margin:10px 0 12px;color:var(--text-2)">生效前仍按 15% 筛选。放宽后今日可选数不变（12 → 12），对之后导入的候选生效。</p>
+        <button class="btn sm" data-toast="已撤销这次放宽：毛利底线保持 15%（演示）">撤销这次放宽</button>
+      </section>
+
+      <section class="card" aria-labelledby="h-prev">
+        <div class="card-head"><h2 id="h-prev">这个方向今天会怎样</h2><span class="meta">按当前设置实时估算</span></div>
+        <div class="funnel">
+          <div class="f"><div class="v" id="pv-n">24</div><div class="k">候选</div></div>
+          <div class="ar">→</div>
+          <div class="f"><div class="v" id="pv-m">12</div><div class="k">可选</div></div>
+          <div class="ar">→</div>
+          <div class="f hl"><div class="v" id="pv-k">5</div><div class="k">进同意 1</div></div>
+        </div>
+        <div class="row small" style="margin-bottom:6px"><span class="muted">可选里预计平均毛利</span><b class="right" id="pv-avg" style="font-size:17px">31.4%</b></div>
+        <div class="meter" style="margin-bottom:4px"><i id="pv-bar" style="width:50%"></i></div>
+        <div class="small faint" id="pv-note" style="margin-bottom:10px">预计同意 1 = 分数 ≥ 70 的可选，最多到单批上限</div>
+        <div id="pv-ex"></div>
+      </section>
+
+      <section class="card" aria-labelledby="h-chg">
+        <div class="card-head"><h2 id="h-chg">未保存的修改</h2><span class="meta" id="chg-n">0 处</span></div>
+        <ul class="chg-list" id="chg"></ul>
+      </section>
+    </div>
+  </div>
+
+  <div class="footbar">
+    <b>没有方向，系统不会选品。</b>
+    <span class="right small muted" id="foot-st">当前 v7 · 2026-10-20 10:02 林薇保存</span>
+  </div>
+</template>
+
+<template id="detail-tpl">
+  <h3>版本历史</h3>
+  <p class="small muted" style="margin:0 0 16px">已生成的候选与审批单固定引用生成时的版本，不随新版本改变。今日候选由 v6 生成。</p>
+  <ul class="timeline vh">
+    <li><span class="pt human"></span>
+      <div class="when">V7 · 2026-10-20 10:02 · 林薇</div>
+      <div class="what"><b>当前版本</b> <span class="badge wait">已放宽 · 待生效</span>
+        <div class="diff">
+          <div>毛利底线 <s>15%</s> → <span class="to">12%</span> <span class="badge wait">放宽 · 10-21 10:02</span></div>
+          <div>每日候选上限 <s>40</s> → <span class="to">30</span> <span class="badge">收紧 · 已生效</span></div>
+        </div></div></li>
+    <li><span class="pt ok"></span>
+      <div class="when">V6 · 2026-10-12 21:40 · 林薇</div>
+      <div class="what"><b>新增宠物用品</b> <span class="badge">已生效 10-13</span>
+        <div class="diff">
+          <div>类目 + <span class="to">宠物用品</span> <span class="badge wait">放宽 · 24 小时后生效</span></div>
+          <div>避开项 + <span class="to" lang="ja">サンリオ</span> <span class="badge">收紧</span></div>
+        </div>
+        <div class="chart" style="margin-top:6px" data-chart="spark" data-cfg='{"values":[18,20,19,22,24,23,24],"color":"primary","w":200,"h":28}'></div>
+        <div class="small faint">这版每日候选 18 → 24</div></div></li>
+    <li><span class="pt"></span>
+      <div class="when">V5 · 2026-10-05 09:15 · 林薇</div>
+      <div class="what"><b>价格带上调、权重重配</b>
+        <div class="diff">
+          <div>价格带 <s>¥1,000–2,500</s> → <span class="to">¥1,000–3,000</span> <span class="badge wait">放宽</span></div>
+          <div>权重 需求 <s>40</s> → <span class="to">35</span> · 利润 <s>30</s> → <span class="to">35</span></div>
+        </div></div></li>
+    <li><span class="pt"></span>
+      <div class="when">V1–V4 · 2026-09-28 起</div>
+      <div class="what small muted">首版：家居收纳、厨房小工具；毛利底线 15%</div></li>
+  </ul>
+  <div class="row wrap" style="margin-top:4px">
+    <button class="btn sm" data-toast="打开 v6 与 v7 的逐字段差异（演示）">对比 v6 → v7</button>
+    <button class="btn sm ghost" data-toast="打开全部版本（演示）">全部版本</button>
+  </div>
+  <h3>放宽与收紧</h3>
+  <dl class="kv">
+    <dt>放宽</dt><dd>降毛利底线、加类目、提价格带上限、删避开项、提数量上限 → 24 小时后生效，期间可撤销</dd>
+    <dt>收紧</dt><dd>其余修改，保存即生效</dd>
+  </dl>
+</template>
+
+<script src="assets/art.js"></script>
+<script src="assets/charts.js"></script>
+<script src="assets/cp2.js"></script>
+<script>
+(function(){
+  var $ = function(s){ return document.querySelector(s); };
+  var fmt = function(n){ return Number(n).toLocaleString('ja-JP'); };
+  /* 今日 24 个候选（演示）：cat 类目、p 售价、m 毛利、st 状态、d/c/r 打分分量 */
+  var C = [
+    {n:'折叠収納ボックス3個セット',a:'box',cat:'home',p:2480,m:31.7,st:'ok',d:.98,c:.94,r:.08},
+    {n:'シリコン調理スプーン5点セット',a:'spoons',cat:'kitchen',p:1980,m:34.2,st:'ok',d:.94,c:.78,r:.05},
+    {n:'デスクケーブルオーガナイザー',a:'cable',cat:'desk',p:1680,m:29.8,st:'ok',d:.92,c:.95,r:.12},
+    {n:'ペット用ブラシ 抜け毛クリーナー',a:'brush',cat:'pet',p:1880,m:33.0,st:'ok',d:.84,c:.66,r:.05},
+    {n:'折りたたみシリコンカップ',a:'cup',cat:'kitchen',p:1480,m:28.4,st:'ok',d:.90,c:.80,r:.06},
+    {n:'キッチン水切りラック',a:'rack',cat:'kitchen',p:2780,m:27.1,st:'ok',d:.97,c:.62,r:.12},
+    {n:'引き出し仕切り板',a:'divider',cat:'home',p:1580,m:30.2,st:'ok',d:.66,c:.80,r:.05},
+    {n:'マグネットフック6個入',a:'hooks',cat:'home',p:1180,m:26.0,st:'ok',d:.80,c:.78,r:.05},
+    {n:'シンク下収納ラック',a:'rack',cat:'home',p:2280,m:22.5,st:'ok',d:.80,c:.80,r:.05},
+    {n:'シューズラック',a:'divider',cat:'home',p:2980,m:19.8,st:'ok',d:.85,c:.85,r:.05},
+    {n:'ペット用食器スタンド',a:'cup',cat:'pet',p:2680,m:16.4,st:'ok',d:.80,c:1,r:.10},
+    {n:'シリコン鍋つかみ',a:'spoons',cat:'kitchen',p:1080,m:15.6,st:'ok',d:.75,c:.90,r:.14},
+    {n:'シリコン泡立て器',a:'whisk',cat:'kitchen',p:1280,st:'nd'},
+    {n:'折りたたみ洗濯かご',a:'basket',cat:'home',p:1980,st:'nd'},
+    {n:'米びつ スタッカブル',a:'box',cat:'kitchen',p:2180,st:'nd'},
+    {n:'靴下収納ボックス',a:'box',cat:'home',p:1380,st:'nd'},
+    {n:'アルミ製スマホスタンド',a:'cable',cat:'desk',p:1580,st:'nd'},
+    {n:'食器乾燥マット',a:'rack',cat:'kitchen',p:1680,st:'nd'},
+    {n:'耐熱シリコンマット',a:'cup',cat:'kitchen',p:1180,st:'nd'},
+    {n:'Bluetoothイヤホン',a:'earbuds',cat:'digital',p:2980,st:'bk',why:'类目未登记 · 含无线'},
+    {n:'美容液',a:'serum',cat:'beauty',p:2480,st:'bk',why:'化粧品'},
+    {n:'モバイルバッテリー',a:'powerbank',cat:'digital',p:2980,st:'bk',why:'含电池'},
+    {n:'保湿マスク',a:'mask',cat:'beauty',p:1580,st:'bk',why:'化粧品'},
+    {n:'お菓子ギフト',a:'snack',cat:'food',p:1980,st:'bk',why:'食品'}
+  ];
+  var WL = {home:1,kitchen:1,pet:1,desk:1};
+  var CATN = {home:'家居收纳',kitchen:'厨房小工具',pet:'宠物用品',desk:'桌面办公'};
+  /* 榜单在售商品价格分布（¥500 一档） */
+  var HV = [5,12,16,11,7,5,3,2,1], HL = ['¥500–999','¥1,000–1,499','¥1,500–1,999','¥2,000–2,499','¥2,500–2,999','¥3,000–3,499','¥3,500–3,999','¥4,000–4,499','¥4,500–5,000'];
+  var BASE = {cats:'home,kitchen,pet,desk',pmin:1000,pmax:3000,daily:30,cap:10,target:32,floor:12,w:[35,35,15,15],ship:20,avoid:['ディズニー','サンリオ','ポケモン','除菌','医療用']};
+  var W0 = [35,35,15,15];
+
+  function num(el){ var v=String(el.value).replace(/[,，\s]/g,''); return v===''?NaN:+v; }
+  function state(){
+    var cats=[].map.call(document.querySelectorAll('#cats .cat[aria-pressed=true]'),function(b){return b.dataset.cat;});
+    return {cats:cats,pmin:+$('#pmin').value,pmax:+$('#pmax').value,daily:num($('#daily')),cap:num($('#cap')),target:num($('#target')),
+      floor:num($('#floor-n')),w:[1,2,3,4].map(function(i){return +$('#w'+i).value;}),ship:num($('#ship')),
+      avoid:[].map.call(document.querySelectorAll('#avoid [data-av]'),function(c){return c.dataset.av;})};
+  }
+  function score(c,w,floor,target){
+    var t=isNaN(target)?floor+20:target, p=Math.max(0,Math.min(1,(c.m-floor)/((t-floor)||1)));
+    return c.d*w[0]+p*w[1]+c.c*w[2]-c.r*w[3];
+  }
+  function inBand(c,s){ return c.p>=s.pmin && c.p<=s.pmax; }
+  function picked(c,s){ return !WL[c.cat] || s.cats.indexOf(c.cat)>=0; }
+
+  /* ---------- 价格带 ---------- */
+  function drawPrice(s){
+    var i0=Math.max(0,Math.floor((s.pmin-500)/500)), i1=Math.min(8,Math.ceil((s.pmax-500)/500)-1);
+    var el=$('#hist'); el.innerHTML=CP.chart.hist({w:480,h:92,values:HV,labels:HL,highlight:[i0,i1],color:'primary',unit:' 个在售'});
+    var a=(s.pmin-500)/4500*100, b=(s.pmax-500)/4500*100;
+    $('#pfill').style.left=a+'%'; $('#pfill').style.width=(b-a)+'%';
+    var cov=0; HV.forEach(function(v,i){ if(i>=i0&&i<=i1) cov+=v; });
+    $('#pb-cover').textContent='覆盖榜单在售商品 '+cov+' / 62（'+Math.round(cov/62*100)+'%）';
+  }
+
+  /* ---------- 毛利底线曲线（内联 SVG） ---------- */
+  function drawCurve(s){
+    var pool=C.filter(function(c){return c.st==='ok'&&picked(c,s)&&inBand(c,s);});
+    var W=480,H=176,l=34,r=14,t=16,b=26, x0=5,x1=40, ymax=Math.max(4,Math.ceil((pool.length+1)/4)*4);
+    var X=function(v){return l+(v-x0)/(x1-x0)*(W-l-r);}, Y=function(v){return H-b-(v/ymax)*(H-b-t);};
+    function cnt(f){ return pool.filter(function(c){return c.m>=f;}).length; }
+    var g='';
+    for(var k=0;k<=4;k++){ var yv=Math.round(ymax*k/4), yy=Y(yv); g+='<line x1="'+l+'" x2="'+(W-r)+'" y1="'+yy+'" y2="'+yy+'" stroke="var(--grid)"/><text x="'+(l-8)+'" y="'+(yy+4)+'" text-anchor="end">'+yv+'</text>'; }
+    [5,10,15,20,25,30,35,40].forEach(function(v){ g+='<text x="'+X(v)+'" y="'+(H-8)+'" text-anchor="middle">'+v+'%</text>'; });
+    var pts=[], prev=null;
+    for(var f=5; f<=40.001; f+=0.5){ var n=cnt(f); if(prev!==null&&n!==prev){ pts.push(X(f).toFixed(1)+','+Y(prev).toFixed(1)); } pts.push(X(f).toFixed(1)+','+Y(n).toFixed(1)); prev=n; }
+    var area='<polygon points="'+X(5)+','+Y(0)+' '+pts.join(' ')+' '+X(40)+','+Y(0)+'" fill="var(--primary)" opacity=".1"/>';
+    var line='<polyline points="'+pts.join(' ')+'" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linejoin="round"/>';
+    var tg=isNaN(s.target)?null:s.target, tl='';
+    if(tg&&tg>=5&&tg<=40){ tl='<line x1="'+X(tg)+'" x2="'+X(tg)+'" y1="'+t+'" y2="'+(H-b)+'" stroke="var(--axis)" stroke-dasharray="3 3"/><text x="'+(X(tg)+4)+'" y="'+(t+8)+'">目标 '+tg+'%</text>'; }
+    var mk='', fl=s.floor;
+    if(!isNaN(fl)){ var fx=Math.max(5,Math.min(40,fl)), n2=cnt(fl), lx=X(fx), anchor=fx>30?'end':'start', dx=fx>30?-10:10;
+      mk='<line x1="'+lx+'" x2="'+lx+'" y1="'+t+'" y2="'+(H-b)+'" stroke="var(--primary)" stroke-width="1.5" stroke-dasharray="5 4"/>'
+        +'<circle cx="'+lx+'" cy="'+Y(n2)+'" r="5" fill="var(--primary)" stroke="var(--surface)" stroke-width="2" data-tip="底线 '+fl+'% → 可选 '+n2+' 个"/>'
+        +'<text class="val" x="'+(lx+dx)+'" y="'+(Y(n2)-10)+'" text-anchor="'+anchor+'" style="font-size:14px">底线 '+fl+'% → 可选 '+n2+'</text>';
+      var at15=cnt(15);
+      $('#curve-read').textContent='读法：竖线是当前底线。底线 15% 时可选 '+at15+' 个，'+fl+'% 时 '+n2+' 个'+(n2===at15?'；曲线左段平坦，再降底线也不会多出候选。':'。');
+    } else { $('#curve-read').textContent='底线未填：系统不会开工选品。'; }
+    $('#curve').innerHTML='<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="毛利底线与可选候选数">'+g+area+line+tl+mk+'</svg>';
+  }
+
+  /* ---------- 权重 ---------- */
+  function drawWeights(s){
+    var sum=s.w.reduce(function(a,b){return a+b;},0);
+    s.w.forEach(function(v,i){ $('#w'+(i+1)+'v').textContent=v; });
+    $('#sum-b').innerHTML= sum===100?'<span class="badge ok">合计 100</span>':'<span class="badge block">合计 '+sum+'，须为 100</span>';
+    $('#wstack').innerHTML=CP.chart.stack({h:14,items:[{label:'需求',value:Math.max(s.w[0],.01),color:'s1',text:String(s.w[0])},{label:'利润',value:Math.max(s.w[1],.01),color:'s2',text:String(s.w[1])},{label:'竞争空档',value:Math.max(s.w[2],.01),color:'s3',text:String(s.w[2])},{label:'风险扣分',value:Math.max(s.w[3],.01),color:'s4',text:String(s.w[3])}]});
+    var v=function(a){return a.map(function(x){return Math.min(1,x/50);});};
+    $('#radar').innerHTML=CP.chart.radar({size:210,axes:[{label:'需求'},{label:'利润'},{label:'竞争空档'},{label:'风险扣分'}],series:[{values:v(W0),color:'s2'},{values:v(s.w),color:'s1'}]});
+    var fl=isNaN(s.floor)?12:s.floor;
+    var pool=C.filter(function(c){return c.st==='ok';});
+    var base=pool.slice().sort(function(a,b){return score(b,W0,12,32)-score(a,W0,12,32);});
+    var now=pool.slice().sort(function(a,b){return score(b,s.w,fl,s.target)-score(a,s.w,fl,s.target);});
+    $('#rank').innerHTML=now.slice(0,5).map(function(c,i){
+      var j=base.indexOf(c), mv=j-i, cls=mv>0?'up':mv<0?'dn':'eq', t=mv>0?'▲ '+mv:mv<0?'▼ '+(-mv):'—';
+      return '<li><span class="no">'+(i+1)+'</span><span class="thumb sm" data-art="'+c.a+'"></span><span class="nm" lang="ja">'+c.n+'</span><b>'+Math.round(score(c,s.w,fl,s.target))+'</b><span class="mv '+cls+'">'+t+'</span></li>';
+    }).join('');
+    CP.hydrateArt($('#rank'));
+    return sum;
+  }
+
+  /* ---------- 预览 ---------- */
+  function drawPreview(s){
+    var fl=isNaN(s.floor)?null:s.floor;
+    var N=C.filter(function(c){return picked(c,s)&&inBand(c,s);});
+    var M=N.filter(function(c){return c.st==='ok'&&WL[c.cat]&&fl!==null&&c.m>=fl;});
+    var sorted=M.slice().sort(function(a,b){return score(b,s.w,fl,s.target)-score(a,s.w,fl,s.target);});
+    var cap=isNaN(s.cap)?10:s.cap;
+    var K=sorted.filter(function(c){return score(c,s.w,fl,s.target)>=70;}).slice(0,cap);
+    $('#pv-n').textContent=fl===null?'—':N.length; $('#pv-m').textContent=fl===null?'—':M.length; $('#pv-k').textContent=fl===null?'—':K.length;
+    var avg=M.length?M.reduce(function(a,c){return a+c.m;},0)/M.length:null;
+    var avgK=K.length?K.reduce(function(a,c){return a+c.m;},0)/K.length:null;
+    $('#pv-avg').textContent=avgK===null?'不可算':avgK.toFixed(1)+'%';
+    $('#pv-bar').style.width=(avgK===null?0:Math.min(100,avgK/40*100))+'%';
+    $('#pv-note').textContent=fl===null?'底线未填：不开工，不估算。':'同意 1 的 '+K.length+' 个品平均毛利；全部可选平均 '+(avg===null?'不可算':avg.toFixed(1)+'%')+'。预计同意 1 = 分数 ≥ 70 的可选，最多 '+cap+' 个。';
+    function ex(c,ok,why){ return '<div class="ex'+(ok?'':' no')+'"><span class="thumb" data-art="'+c.a+'"></span><div><div class="t" lang="ja">'+c.n+'</div><div class="s">'+(ok?'<span class="badge ok">会通过</span> ':'<span class="badge block">被拦</span> ')+why+'</div></div></div>'; }
+    function judge(c){
+      if(!WL[c.cat]) return [false,c.why];
+      if(s.cats.indexOf(c.cat)<0) return [false,'不在所选类目（'+CATN[c.cat]+'）'];
+      if(!inBand(c,s)) return [false,'售价 ¥'+fmt(c.p)+' 不在价格带内'];
+      if(fl===null) return [false,'底线未填，不开工'];
+      if(c.m<fl) return [false,'毛利 '+c.m.toFixed(1)+'% 低于底线 '+fl+'%'];
+      return [true,'毛利 '+c.m.toFixed(1)+'% · 分数 '+Math.round(score(c,s.w,fl,s.target))];
+    }
+    var e1=C[0], e2=C[7], e3=C[19], j1=judge(e1), j2=judge(e2), j3=judge(e3);
+    $('#pv-ex').innerHTML='<div class="small faint" style="margin:4px 0 2px">示例</div>'+ex(e1,j1[0],j1[1])+ex(e2,j2[0],j2[1])+ex(e3,j3[0],j3[1]);
+    CP.hydrateArt($('#pv-ex'));
+    document.querySelectorAll('[data-cn]').forEach(function(el){
+      var k=el.dataset.cn, n=C.filter(function(c){return c.cat===k&&inBand(c,s);}).length; el.textContent='今日候选 '+n;
+    });
+  }
+
+  /* ---------- 修改与放宽判定 ---------- */
+  function diffs(s){
+    var out=[];
+    function add(label,from,to,loosen){ out.push({label:label,from:from,to:to,loosen:loosen}); }
+    var bc=BASE.cats.split(',');
+    bc.forEach(function(c){ if(s.cats.indexOf(c)<0) add('类目','含 '+CATN[c],'去掉 '+CATN[c],false); });
+    s.cats.forEach(function(c){ if(bc.indexOf(c)<0) add('类目','—','新增 '+CATN[c],true); });
+    if(s.pmin!==BASE.pmin) add('价格下限','¥'+fmt(BASE.pmin),'¥'+fmt(s.pmin),s.pmin<BASE.pmin);
+    if(s.pmax!==BASE.pmax) add('价格上限','¥'+fmt(BASE.pmax),'¥'+fmt(s.pmax),s.pmax>BASE.pmax);
+    if(!isNaN(s.floor)&&s.floor!==BASE.floor) add('毛利底线',BASE.floor+'%',s.floor+'%',s.floor<BASE.floor);
+    if(!isNaN(s.daily)&&s.daily!==BASE.daily) add('每日候选上限',BASE.daily,s.daily,s.daily>BASE.daily);
+    if(!isNaN(s.cap)&&s.cap!==BASE.cap) add('同意 1 单批上限',BASE.cap,s.cap,s.cap>BASE.cap);
+    if(!isNaN(s.target)&&s.target!==BASE.target) add('毛利目标',BASE.target+'%',s.target+'%',null);
+    if(s.w.join()!==BASE.w.join()) add('权重',BASE.w.join(' / '),s.w.join(' / '),null);
+    if(!isNaN(s.ship)&&s.ship!==BASE.ship) add('运费占比警告线',BASE.ship+'%',s.ship+'%',null);
+    BASE.avoid.forEach(function(a){ if(s.avoid.indexOf(a)<0) add('避开项','含 '+a,'删除 '+a,true); });
+    s.avoid.forEach(function(a){ if(BASE.avoid.indexOf(a)<0) add('避开项','—','新增 '+a,false); });
+    return out;
+  }
+
+  function check(){
+    var s=state(), sum=drawWeights(s);
+    drawPrice(s); drawCurve(s); drawPreview(s);
+    var errs=[];
+    var fe=$('#floor-n'), fh=$('#floor-h');
+    if(isNaN(s.floor)){ errs.push('请补：毛利底线（必填）'); fe.classList.add('bad'); fh.textContent='请补：毛利底线（必填）。未填 = 系统不开工。'; fh.style.color='var(--block)'; }
+    else if(s.floor<0||s.floor>=100){ errs.push('毛利底线须在 0–99 之间'); fe.classList.add('bad'); fh.textContent='毛利底线须在 0–99 之间。'; fh.style.color='var(--block)'; }
+    else { fe.classList.remove('bad'); fh.textContent='低于它的候选不会进入可选。必填。'; fh.style.color='var(--text-3)'; }
+    if(sum!==100) errs.push('权重之和为 '+sum+'，须为 100');
+    if(!s.cats.length) errs.push('至少选 1 个类目');
+    if(!isNaN(s.target)&&!isNaN(s.floor)&&s.target<=s.floor) errs.push('毛利目标须高于底线');
+    if(isNaN(s.cap)||s.cap<1||s.cap>10) errs.push('同意 1 单批上限须在 1–10 之间');
+    var btn=$('#save'); btn.disabled=errs.length>0; btn.classList.toggle('disabled',errs.length>0);
+    $('#warn').hidden=!errs.length; $('#warn-t').textContent=errs.join('；');
+    $('#save-hint').textContent=errs.length?errs[0]:'';
+    var d=diffs(s);
+    $('#chg-n').textContent=d.length+' 处';
+    $('#chg').innerHTML=d.length?d.map(function(x){
+      var b=x.loosen===true?'<span class="badge wait">放宽 · 24 小时后生效</span>':x.loosen===false?'<span class="badge">收紧 · 立即生效</span>':'<span class="badge">立即生效</span>';
+      return '<li><span><span class="muted">'+x.label+'</span> <s class="faint">'+x.from+'</s> → <b>'+x.to+'</b></span>'+b+'</li>';
+    }).join(''):'<li class="small faint">还没有修改。拖动左侧任意控件，这里会列出差异并标明放宽或收紧。</li>';
+    var nl=d.filter(function(x){return x.loosen===true;}).length;
+    $('#foot-st').textContent=d.length?('有 '+d.length+' 处未保存的修改'+(nl?'，其中 '+nl+' 处放宽将在保存后 24 小时生效':'')):'当前 v7 · 2026-10-20 10:02 林薇保存';
+  }
+
+  /* ---------- 事件 ---------- */
+  function syncPrice(from){
+    var a=$('#pmin'), b=$('#pmax');
+    if(from==='n'){ var x=num($('#pmin-n')), y=num($('#pmax-n')); if(!isNaN(x)) a.value=x; if(!isNaN(y)) b.value=y; }
+    if(+a.value>+b.value-100){ if(document.activeElement===a) a.value=+b.value-100; else b.value=+a.value+100; }
+    if(from!=='n'){ $('#pmin-n').value=fmt(a.value); $('#pmax-n').value=fmt(b.value); }
+  }
+  document.addEventListener('input',function(e){
+    var t=e.target;
+    if(t.id==='pmin'||t.id==='pmax') syncPrice('r');
+    else if(t.id==='pmin-n'||t.id==='pmax-n') syncPrice('n');
+    else if(t.id==='floor') $('#floor-n').value=t.value;
+    else if(t.id==='floor-n'){ var v=num(t); if(!isNaN(v)) $('#floor').value=v; }
+    check();
+  });
+  document.addEventListener('click',function(e){
+    var cb=e.target.closest('#cats .cat:not([disabled])'); if(cb){ cb.setAttribute('aria-pressed', cb.getAttribute('aria-pressed')!=='true'); check(); }
+    var x=e.target.closest('#avoid .x'); if(x){ x.closest('[data-av]').remove(); check(); }
+    if(e.target.id==='wreset'){ W0.forEach(function(v,i){ $('#w'+(i+1)).value=v; }); check(); }
+  });
+  $('#avoid-in').addEventListener('keydown',function(e){
+    if(e.key!=='Enter') return; var v=this.value.trim(); if(!v) return; e.preventDefault();
+    var exists=[].some.call(document.querySelectorAll('#avoid [data-av]'),function(c){return c.dataset.av===v;});
+    if(!exists){ var sp=document.createElement('span'); sp.className='chip'; sp.dataset.av=v; sp.setAttribute('data-tip','新加入 · 保存后命中即不入候选'); sp.textContent=v+' '; var b=document.createElement('button'); b.className='x'; b.setAttribute('aria-label','移除 '+v); b.textContent='×'; sp.appendChild(b); this.parentNode.insertBefore(sp,this); }
+    this.value=''; check();
+  });
+  check();
+})();
+</script>
+</body>
+</html>

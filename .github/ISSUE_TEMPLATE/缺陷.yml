@@ -1,0 +1,30 @@
+name: 缺陷
+description: 不按预期工作的地方
+title: "[缺陷] "
+labels: ["类型:缺陷", "状态:待处理"]
+body:
+  - type: textarea
+    id: steps
+    attributes:
+      label: 重现步骤
+      placeholder: "1. 打开…\n2. 点击…"
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: 期望的结果
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: 实际的结果
+      description: 截图只用样例数据;不贴密钥、客户名、人名。
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: 版本或环境
+      placeholder: 例:v1.3.0 / 预发布环境

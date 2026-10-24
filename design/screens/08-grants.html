@@ -1,0 +1,532 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>授权清单 · CrossPilot</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="assets/cp2.css">
+<style>
+/* —— 授权清单页专用 —— */
+.gcard{background:var(--surface);border-radius:16px;box-shadow:var(--shadow-1);padding:18px 20px 20px;cursor:pointer;transition:box-shadow .12s}
+.gcard:hover{box-shadow:var(--shadow-2)}
+.gcard.sel{box-shadow:0 0 0 2px var(--primary),var(--shadow-1)}
+.gcard .gh{display:flex;align-items:flex-start;gap:12px;margin-bottom:14px}
+.gcard .gh .ico{width:38px;height:38px;border-radius:11px;display:grid;place-items:center;flex:none;background:var(--primary-bg);color:var(--primary-strong)}
+.gcard .gh .ico svg{width:20px;height:20px}
+.gcard .gh h2{font-size:17px}
+.gcard .gh .sub{font-size:14px;color:var(--text-3);margin-top:2px}
+.gcard .gh .tools{margin-left:auto;display:flex;gap:8px;flex:none}
+.gcard.susp .gh .ico{background:var(--block-bg);color:var(--block)}
+.gcard.exp,.gcard.revoked{background:var(--surface-2);box-shadow:none}
+.gcard.exp .gh .ico,.gcard.revoked .gh .ico{background:var(--surface-3);color:var(--text-3)}
+.gcard.revoked .env-grid{opacity:.5;filter:grayscale(1)}
+.env-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.env{background:var(--surface-2);border-radius:12px;padding:12px 14px;min-width:0}
+.gcard.exp .env{background:var(--surface)}
+.env .lab{font-size:14px;color:var(--text-3);display:flex;justify-content:space-between;gap:6px}
+.env .val{font-size:17px;font-weight:600;line-height:1.35}
+.env .val small{font-size:14px;font-weight:400;color:var(--text-3)}
+.track{position:relative;height:8px;border-radius:4px;background:var(--surface-3);margin:30px 2px 20px}
+.track i,.samp i,.dots i{font-style:normal}
+.track .rng{position:absolute;top:0;bottom:0;border-radius:4px;background:var(--primary);transition:left .2s,width .2s}
+.track .rng.soft{background:color-mix(in srgb,var(--primary) 30%,transparent)}
+.track .mk{position:absolute;top:-5px;width:2px;height:18px;margin-left:-1px;border-radius:1px;background:var(--text-2);transition:left .2s}
+.track .mk span{position:absolute;left:50%;transform:translateX(-50%);font-size:13px;white-space:nowrap;font-weight:600}
+.track .mk.up span{bottom:20px} .track .mk.dn span{top:20px}
+.track .mk.block{background:var(--block)} .track .mk.block span{color:var(--block)}
+.track .mk.pri{background:var(--primary-strong)} .track .mk.pri span{color:var(--primary-strong)}
+.track .mk.tgt span{color:var(--text-2)}
+.track .tk{position:absolute;top:1px;width:6px;height:6px;margin-left:-3px;border-radius:50%;background:var(--surface);box-shadow:0 0 0 1.5px var(--text-2)}
+.track .ends{position:absolute;top:14px;font-size:13px;color:var(--text-3)}
+.dots{display:flex;gap:8px;align-items:flex-end;margin-top:10px}
+.dots .d{display:flex;flex-direction:column;align-items:center;gap:3px;font-size:12px;color:var(--text-3)}
+.dots .d i{width:10px;height:10px;border-radius:3px;background:var(--surface-3);display:block}
+.dots .d i.on{background:var(--primary)}
+.dots .d i.off{background:transparent;box-shadow:inset 0 0 0 1px var(--border-strong)}
+.dots .d.today{color:var(--primary-strong);font-weight:600}
+.envring{display:flex;align-items:center;gap:12px;margin-top:6px}
+.samp{display:flex;gap:4px;margin-top:10px}
+.samp i{width:18px;height:18px;border-radius:5px;background:var(--surface-3);display:grid;place-items:center;font-style:normal;font-size:12px;font-weight:600}
+.samp i.p{background:var(--wait-bg);color:var(--wait)} .samp i.ok{background:var(--ok-bg);color:var(--ok)} .samp i.bad{background:var(--block-bg);color:var(--block)}
+.narrow{margin-top:14px;background:var(--primary-bg);border-radius:14px;padding:16px 18px;cursor:default}
+.narrow[hidden]{display:none}
+.narrow h3{font-size:15px;color:var(--primary-strong);margin-bottom:2px}
+.narrow .nrow{display:grid;grid-template-columns:96px minmax(0,1fr) 120px;gap:12px;align-items:center;padding:8px 0;border-top:1px solid color-mix(in srgb,var(--primary) 18%,transparent)}
+.narrow .nrow:first-of-type{border-top:0}
+.narrow .nrow label{font-size:14px;color:var(--text-2);font-weight:500}
+.narrow .nrow output{font-weight:600;font-size:15px;text-align:right}
+.narrow .nrow .hint{grid-column:2 / 4;font-size:13px;color:var(--text-3);margin-top:-6px}
+.narrow .seg button[disabled]{opacity:.35;cursor:not-allowed}
+.narrow .preview{font-size:14px;color:var(--text-2);background:var(--surface);border-radius:10px;padding:8px 12px;margin-top:8px;min-height:34px}
+.narrow .preview b{color:var(--primary-strong)}
+.dual{position:relative;height:26px}
+.dual input[type=range]{position:absolute;left:0;right:0;top:4px;pointer-events:none;background:transparent;-webkit-appearance:none;appearance:none;height:18px;margin:0}
+.dual input[type=range]::-webkit-slider-thumb{pointer-events:auto}
+.dual input[type=range]::-moz-range-thumb{pointer-events:auto}
+.dual::before{content:"";position:absolute;left:0;right:0;top:12px;height:4px;border-radius:2px;background:var(--surface-3)}
+.never{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.never .nv{background:var(--surface-2);border-radius:12px;padding:12px 14px;display:flex;flex-direction:column;gap:6px;min-width:0}
+.never .nv .lk{width:28px;height:28px;border-radius:8px;display:grid;place-items:center;background:var(--block-bg);color:var(--block)}
+.never .nv .lk svg{width:15px;height:15px}
+.never .nv b{font-size:15px;line-height:1.35}
+.never .nv span{font-size:13px;color:var(--text-3);line-height:1.45}
+.pend{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:16px;align-items:center}
+.pend .ico{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;background:var(--wait-bg);color:var(--wait)}
+.pend .ico svg{width:22px;height:22px}
+.tl-prod{display:flex;gap:10px;align-items:center;margin-top:4px}
+.ref{font:500 13px var(--font-mono);color:var(--primary-strong)}
+@media (max-width:1280px){.never{grid-template-columns:repeat(2,minmax(0,1fr))}.env-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+</style>
+</head>
+<body data-page="grants" data-crumb="治理 / 授权清单">
+<template id="main-tpl">
+  <div class="page-head">
+    <div>
+      <span class="eyebrow">Grants · JP-01</span>
+      <h1>授权清单：Pilot 目前可代批 1 类事项</h1>
+      <p>授权范围只能收窄，不能放宽；任何放宽都要回到人，并在 24 小时后生效。</p>
+    </div>
+    <div class="actions">
+      <button class="help" data-toast="操作手册：授权清单（演示）" aria-label="帮助">?</button>
+      <button class="btn primary lg" data-toast="新建授权不在本页直接创建：在同意 1 的决定区勾选“把这一类加入授权清单”产生，24 小时后生效（演示）">新建授权（经审批）</button>
+    </div>
+  </div>
+
+  <div class="g3" style="margin-bottom:16px">
+    <div class="stat ok"><div class="k">有效授权</div><div class="v"><span data-v="active-count">1</span> <small>条</small></div><div class="n">另有 1 条已暂停 · 1 条待生效</div>
+      <div class="spark chart" data-chart="spark" data-cfg='{"values":[2,2,2,1,1,1,1],"color":"primary"}'></div></div>
+    <div class="stat"><div class="k">今日已代批 / 每日上限</div><div class="v">0 <small>/ 3 次</small></div><div class="n">最近一次 10-19 08:31 · 近 7 日共 2 次</div>
+      <div class="spark chart" data-chart="spark" data-cfg='{"values":[0,0,0,0,0,2,0],"color":"primary"}'></div></div>
+    <div class="stat block"><div class="k">本周抽检通过率</div><div class="v">50<small>%</small></div><div class="n">已判 2 条 · 1 起有问题 → 已暂停 · 1 条待判</div>
+      <div class="spark chart" data-chart="spark" data-cfg='{"values":[100,100,100,100,100,100,50],"color":"block"}'></div></div>
+  </div>
+
+  <div class="alert info" style="margin-bottom:16px"><span>新建授权不在本页直接创建：只能在同意 1 的决定区勾选“把这一类加入授权清单”产生，由你本人确认，24 小时后生效。代批由确定性规则执行，不经过任何 Agent 的判断。</span><a class="right nowrap" href="06-approvals.html">去待批</a></div>
+
+  <div class="card-head" style="margin:0 0 10px"><h2>授权规则</h2><span class="meta">点卡片在右栏看六个维度、代批记录与撤销历史</span></div>
+
+  <div class="stack" style="margin-bottom:16px">
+    <!-- ACTIVE -->
+    <div class="gcard" data-detail="g-1" id="card-g1">
+      <div class="gh">
+        <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l8 3v6c0 4.5-3.2 8-8 9-4.8-1-8-4.5-8-9V6z"/><path d="M9 12l2 2 4-4"/></svg></span>
+        <div style="min-width:0">
+          <div class="row wrap" style="gap:8px"><h2>选品同意（同意 1）· 家居收纳 / 厨房小工具</h2><span class="badge ok" data-v="status">生效中</span></div>
+          <div class="sub">JP-01 日本站 · 2026-10-13 随同意 1 勾选产生 · 2026-10-14 生效 · 最近使用 10-19 08:31</div>
+        </div>
+        <div class="tools">
+          <button class="btn sm" data-narrow-toggle="n-g1" data-toast="收窄面板：只能往更严的方向调（演示）">收窄</button>
+          <button class="btn sm danger" data-revoke="card-g1" data-toast="已撤销，立即生效；同类单回到人工审批（演示）">撤销</button>
+        </div>
+      </div>
+      <div class="env-grid">
+        <div class="env">
+          <div class="lab"><span>价格带（税込）</span><span class="mono">¥0–4,000</span></div>
+          <div class="val" data-v="price">¥1,200 – ¥2,800</div>
+          <div class="track" data-tip="授权只覆盖这一段售价；轨道上的圆点是最近代批的两个品">
+            <i class="rng" data-v="price-rng" style="left:30%;width:40%"></i>
+            <i class="tk" style="left:42%" data-tip="デスクケーブルオーガナイザー ¥1,680"></i>
+            <i class="tk" style="left:49.5%" data-tip="シリコン調理スプーン5点セット ¥1,980"></i>
+          </div>
+        </div>
+        <div class="env">
+          <div class="lab"><span>毛利下限</span><span class="mono">0–50%</span></div>
+          <div class="val" data-v="margin">≥ 28% <small>比方向卡底线更窄</small></div>
+          <div class="track">
+            <i class="rng soft" data-v="margin-rng" style="left:56%;width:44%"></i>
+            <i class="mk up block" style="left:24%" data-tip="方向卡毛利底线 12%"><span>底线 12%</span></i>
+            <i class="mk up pri" data-v="margin-mk" style="left:56%" data-tip="本授权下限：低于此值转人工"><span data-v="margin-lbl">下限 28%</span></i>
+            <i class="mk dn tgt" style="left:64%" data-tip="方向卡毛利目标 32%"><span>目标 32%</span></i>
+          </div>
+        </div>
+        <div class="env">
+          <div class="lab"><span>每日上限</span><span>近 7 日</span></div>
+          <div class="val">≤ <span data-v="daily">3</span> 次/日 <small>今日 0/<span data-v="daily2">3</span></small></div>
+          <div class="dots" data-v="dots" data-tip="每列一天，实心=当天代批 1 次；日界按东京时间">
+            <span class="d"><i></i><i></i><i></i>14</span><span class="d"><i></i><i></i><i></i>15</span><span class="d"><i></i><i></i><i></i>16</span><span class="d"><i></i><i></i><i></i>17</span><span class="d"><i></i><i></i><i></i>18</span><span class="d"><i></i><i class="on"></i><i class="on"></i>19</span><span class="d today"><i></i><i></i><i></i>今日</span>
+          </div>
+        </div>
+        <div class="env">
+          <div class="lab"><span>总次数</span><span>原子消费</span></div>
+          <div class="envring">
+            <div class="chart" data-v="total-ring" data-chart="ring" data-cfg='{"pct":20,"size":64,"stroke":8,"label":"2/10","fs":14,"color":"primary","tip":"已用 2 次，上限 10 次；用尽即停"}'></div>
+            <div class="small muted">已用 2 次<br>剩余 <b data-v="total-left">8</b> 次</div>
+          </div>
+        </div>
+        <div class="env">
+          <div class="lab"><span>有效期</span><span>≤ 30 天</span></div>
+          <div class="val">剩 <span data-v="days">23</span> 天 <small>到期 <span data-v="exp">2026-11-12</span></small></div>
+          <div class="meter" style="margin-top:14px" data-tip="10-14 生效 → 11-12 到期；已过 6 天"><i data-v="exp-bar" style="width:21%"></i></div>
+          <div class="row between small faint" style="margin-top:4px"><span>10-14</span><span>今日</span><span data-v="exp-end">11-12</span></div>
+        </div>
+        <div class="env">
+          <div class="lab"><span>抽检比例</span><span>每周抽检卡</span></div>
+          <div class="val"><span data-v="samp">20</span>% <small>抽中 1 / 代批 2</small></div>
+          <div class="samp" data-tip="灰=未抽中；琥珀=已抽中、待 10-26 抽检卡判定">
+            <i class="p">待</i><i></i>
+          </div>
+          <div class="small faint" style="margin-top:6px">最近结果：待 10-26 抽检卡判定</div>
+        </div>
+      </div>
+
+      <div class="narrow" id="n-g1" hidden data-card="card-g1">
+        <h3>收窄（立即生效）</h3>
+        <p class="small muted" style="margin:0 0 6px">每个控件都只能往更严的方向走：毛利下限只能上调、价格带只能内缩、次数只能减少、有效期只能提前、抽检只能提高。</p>
+        <div class="nrow"><label for="ng1-m">毛利下限</label>
+          <input id="ng1-m" type="range" min="28" max="45" step="1" value="28" data-narrow="margin" data-cur="28" data-dir="up" data-out="ng1-mo">
+          <output id="ng1-mo">≥ 28%</output></div>
+        <div class="nrow"><label>价格带</label>
+          <div class="dual">
+            <input type="range" min="1200" max="2800" step="100" value="1200" data-narrow="pmin" data-cur="1200" data-dir="up" aria-label="价格带下沿">
+            <input type="range" min="1200" max="2800" step="100" value="2800" data-narrow="pmax" data-cur="2800" data-dir="down" aria-label="价格带上沿">
+          </div>
+          <output data-out-price>¥1,200 – ¥2,800</output></div>
+        <div class="nrow"><label>每日上限</label>
+          <div class="seg" data-narrow-seg="daily" data-cur="3">
+            <button aria-pressed="true" data-val="3" data-toast="每日上限：3（当前，演示）">3（当前）</button>
+            <button aria-pressed="false" data-val="2" data-toast="每日上限预览：2，提交后生效（演示）">2</button>
+            <button aria-pressed="false" data-val="1" data-toast="每日上限预览：1，提交后生效（演示）">1</button>
+          </div>
+          <output data-out-daily>≤ 3 次/日</output></div>
+        <div class="nrow"><label for="ng1-t">总次数上限</label>
+          <input id="ng1-t" type="range" min="2" max="10" step="1" value="10" data-narrow="total" data-cur="10" data-dir="down" data-out="ng1-to">
+          <output id="ng1-to">10 次</output>
+          <span class="hint">不能低于已用的 2 次。</span></div>
+        <div class="nrow"><label for="ng1-e">提前到期</label>
+          <input id="ng1-e" class="input" type="date" min="2026-10-20" max="2026-11-12" value="2026-11-12" data-narrow="exp" data-cur="2026-11-12" data-dir="down" data-out="ng1-eo">
+          <output id="ng1-eo">2026-11-12</output></div>
+        <div class="nrow"><label for="ng1-s">抽检比例</label>
+          <input id="ng1-s" type="range" min="20" max="100" step="10" value="20" data-narrow="samp" data-cur="20" data-dir="up" data-out="ng1-so">
+          <output id="ng1-so">20%</output></div>
+        <div class="nrow"><label>去掉类目</label>
+          <span class="row wrap" style="gap:14px"><label class="chk"><input type="checkbox" data-narrow-cat="家居收纳"> 家居收纳</label><label class="chk"><input type="checkbox" data-narrow-cat="厨房小工具"> 厨房小工具</label></span>
+          <span class="small faint" style="text-align:right">不能添加类目</span></div>
+        <div class="preview" data-preview>还没有改动。</div>
+        <div class="row" style="margin-top:12px">
+          <button class="btn primary" data-narrow-submit="n-g1" data-toast="已收窄，立即生效（演示）">提交收窄</button>
+          <button class="btn ghost" data-narrow-toggle="n-g1" data-toast="已收起收窄面板（演示）">收起</button>
+          <span class="small faint right">这里没有“放宽”：放宽 = 新建授权，回到人并 24 小时后生效。</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- SUSPENDED -->
+    <div class="gcard susp" data-detail="g-2" id="card-g2">
+      <div class="gh">
+        <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l8 3v6c0 4.5-3.2 8-8 9-4.8-1-8-4.5-8-9V6z"/><path d="M10 9v6M14 9v6"/></svg></span>
+        <div style="min-width:0">
+          <div class="row wrap" style="gap:8px"><h2>选品同意（同意 1）· 宠物用品</h2><span class="badge block" data-v="status">已暂停</span></div>
+          <div class="sub">2026-10-06 创建 · 10-19 10:20 抽检判定后自动暂停 · 同类单已回到人工审批</div>
+        </div>
+        <div class="tools">
+          <button class="btn sm" data-toast="打开抽检记录：你复核后才可恢复到暂停前的包络，即时生效并留痕（演示）">复核抽检</button>
+          <button class="btn sm" data-narrow-toggle="n-g2" data-toast="收窄面板：只能往更严的方向调（演示）">收窄</button>
+          <button class="btn sm danger" data-revoke="card-g2" data-toast="已撤销，立即生效（演示）">撤销</button>
+        </div>
+      </div>
+      <div class="alert block" style="margin-bottom:12px"><span><b>抽检发现 1 起“应拒绝却被代批”</b>：ペット用スリッカーブラシ 大型犬用（外观疑似知名品牌）。已暂停，等你复核；系统不会自动恢复。</span></div>
+      <div class="env-grid">
+        <div class="env">
+          <div class="lab"><span>价格带（税込）</span><span class="mono">¥0–4,000</span></div>
+          <div class="val" data-v="price">¥1,200 – ¥2,400</div>
+          <div class="track"><i class="rng" data-v="price-rng" style="left:30%;width:30%"></i><i class="tk" style="left:47%" data-tip="ペット用スリッカーブラシ ¥1,880（抽检判为应拒绝）"></i></div>
+        </div>
+        <div class="env">
+          <div class="lab"><span>毛利下限</span><span class="mono">0–50%</span></div>
+          <div class="val" data-v="margin">≥ 30%</div>
+          <div class="track">
+            <i class="rng soft" data-v="margin-rng" style="left:60%;width:40%"></i>
+            <i class="mk up block" style="left:24%"><span>底线 12%</span></i>
+            <i class="mk up pri" data-v="margin-mk" style="left:60%"><span data-v="margin-lbl">下限 30%</span></i>
+          </div>
+        </div>
+        <div class="env">
+          <div class="lab"><span>每日上限</span><span>暂停中</span></div>
+          <div class="val">≤ <span data-v="daily">2</span> 次/日 <small>今日不可用</small></div>
+          <div class="dots"><span class="d"><i class="off"></i><i class="on"></i>14</span><span class="d"><i class="off"></i><i></i>15</span><span class="d"><i class="off"></i><i></i>16</span><span class="d"><i class="off"></i><i class="on"></i>17</span><span class="d"><i class="off"></i><i></i>18</span><span class="d"><i class="off"></i><i></i>19</span><span class="d today"><i class="off"></i><i class="off"></i>今日</span></div>
+        </div>
+        <div class="env">
+          <div class="lab"><span>总次数</span></div>
+          <div class="envring"><div class="chart" data-chart="ring" data-cfg='{"pct":50,"size":64,"stroke":8,"label":"4/8","fs":14,"color":"primary"}'></div><div class="small muted">已用 4 次<br>剩余 <b data-v="total-left">4</b> 次</div></div>
+        </div>
+        <div class="env">
+          <div class="lab"><span>有效期</span></div>
+          <div class="val">剩 <span data-v="days">16</span> 天 <small>到期 <span data-v="exp">2026-11-05</span></small></div>
+          <div class="meter" style="margin-top:14px"><i data-v="exp-bar" style="width:45%"></i></div>
+          <div class="row between small faint" style="margin-top:4px"><span>10-07</span><span>今日</span><span data-v="exp-end">11-05</span></div>
+        </div>
+        <div class="env">
+          <div class="lab"><span>抽检比例</span></div>
+          <div class="val"><span data-v="samp">20</span>% <small>抽中 2 / 代批 4</small></div>
+          <div class="samp" data-tip="绿=通过；红=有问题"><i class="ok">✓</i><i class="bad">✕</i><i></i><i></i></div>
+          <div class="small" style="margin-top:6px;color:var(--block)">最近结果：1 起有问题（10-19）</div>
+        </div>
+      </div>
+      <div class="narrow" id="n-g2" hidden data-card="card-g2">
+        <h3>收窄（立即生效；不会解除暂停）</h3>
+        <div class="nrow"><label for="ng2-m">毛利下限</label>
+          <input id="ng2-m" type="range" min="30" max="45" step="1" value="30" data-narrow="margin" data-cur="30" data-dir="up" data-out="ng2-mo">
+          <output id="ng2-mo">≥ 30%</output></div>
+        <div class="nrow"><label>价格带</label>
+          <div class="dual">
+            <input type="range" min="1200" max="2400" step="100" value="1200" data-narrow="pmin" data-cur="1200" data-dir="up" aria-label="价格带下沿">
+            <input type="range" min="1200" max="2400" step="100" value="2400" data-narrow="pmax" data-cur="2400" data-dir="down" aria-label="价格带上沿">
+          </div>
+          <output data-out-price>¥1,200 – ¥2,400</output></div>
+        <div class="nrow"><label for="ng2-e">提前到期</label>
+          <input id="ng2-e" class="input" type="date" min="2026-10-20" max="2026-11-05" value="2026-11-05" data-narrow="exp" data-cur="2026-11-05" data-dir="down" data-out="ng2-eo">
+          <output id="ng2-eo">2026-11-05</output></div>
+        <div class="preview" data-preview>还没有改动。</div>
+        <div class="row" style="margin-top:12px">
+          <button class="btn primary" data-narrow-submit="n-g2" data-toast="已收窄，立即生效（演示）">提交收窄</button>
+          <button class="btn ghost" data-narrow-toggle="n-g2" data-toast="已收起收窄面板（演示）">收起</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- EXPIRED -->
+    <div class="gcard exp" data-detail="g-3">
+      <div class="gh" style="margin-bottom:12px">
+        <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span>
+        <div style="min-width:0">
+          <div class="row wrap" style="gap:8px"><h2 class="muted">选品同意（同意 1）· 桌面整理</h2><span class="badge">已到期</span></div>
+          <div class="sub">2026-10-12 到期，已回到人工审批 · 到期授权不能续期</div>
+        </div>
+        <div class="tools">
+          <button class="btn sm" disabled data-toast="已到期，无需收窄（演示）">收窄</button>
+          <button class="btn sm" disabled data-toast="已到期，无需撤销（演示）">撤销</button>
+        </div>
+      </div>
+      <div class="row wrap small muted" style="gap:8px 22px">
+        <span>价格带 <b class="faint">¥1,000–¥2,000</b></span><span>毛利 <b class="faint">≥ 30%</b></span><span>每日 <b class="faint">≤ 2</b></span>
+        <span class="row" style="gap:8px">总次数 <span class="meter" style="width:80px"><i style="width:100%;background:var(--text-3)"></i></span><b class="faint">6/6 用尽</b></span>
+        <span>抽检 <b class="faint">2/2 无问题</b></span>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-bottom:16px">
+    <div class="card-head"><h2>待生效的新授权</h2><span class="badge wait">24 小时后生效</span><span class="meta">放宽 = 新建；生效前可随时撤销</span></div>
+    <div class="pend" data-detail="g-4" style="cursor:pointer" id="card-g4">
+      <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2M9 2h6"/></svg></span>
+      <div style="min-width:0">
+        <b>选品同意 · 収納用品（引き出し・仕切り）</b>
+        <div class="small muted">¥1,000–¥2,000 · 毛利 ≥ 30% · ≤ 2 次/日 · 累计 ≤ 6 · 抽检 20% · 2026-10-19 18:20 在同意 1 决定区勾选产生</div>
+        <div class="row" style="gap:10px;margin-top:8px">
+          <div class="meter wait" style="flex:1" data-tip="已等待 16 小时 45 分 / 24 小时"><i style="width:70%"></i></div>
+          <span class="small nowrap" style="color:var(--wait);font-weight:600">2026-10-20 18:20 生效</span>
+        </div>
+      </div>
+      <button class="btn danger" data-revoke="card-g4" data-toast="已撤销待生效授权，它不会生效（演示）">撤销</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-head"><h2>不可加入</h2><span class="badge block">永不可授权</span><span class="meta">这些动作不在可授权范围内，也没有入口把它们加进来</span></div>
+    <div class="never">
+      <div class="nv"><span class="lk"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></span><b>同意 2（素材与价格）</b><span>这类动作必须由你本人批准，不能交给 Pilot。</span></div>
+      <div class="nv"><span class="lk"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></span><b>上架（新建商品）</b><span>这类动作必须由你本人批准，不能交给 Pilot。</span></div>
+      <div class="nv"><span class="lk"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></span><b>超预算放行</b><span>这类动作必须由你本人批准，不能交给 Pilot。</span></div>
+      <div class="nv"><span class="lk"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></span><b>放宽规则 / 安全带</b><span>这类动作必须由你本人批准，不能交给 Pilot。</span></div>
+      <div class="nv"><span class="lk"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></span><b>新建授权</b><span>这类动作必须由你本人批准，不能交给 Pilot。</span></div>
+      <div class="nv"><span class="lk"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></span><b>风险确认（発送日数）</b><span>这类动作必须由你本人批准，不能交给 Pilot。</span></div>
+      <div class="nv"><span class="lk"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></span><b>接受读回差异</b><span>这类动作必须由你本人批准，不能交给 Pilot。</span></div>
+      <div class="nv"><span class="lk"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></span><b>规则库确认续用</b><span>这类动作必须由你本人批准，不能交给 Pilot。</span></div>
+    </div>
+  </div>
+</template>
+
+<template id="detail-tpl">
+  <h3>授权详情</h3>
+  <p class="empty">点左侧一张授权卡，查看六个维度、代批记录与撤销历史。</p>
+</template>
+
+<template id="g-1">
+  <h3>选品同意 · 家居收纳 / 厨房小工具</h3>
+  <div class="row wrap" style="margin-bottom:12px"><span class="badge ok">生效中</span><span class="faint small">随同意 1 勾选产生 · 林薇</span></div>
+  <div class="g2" style="gap:10px">
+    <div class="card tint" style="padding:12px 14px"><div class="small faint">已用 / 上限</div><b style="font-size:20px">2 / 10</b></div>
+    <div class="card tint" style="padding:12px 14px"><div class="small faint">剩余有效期</div><b style="font-size:20px">23 天</b></div>
+  </div>
+  <h3>六个维度</h3>
+  <dl class="kv">
+    <dt>动作与店铺</dt><dd>选品同意 · JP-01 日本站</dd>
+    <dt>类目</dt><dd>家居收纳、厨房小工具</dd>
+    <dt>价格带</dt><dd>¥1,200–¥2,800（税込）</dd>
+    <dt>毛利下限</dt><dd>≥ 28%（方向卡底线 12%）</dd>
+    <dt>频次与总量</dt><dd>每日 ≤ 3 · 累计 ≤ 10 · 已用 2</dd>
+    <dt>有效期</dt><dd>2026-10-14 至 2026-11-12</dd>
+    <dt>附加条件</dt><dd>利润可算 · 品类闸门通过 · 无“数据不全” · 来源等级 ≥ B</dd>
+    <dt>抽检</dt><dd>20%，进每周抽检卡</dd>
+  </dl>
+  <h3>代批记录</h3>
+  <ul class="timeline">
+    <li><span class="pt wait"></span><div class="when">10-19 08:31 · 代批 · 已抽中</div><div class="what"><div class="tl-prod"><span class="thumb sm" data-art="spoons"></span><div><span lang="ja">シリコン調理スプーン5点セット</span><div class="small faint">¥1,980 · 毛利 34.2% · <span class="ref">审批单 A-1019-02</span></div></div></div></div></li>
+    <li><span class="pt ok"></span><div class="when">10-19 08:30 · 代批</div><div class="what"><div class="tl-prod"><span class="thumb sm" data-art="cable"></span><div><span lang="ja">デスクケーブルオーガナイザー</span><div class="small faint">¥1,680 · 毛利 29.8% · <span class="ref">审批单 A-1019-01</span></div></div></div></div></li>
+    <li><span class="pt human"></span><div class="when">10-18 08:12 · 包络外 → 转人工</div><div class="what"><div class="tl-prod"><span class="thumb sm" data-art="rack"></span><div><span lang="ja">キッチン水切りラック</span><div class="small faint">毛利 27.1% &lt; 28%，由你本人批 · <span class="ref">审批单 A-1018-03</span></div></div></div></div></li>
+  </ul>
+  <h3>收窄与撤销历史</h3>
+  <ul class="timeline">
+    <li><span class="pt human"></span><div class="when">10-19 17:05 · 林薇</div><div class="what">收窄：每日上限 4 → 3，立即生效</div></li>
+    <li><span class="pt"></span><div class="when">10-13 09:10 · 林薇</div><div class="what">在同意 1（<span class="ref">A-1013-04</span>）勾选产生；24 小时后生效</div></li>
+    <li><span class="pt block"></span><div class="when">10-12 17:05 · 林薇</div><div class="what">撤销旧授权「厨房小工具 · 毛利 ≥25%」· 未填理由</div></li>
+  </ul>
+  <p class="small" style="margin-top:4px"><a href="09-audit.html">在审计中查看全部记录 →</a></p>
+</template>
+
+<template id="g-2">
+  <h3>选品同意 · 宠物用品</h3>
+  <div class="row wrap" style="margin-bottom:10px"><span class="badge block">已暂停</span><span class="faint small">10-19 10:20 自动暂停</span></div>
+  <div class="alert block"><span>同类单已回到人工审批。只有你复核后才能恢复（恢复到暂停前的包络，即时生效并留痕），系统不会自动恢复。</span></div>
+  <h3>六个维度</h3>
+  <dl class="kv">
+    <dt>动作与店铺</dt><dd>选品同意 · JP-01 日本站</dd>
+    <dt>类目</dt><dd>宠物用品</dd>
+    <dt>价格带</dt><dd>¥1,200–¥2,400（税込）</dd>
+    <dt>毛利下限</dt><dd>≥ 30%</dd>
+    <dt>频次与总量</dt><dd>每日 ≤ 2 · 累计 ≤ 8 · 已用 4</dd>
+    <dt>有效期</dt><dd>2026-10-07 至 2026-11-05</dd>
+  </dl>
+  <h3>抽检记录</h3>
+  <ul class="timeline">
+    <li><span class="pt block"></span><div class="when">10-19 10:20 · 抽检卡 · 林薇判定</div><div class="what"><div class="tl-prod"><span class="thumb sm" data-art="brush"></span><div><span lang="ja">ペット用スリッカーブラシ 大型犬用</span><div class="small" style="color:var(--block)">应拒绝：外观疑似知名品牌，包络未覆盖此项</div><div class="small faint">10-17 09:02 代批 · <span class="ref">审批单 A-1017-01</span></div></div></div></div></li>
+    <li><span class="pt ok"></span><div class="when">10-19 10:18 · 抽检卡 · 林薇判定</div><div class="what">ペット用 給水ボトル · 通过 · <span class="ref">A-1014-02</span></div></li>
+  </ul>
+  <div class="row" style="margin-top:8px">
+    <button class="btn" data-toast="打开抽检记录：复核后才可恢复（演示）">复核抽检</button>
+    <button class="btn danger" data-toast="已撤销，立即生效（演示）">撤销</button>
+  </div>
+  <h3>撤销历史</h3>
+  <p class="faint small" style="margin:0">这条授权尚未被撤销。</p>
+</template>
+
+<template id="g-3">
+  <h3>选品同意 · 桌面整理</h3>
+  <div class="row wrap" style="margin-bottom:10px"><span class="badge">已到期</span><span class="faint small">2026-10-12 到期，已回到人工审批</span></div>
+  <h3>六个维度</h3>
+  <dl class="kv">
+    <dt>动作与店铺</dt><dd>选品同意 · JP-01 日本站</dd>
+    <dt>类目</dt><dd>桌面整理</dd>
+    <dt>价格带</dt><dd>¥1,000–¥2,000（税込）</dd>
+    <dt>毛利下限</dt><dd>≥ 30%</dd>
+    <dt>频次与总量</dt><dd>每日 ≤ 2 · 累计 ≤ 6 · 已用 6（用尽）</dd>
+    <dt>有效期</dt><dd>2026-09-13 至 2026-10-12</dd>
+  </dl>
+  <div class="alert" style="margin-top:12px"><span>到期授权不能续期。需要同类代批时，请在下一次同意 1 的决定区重新勾选，24 小时后生效。</span></div>
+  <h3>代批记录</h3>
+  <p class="faint small" style="margin:0">共 6 次；抽检 2 次，均无问题。</p>
+  <h3>撤销历史</h3>
+  <p class="faint small" style="margin:0">无撤销，自然到期。</p>
+</template>
+
+<template id="g-4">
+  <h3>待生效：选品同意 · 収納用品</h3>
+  <div class="row wrap" style="margin-bottom:10px"><span class="badge wait">等待生效</span><span class="faint small">2026-10-20 18:20 生效</span></div>
+  <div class="meter wait" style="margin-bottom:6px"><i style="width:70%"></i></div>
+  <p class="small faint" style="margin:0 0 4px">已等待 16 小时 45 分 / 24 小时。生效前随时可撤销；撤销后不会生效。</p>
+  <h3>六个维度</h3>
+  <dl class="kv">
+    <dt>动作与店铺</dt><dd>选品同意 · JP-01 日本站</dd>
+    <dt>类目</dt><dd lang="ja">収納用品（引き出し・仕切り）</dd>
+    <dt>价格带</dt><dd>¥1,000–¥2,000（税込）</dd>
+    <dt>毛利下限</dt><dd>≥ 30%</dd>
+    <dt>频次与总量</dt><dd>每日 ≤ 2 · 累计 ≤ 6</dd>
+    <dt>有效期</dt><dd>生效后 30 天内</dd>
+  </dl>
+  <h3>来源</h3>
+  <ul class="timeline">
+    <li><span class="pt human"></span><div class="when">10-19 18:20 · 林薇</div><div class="what">在同意 1（<span class="ref">A-1019-05</span>）勾选“把这一类加入授权清单”，二次确认</div></li>
+  </ul>
+  <button class="btn danger" data-toast="已撤销待生效授权，它不会生效（演示）">撤销</button>
+</template>
+
+<script src="assets/art.js"></script>
+<script src="assets/charts.js"></script>
+<script src="assets/cp2.js"></script>
+<script>
+(function(){
+  var main=document.getElementById('main');
+  function yen(n){ return '¥'+Number(n).toLocaleString('ja-JP'); }
+  function dayDiff(a,b){ return Math.round((new Date(b)-new Date(a))/864e5); }
+  var LABEL={margin:'毛利下限',pmin:'价格带下沿',pmax:'价格带上沿',total:'总次数上限',exp:'到期日',samp:'抽检比例'};
+  var RULE={margin:'毛利下限只能上调',pmin:'价格带只能内缩',pmax:'价格带只能内缩',total:'总次数只能减少',exp:'有效期只能提前',samp:'抽检比例只能提高'};
+  function fmt(k,v){ return k==='margin'?'≥ '+v+'%':(k==='pmin'||k==='pmax')?yen(v):k==='total'?v+' 次':k==='samp'?v+'%':v; }
+
+  // 自动选中第一张授权卡
+  var first=document.getElementById('card-g1'); if(first) first.click();
+
+  // 展开/收起收窄面板
+  main.addEventListener('click',function(e){
+    var t=e.target.closest('[data-narrow-toggle]'); if(!t) return;
+    var p=document.getElementById(t.dataset.narrowToggle); if(p) p.hidden=!p.hidden;
+  });
+
+  function preview(panel){
+    var out=[];
+    panel.querySelectorAll('[data-narrow]').forEach(function(i){ if(String(i.value)!==String(i.dataset.cur)) out.push(LABEL[i.dataset.narrow]+' '+fmt(i.dataset.narrow,i.dataset.cur)+' → <b>'+fmt(i.dataset.narrow,i.value)+'</b>'); });
+    var seg=panel.querySelector('[data-narrow-seg]');
+    if(seg){ var on=seg.querySelector('[aria-pressed=true]'); if(on && on.dataset.val!==seg.dataset.cur) out.push('每日上限 '+seg.dataset.cur+' → <b>'+on.dataset.val+'</b>'); }
+    panel.querySelectorAll('[data-narrow-cat]:checked').forEach(function(c){ out.push('去掉类目 <b>'+c.dataset.narrowCat+'</b>'); });
+    panel.querySelector('[data-preview]').innerHTML = out.length ? '收窄后：'+out.join('；') : '还没有改动。';
+    return out.length;
+  }
+
+  // 夹紧：只能往更严的方向
+  main.addEventListener('input',function(e){
+    var i=e.target; if(!i.dataset || !i.dataset.narrow) return;
+    var panel=i.closest('.narrow'), k=i.dataset.narrow, dir=i.dataset.dir, cur=i.dataset.cur, v=i.value;
+    var num=k!=='exp', bad = num ? (dir==='up' ? +v < +cur : +v > +cur) : (v > cur || v==='');
+    if(bad){ i.value=cur; if(window.CP&&CP.toast) CP.toast('只能往更严的方向：'+RULE[k]); }
+    if(k==='pmin'||k==='pmax'){
+      var lo=panel.querySelector('[data-narrow=pmin]'), hi=panel.querySelector('[data-narrow=pmax]');
+      if(+lo.value>+hi.value){ if(k==='pmin') lo.value=hi.value; else hi.value=lo.value; }
+      panel.querySelector('[data-out-price]').textContent=yen(lo.value)+' – '+yen(hi.value);
+    }
+    if(i.dataset.out){ var o=document.getElementById(i.dataset.out); if(o) o.textContent=fmt(k,i.value); }
+    preview(panel);
+  });
+  main.addEventListener('change',function(e){ var c=e.target; if(c.dataset && c.dataset.narrowCat!==undefined){ var p=c.closest('.narrow'); var all=p.querySelectorAll('[data-narrow-cat]'), n=p.querySelectorAll('[data-narrow-cat]:checked').length; if(n===all.length){ c.checked=false; CP.toast('至少保留 1 个类目；全部去掉请直接撤销'); } preview(p); } });
+  main.addEventListener('click',function(e){
+    var b=e.target.closest('[data-narrow-seg] button'); if(!b) return;
+    var seg=b.parentElement; if(+b.dataset.val>+seg.dataset.cur){ CP.toast('只能往更严的方向：每日上限只能减少'); return; }
+    seg.querySelectorAll('button').forEach(function(x){ x.setAttribute('aria-pressed',x===b); });
+    var o=seg.closest('.nrow').querySelector('[data-out-daily]'); if(o) o.textContent='≤ '+b.dataset.val+' 次/日';
+    preview(seg.closest('.narrow'));
+  });
+
+  // 提交收窄：更新卡片上的包络
+  main.addEventListener('click',function(e){
+    var s=e.target.closest('[data-narrow-submit]'); if(!s) return;
+    var panel=document.getElementById(s.dataset.narrowSubmit), card=document.getElementById(panel.dataset.card);
+    if(!preview(panel)){ CP.toast('没有改动：只能往更严的方向收窄'); return; }
+    function q(n){ return card.querySelector('[data-v="'+n+'"]'); }
+    function inp(n){ return panel.querySelector('[data-narrow='+n+']'); }
+    var m=inp('margin'); if(m){ var mp=m.value*2; q('margin-mk').style.left=mp+'%'; q('margin-rng').style.left=mp+'%'; q('margin-rng').style.width=(100-mp)+'%'; q('margin-lbl').textContent='下限 '+m.value+'%'; q('margin').innerHTML='≥ '+m.value+'% <small>已收窄</small>'; }
+    var lo=inp('pmin'), hi=inp('pmax'); if(lo){ q('price').textContent=yen(lo.value)+' – '+yen(hi.value); q('price-rng').style.left=(lo.value/40)+'%'; q('price-rng').style.width=((hi.value-lo.value)/40)+'%'; }
+    var seg=panel.querySelector('[data-narrow-seg]'); if(seg){ var d=seg.querySelector('[aria-pressed=true]').dataset.val; q('daily').textContent=d; if(q('daily2')) q('daily2').textContent=d; seg.dataset.cur=d;
+      seg.querySelectorAll('button').forEach(function(x){ x.disabled=+x.dataset.val>+d; x.textContent=x.dataset.val+(x.dataset.val===d?'（当前）':''); }); }
+    var t=inp('total'); if(t && q('total-ring')){ var used=2, el=q('total-ring'); el.dataset.mounted=''; el.dataset.cfg=JSON.stringify({pct:used/t.value*100,size:64,stroke:8,label:used+'/'+t.value,fs:14,color:'primary'}); CP.hydrate(card); q('total-left').textContent=t.value-used; }
+    var x=inp('exp'); if(x){ q('exp').textContent=x.value; q('exp-end').textContent=x.value.slice(5); q('days').textContent=dayDiff('2026-10-20',x.value); }
+    var sp=inp('samp'); if(sp && q('samp')) q('samp').textContent=sp.value;
+    // 新值成为新的“当前值”，之后只能更严
+    panel.querySelectorAll('[data-narrow]').forEach(function(i){ i.dataset.cur=i.value; if(i.type==='range'){ if(i.dataset.dir==='up') i.min=i.value; else i.max=i.value; } else if(i.type==='date'){ i.max=i.value; } });
+    panel.querySelectorAll('[data-narrow-cat]:checked').forEach(function(c){ c.disabled=true; c.closest('label').style.textDecoration='line-through'; });
+    panel.querySelector('[data-preview]').textContent='已收窄并立即生效。新的值就是之后能收窄的起点。';
+  });
+
+  // 撤销：一键、立即、无理由
+  main.addEventListener('click',function(e){
+    var r=e.target.closest('[data-revoke]'); if(!r) return;
+    var card=document.getElementById(r.dataset.revoke); if(!card) return;
+    var st=card.querySelector('[data-v=status]'); var wasActive=st && st.textContent==='生效中';
+    if(card.classList.contains('pend')){ card.style.opacity='.5'; card.querySelector('.meter').classList.remove('wait'); card.querySelector('.meter i').style.background='var(--text-3)'; card.querySelector('.nowrap').textContent='已撤销 · 不会生效'; r.disabled=true; return; }
+    card.classList.add('revoked'); if(st){ st.className='badge'; st.textContent='已撤销'; }
+    card.querySelectorAll('.gh .tools button').forEach(function(b){ b.disabled=true; });
+    var n=card.querySelector('.narrow'); if(n) n.hidden=true;
+    if(wasActive){ var c=document.querySelector('[data-v=active-count]'); if(c) c.textContent=Math.max(0,+c.textContent-1); }
+  });
+})();
+</script>
+</body>
+</html>

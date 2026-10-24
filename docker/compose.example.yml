@@ -1,0 +1,41 @@
+# 开发环境的起点(docs/运营规则.md 11 章)。复制成 docker/compose.yml 后填写:应用的镜像或构建、数据库的镜像、测试用数据库。
+# 开发电脑、预发布、正式环境用同一套镜像(预发布和正式环境有自己的 compose 文件和设置文件,不用这里的默认值)。
+#
+#   python scripts/dev/setup_env.py                                   # docker/.env(随机密钥,不显示)
+#   docker compose -f docker/compose.yml --env-file docker/.env up -d
+#   一次性环境(截证据用),和自己的环境并存(另一个项目名、另一个端口;shell 的变量优先于 --env-file):
+#   APP_PORT=8081 docker compose -p sample-try1 -f docker/compose.yml --env-file docker/.env up -d
+#
+# 端口来自设置文件(APP_PORT),只绑定 127.0.0.1。数据库不暴露到电脑上。
+services:
+  db:
+    image: postgres:16                     # 示例:换成项目的数据库镜像(固定版本)
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      interval: 10s
+      retries: 10
+
+  app:
+    build:
+      context: ..                          # 示例:项目的 Dockerfile
+      dockerfile: docker/app.Dockerfile
+    environment:                           # 来自 --env-file 指定的设置文件(一次性环境用它自己的值)
+      DB_HOST: db
+      DB_NAME: ${DB_NAME}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      APP_SECRET_KEY: ${APP_SECRET_KEY}
+    ports:
+      - "127.0.0.1:${APP_PORT}:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  db-data:

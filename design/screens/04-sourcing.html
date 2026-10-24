@@ -1,0 +1,391 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>货源 · CrossPilot</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="assets/cp2.css">
+<style>
+  [hidden]{display:none!important}
+  .cnts{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+  #need{font-size:14px;color:var(--block);max-width:240px;text-align:right;line-height:1.45}
+  .kb{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+  .col{background:var(--surface-2);border-radius:14px;padding:10px;min-width:0}
+  .col h3{font-size:14px;font-weight:600;color:var(--text-2);margin:2px 4px 10px;display:flex;align-items:center;gap:6px}
+  .col h3 .n{margin-left:auto;font:600 13px var(--font-mono);background:var(--surface);border-radius:999px;padding:1px 8px;color:var(--text-2)}
+  .col h3 i{width:8px;height:8px;border-radius:50%;display:inline-block}
+  .kc{display:grid;grid-template-columns:30px minmax(0,1fr) 36px;gap:7px;align-items:center;background:var(--surface);border-radius:11px;padding:8px;box-shadow:var(--shadow-1);margin-bottom:8px;cursor:pointer;width:100%;border:0;text-align:left;transition:box-shadow .12s}
+  .kc:hover{box-shadow:var(--shadow-2)}
+  .kc[aria-current=true]{box-shadow:0 0 0 2px var(--primary),var(--shadow-2)}
+  .kc .thumb{width:30px;height:30px;border-radius:8px}
+  .kc > span:nth-child(2){min-width:0;display:block}
+  .kc .t{display:block;font-size:14px;font-weight:600;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .kc .m{display:block;font-size:13px;line-height:1.35;color:var(--text-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .kc .m.w{color:var(--wait)} .kc .m.b{color:var(--block)} .kc .m.o{color:var(--ok)}
+  .kc .m.a{color:var(--info);white-space:normal} .kc .m.a.done{color:var(--ok)}
+  .kc{grid-template-rows:auto}
+  .imp-s{margin-bottom:16px}
+  .imp-s .ib{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:12px;align-items:center}
+  .imp-s h2{font-size:16px} .imp-s p{margin:2px 0 0;font-size:14px;color:var(--text-3);line-height:1.5}
+  .imp-s .ilog{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:10px;padding:8px 12px;border-radius:10px;background:var(--surface-2);font-size:14px}
+  .autob{display:flex;align-items:center;gap:6px;margin-top:4px;font-size:12.5px;color:var(--info)}
+  .autob .grade{width:20px;height:20px;font-size:12px}
+  .autob.done{color:var(--ok)}
+  .input.auto{background:var(--info-bg)}
+  .autobar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:var(--info-bg);color:var(--info);border-radius:10px;padding:8px 12px;margin-bottom:12px;font-size:14px}
+  .autobar .tx{flex:1 1 180px;min-width:0;line-height:1.5}
+  .autobar .grade,.autob .grade{flex:none}
+  .autobar.done{background:var(--ok-bg);color:var(--ok)}
+  .kc.dup{opacity:.7} .kc.dup .thumb{filter:grayscale(1)}
+  .shead{display:flex;align-items:center;gap:14px;margin:22px 0 14px}
+  .shead h2{font-size:20px}
+  .two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;align-items:start}
+  .fg{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 12px}
+  .fg .full{grid-column:1/-1}
+  .field .input,.field .select{width:100%}
+  .input.miss{border-color:var(--wait-solid);background:var(--wait-bg)}
+  .field .hint.miss{color:var(--wait);font-weight:500}
+  .unit{position:relative} .unit .input{padding-right:40px} .unit span{position:absolute;right:10px;top:7px;font-size:14px;color:var(--text-3)}
+  .tbar{position:relative;height:30px;margin:26px 0 22px}
+  .tbar .trk{position:absolute;inset:8px 0;border-radius:6px;background:var(--surface-3);overflow:hidden;display:flex;gap:2px}
+  .tbar .seg1{background:var(--primary);height:100%} .tbar .seg2{background:color-mix(in srgb,var(--primary) 45%,var(--surface));height:100%}
+  .tbar.bad .seg1{background:var(--block)} .tbar.bad .seg2{background:color-mix(in srgb,var(--block) 45%,var(--surface))}
+  .tbar .buf{position:absolute;top:4px;bottom:4px;background:repeating-linear-gradient(135deg,transparent 0 4px,color-mix(in srgb,var(--wait-solid) 45%,transparent) 4px 6px);border-radius:4px}
+  .tbar .lim{position:absolute;top:-4px;bottom:-4px;width:2px;background:var(--text)}
+  .tbar .lim b{position:absolute;bottom:100%;left:50%;transform:translateX(-50%);white-space:nowrap;font-size:13px;font-weight:600;margin-bottom:2px}
+  .tbar .ax{position:absolute;top:100%;font-size:12px;color:var(--text-3);transform:translateX(-50%);margin-top:3px}
+  .tleg{display:flex;gap:12px;flex-wrap:wrap;font-size:13px;color:var(--text-3)}
+  .tleg i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:4px;vertical-align:-1px}
+  .cmpg{display:grid;grid-template-columns:1fr 24px 1fr;gap:6px;align-items:center}
+  .cmpg .box{background:var(--surface-2);border-radius:12px;padding:10px 12px}
+  .cmpg .box small{display:block;font-size:13px;color:var(--text-3)}
+  .cmpg .box b{font-size:20px;font-weight:600}
+  .cmpg .box.hl{background:var(--primary-bg)} .cmpg .box.hl b{color:var(--primary-strong)}
+  .rng{position:relative;height:40px;margin:10px 0 18px}
+  .rng .trk{position:absolute;left:0;right:0;top:16px;height:8px;border-radius:4px;background:var(--surface-3)}
+  .rng .band{position:absolute;top:12px;height:16px;border-radius:6px;background:color-mix(in srgb,var(--primary) 28%,var(--surface))}
+  .rng .pt{position:absolute;top:10px;width:20px;height:20px;border-radius:50%;background:var(--primary);border:3px solid var(--surface);box-shadow:var(--shadow-1);transform:translateX(-50%)}
+  .rng .fl{position:absolute;top:6px;height:28px;width:0;border-left:2px dashed var(--block)}
+  .rng .lb{position:absolute;font-size:13px;white-space:nowrap;transform:translateX(-50%)}
+  .rng .lb.t{top:-8px} .rng .lb.b{top:34px;color:var(--text-3)}
+  .lics{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+  .lic{background:var(--surface-2);border-radius:12px;padding:8px;display:grid;gap:6px;align-content:start}
+  .lic .ph{border-radius:9px;aspect-ratio:4/3}
+  .lic .ph svg{transition:transform .2s}
+  .lic .ph.v2 svg{transform:scale(1.45) translate(6%,4%)} .lic .ph.v3 svg{transform:rotate(-9deg) scale(1.1)} .lic .ph.v4 svg{transform:scale(.8)}
+  .lic .ph .l{font:600 12px var(--font-mono);background:var(--surface);border-radius:5px;padding:2px 5px}
+  .lic.none .ph{outline:2px solid var(--block);outline-offset:-2px}
+  .lic.none .ph::after{content:"仅内部比对";position:absolute;inset:auto 0 0 0;background:var(--block-bg);color:var(--block);font-size:13px;font-weight:600;text-align:center;padding:2px 0}
+  .lic .select{height:30px;font-size:14px;width:100%}
+  .lic .ev{font-size:13px;display:flex;align-items:center;gap:6px;line-height:1.35}
+  .lic .ev .btn{height:22px;padding:0 7px;font-size:13px;margin-left:auto}
+  .fm{display:grid;gap:2px}
+  .fr{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center;padding:6px 8px;border-radius:9px}
+  .fr.unans{background:var(--wait-bg)} .fr.hit{background:var(--block-bg)}
+  .fr .k{font-size:15px;font-weight:500}
+  .fr .k small{display:block;font-size:13px;color:var(--text-3);font-weight:400;line-height:1.3}
+  .fr.unans .k small{color:var(--wait)} .fr.hit .k small{color:var(--block)}
+  .fr .seg button{height:24px;padding:0 12px;font-size:14px}
+  .fr .seg button[data-v=y][aria-pressed=true]{background:var(--block);color:#fff}
+  .fr .seg button[data-v=y].allow[aria-pressed=true]{background:var(--wait-solid);color:#2B1D00}
+  .ckl label{display:flex;gap:10px;align-items:center;padding:7px 4px;border-top:1px solid var(--border);font-size:15px;cursor:pointer}
+  .ckl label:first-child{border-top:0}
+  .ckl input{width:16px;height:16px;accent-color:var(--primary)}
+  .ckl label small{margin-left:auto;font-size:13px;color:var(--text-3)}
+  .needlist{display:flex;flex-wrap:wrap;gap:6px}
+  .stepv{list-style:none;margin:0;padding:0}
+  .stepv li{display:grid;grid-template-columns:22px minmax(0,1fr);gap:10px;padding:0 0 14px;position:relative}
+  .stepv li::before{content:"";position:absolute;left:10px;top:22px;bottom:2px;width:2px;background:var(--border)}
+  .stepv li:last-child::before{display:none}
+  .stepv .ic{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font-size:13px;font-weight:600;background:var(--surface-3);color:var(--text-3)}
+  .stepv .ic.ok{background:var(--ok-bg);color:var(--ok)} .stepv .ic.w{background:var(--wait-bg);color:var(--wait)} .stepv .ic.b{background:var(--block-bg);color:var(--block)}
+  .stepv b{font-size:15px;font-weight:600;display:block;line-height:1.4} .stepv span.s{font-size:14px;color:var(--text-3)}
+  @media (max-width:1400px){.two{grid-template-columns:1fr}.kb{grid-template-columns:repeat(2,minmax(0,1fr))}}
+</style>
+</head>
+<body data-page="sourcing" data-crumb="流水线 / 货源">
+<template id="main-tpl">
+  <div class="page-head">
+    <div>
+      <span class="eyebrow">Pipeline · 采集箱</span>
+      <h1>货源</h1>
+      <p>贴链接、填字段、定授权与属性；确认后素材自动开始生成。系统不抓取货源页面，缺什么就写缺什么。</p>
+      <div class="cnts"><span class="badge">待录入 2</span><span class="badge wait">待确认 2</span><span class="badge ok">已确认 4</span><span class="badge">重复 1</span></div>
+    </div>
+    <div class="actions">
+      <span id="need" aria-live="polite"></span>
+      <button class="help" data-toast="操作手册：货源页（演示）" aria-label="帮助">?</button>
+      <button class="btn primary lg" id="confirm" data-toast="货源已确认（SOURCED），素材开始生成（演示）">保存并确认货源</button>
+    </div>
+  </div>
+
+  <section class="card imp-s" aria-labelledby="h-imp">
+    <div class="ib"><span class="tag">导入</span><div><h2 id="h-imp">授权采集工具导入</h2><p>把已授权的 ERP 采集箱导出的文件传进来，系统解析为预采数据（参考价、重量、尺寸），你只需确认。不抓取任何页面。</p></div>
+      <button class="btn" data-toast="选择 ERP 采集箱导出文件（.xlsx / .csv），系统解析为预采数据；不抓取任何页面（演示）">从授权采集工具导入</button></div>
+    <div class="ilog"><span class="badge ok">最近导入</span><span class="mono">2026-10-20 09:12</span><span>采集箱导出 · 2 行 → 自动带入 2 个货源</span><span class="grade B" data-tip="来源等级 B：已授权的第三方工具">B</span><span class="faint right">缺的列照实写缺，不补默认值</span></div>
+  </section>
+
+  <section class="card" aria-labelledby="h-kb">
+    <div class="card-head"><h2 id="h-kb">采集箱</h2><span class="meta">点卡片切换下方货源详情 · 小环 = 完成度</span><div class="tools"><button class="btn sm" data-toast="粘贴货源链接后手动填写字段（演示）">新增货源</button></div></div>
+    <div class="kb" id="kb">
+      <div class="col"><h3><i style="background:var(--text-3)"></i>待录入<span class="n">2</span></h3>
+        <button class="kc" data-src="6"><span class="thumb" data-art="rack"></span><span><span class="t" lang="ja">キッチン水切りラック</span><span class="m w">请补：货源链接</span></span><span class="chart rg" data-chart="ring" data-cfg='{"pct":5,"size":36,"stroke":4,"label":"5","fs":10,"color":"wait"}'></span></button>
+        <button class="kc" data-src="8"><span class="thumb" data-art="hooks"></span><span><span class="t" lang="ja">マグネットフック6個入</span><span class="m w">请补：货源链接</span></span><span class="chart rg" data-chart="ring" data-cfg='{"pct":5,"size":36,"stroke":4,"label":"5","fs":10,"color":"wait"}'></span></button>
+      </div>
+      <div class="col"><h3><i style="background:var(--wait-solid)"></i>待确认<span class="n">2</span></h3>
+        <button class="kc" data-src="5" aria-current="true"><span class="thumb" data-art="cup"></span><span><span class="t" lang="ja">折りたたみシリコンカップ</span><span class="m w">缺重量</span><span class="m a">已自动带入 · 待确认</span></span><span class="chart rg" data-chart="ring" data-cfg='{"pct":71,"size":36,"stroke":4,"label":"71","fs":10,"color":"wait"}'></span></button>
+        <button class="kc" data-src="7"><span class="thumb" data-art="divider"></span><span><span class="t" lang="ja">引き出し仕切り板</span><span class="m b">时效超限</span><span class="m a">已自动带入 · 待确认</span></span><span class="chart rg" data-chart="ring" data-cfg='{"pct":62,"size":36,"stroke":4,"label":"62","fs":10,"color":"block"}'></span></button>
+      </div>
+      <div class="col"><h3><i style="background:var(--ok)"></i>已确认<span class="n">4</span></h3>
+        <button class="kc" data-src="1"><span class="thumb" data-art="box"></span><span><span class="t" lang="ja">折叠収納ボックス3個セット</span><span class="m o">10-18 确认 · 已上架</span></span><span class="chart rg" data-chart="ring" data-cfg='{"pct":100,"size":36,"stroke":4,"label":"✓","fs":11,"color":"ok"}'></span></button>
+        <button class="kc" data-src="2"><span class="thumb" data-art="spoons"></span><span><span class="t" lang="ja">シリコン調理スプーン5点セット</span><span class="m o">10-19 确认 · 素材完成</span></span><span class="chart rg" data-chart="ring" data-cfg='{"pct":100,"size":36,"stroke":4,"label":"✓","fs":11,"color":"ok"}'></span></button>
+        <button class="kc" data-src="3"><span class="thumb" data-art="cable"></span><span><span class="t" lang="ja">デスクケーブルオーガナイザー</span><span class="m o">10-19 确认 · 素材完成</span></span><span class="chart rg" data-chart="ring" data-cfg='{"pct":100,"size":36,"stroke":4,"label":"✓","fs":11,"color":"ok"}'></span></button>
+        <button class="kc" data-src="4"><span class="thumb" data-art="brush"></span><span><span class="t" lang="ja">ペット用ブラシ 抜け毛クリーナー</span><span class="m o">10-19 确认 · 素材完成</span></span><span class="chart rg" data-chart="ring" data-cfg='{"pct":100,"size":36,"stroke":4,"label":"✓","fs":11,"color":"ok"}'></span></button>
+      </div>
+      <div class="col"><h3><i style="background:var(--border-strong)"></i>重复<span class="n">1</span></h3>
+        <button class="kc dup" data-toast="与 SKU-0002 同源，已合并到「シリコン調理スプーン5点セット」（演示）"><span class="thumb" data-art="spoons"></span><span><span class="t" lang="ja">シリコン調理スプーン 5本</span><span class="m">与 <span class="mono" style="font-size:13px">SKU-0002</span> 同源，已合并</span></span><span></span></button>
+        <p class="small faint" style="margin:4px 4px 0">同源判定：同一供应商、同款图与规格。重复项不进入素材。</p>
+      </div>
+    </div>
+  </section>
+
+  <div id="src"></div>
+</template>
+
+<template id="detail-tpl">
+  <div id="aside"></div>
+</template>
+
+<script src="assets/art.js"></script>
+<script src="assets/charts.js"></script>
+<script src="assets/cp2.js"></script>
+<script>
+(function(){
+  var $=function(s,r){return (r||document).querySelector(s);};
+  var FX=20.8, DISPATCH=4, BUF=1;
+  var LT=[['','请选择授权类型'],['own_shot','自有拍摄 own_shot'],['supplier_license','供应商授权 supplier_license'],['brand_owner','品牌方授权 brand_owner'],['ai_from_own_photo','自有底图 AI 加工 ai_from_own_photo'],['none','无授权 none']];
+  var FL=[['bat','电池','has_battery'],['rad','无线 / 蓝牙','has_radio'],['food','食品接触','food_contact · 白名单条目允许，需检测报告'],['kid','儿童用品 / 玩具','child_product_or_toy'],['mag','强磁','strong_magnet'],['blade','刃物 / 尖锐','blade_or_sharp'],['carrier','承运商禁运','液体/粉末/喷雾/带磁 · 承运商清单']];
+  var CK=[['有货','供应商确认现货'],['起订量可接受','MOQ × 采购价 = 首批资金'],['发货时效已确认','供应商 + 集货 ≤ 店铺发货天数 − 缓冲'],['授权已确认','图片与品牌授权证据齐'],['质量风险已自检','材质 / 异味 / 做工']];
+  function base(o){ return Object.assign({st:'wait',url:'',title:'',spec:'',cny:'',tier:'',moq:'',wt:'',vol:'',from:'',ship:'',cons:'',brand:'',hs:'',pre:null,ref:null,c:{c2:62,c6:30,c7:22,c10:55},imgs:[{lt:''},{lt:''}],flags:{},ck:[0,0,0,0,0],brandHit:null,brandOk:false,dup:null},o); }
+  var full={url:'detail.1688.com/offer/DEMO-0002（演示）',title:'シリコン調理スプーン5点セット 耐熱230℃',spec:'5 件 / 灰色',cny:24,tier:'≥ 300 件：22.00',moq:'50',wt:'420',vol:'320 × 90 × 40',from:'浙江 义乌',ship:2,cons:1,brand:'none',hs:'3924.10 食卓・台所用品（プラスチック）',pre:[31.0,35.5],ref:23,
+    c:{c2:62,c6:30,c7:22,c10:53},imgs:[{lt:'supplier_license',ev:'供应商授权书.pdf',chain:'yes'},{lt:'supplier_license',ev:'供应商授权书.pdf',chain:'yes'},{lt:'own_shot',ev:'样品自拍 4 张'},{lt:'none'}],
+    flags:{bat:'n',rad:'n',food:'y',kid:'n',mag:'n',blade:'n',carrier:'n'},ck:[1,1,1,1,1],dup:'与重复卡 SKU-0002 同源，已合并 1 条'};
+  var P={
+    5:base({art:'cup',ja:'折りたたみシリコンカップ',zh:'折叠硅胶杯',cand:5,price:1480,url:'detail.1688.com/offer/DEMO-0005（演示）',title:'ムーミン柄 折りたたみシリコンカップ 350ml アウトドア',spec:'350ml / 绿色',cny:18,tier:'≥ 200 件：16.50',moq:'100',wt:'',vol:'95 × 95 × 30（折叠）',from:'广东 东莞',ship:2,cons:1,brand:'none',hs:'3924.10 食卓・台所用品（プラスチック）',pre:[26.5,30.2],ref:18,
+      c:{c2:62,c6:30,c7:20,c10:62},imgs:[{lt:'supplier_license',ev:'供应商授权书.pdf',chain:'yes'},{lt:'none'},{lt:'own_shot',ev:'样品自拍 3 张'},{lt:''}],
+      flags:{bat:'n',rad:'n',food:'y',kid:'n',mag:'n',blade:'n'},ck:[1,1,1,0,0],brandHit:'ムーミン',auto:{cny:1,vol:1},autoMiss:'重量'}),
+    2:base(Object.assign({art:'spoons',ja:'シリコン調理スプーン5点セット',zh:'硅胶厨具五件套',cand:2,price:1980,st:"ok",stamp:"2026-10-19 16:20 确认"},JSON.parse(JSON.stringify(full)))),
+    1:base(Object.assign(JSON.parse(JSON.stringify(full)),{art:'box',ja:'折叠収納ボックス3個セット',zh:'折叠收纳箱三件套',cand:1,price:2480,st:'ok',stamp:'2026-10-18 确认',title:'折叠収納ボックス 3個セット 不織布',spec:'3 件 / 灰色',cny:32,wt:'760',vol:'330 × 260 × 60（折叠）',ref:31,pre:[29.4,33.6],c:{c2:62,c6:30,c7:25,c10:70},flags:{bat:'n',rad:'n',food:'n',kid:'n',mag:'n',blade:'n',carrier:'n'},dup:null})),
+    3:base(Object.assign(JSON.parse(JSON.stringify(full)),{art:'cable',ja:'デスクケーブルオーガナイザー',zh:'桌面理线器',cand:3,price:1680,st:'ok',stamp:'2026-10-19 确认',title:'デスクケーブルオーガナイザー 5連',spec:'5 孔 / 白色',cny:15,wt:'180',vol:'120 × 40 × 30',ref:15,pre:[27.6,31.9],c:{c2:62,c6:30,c7:20,c10:48},flags:{bat:'n',rad:'n',food:'n',kid:'n',mag:'n',blade:'n',carrier:'n'},brandHit:'疑似品牌款',brandOk:true,dup:null})),
+    4:base(Object.assign(JSON.parse(JSON.stringify(full)),{art:'brush',ja:'ペット用ブラシ 抜け毛クリーナー',zh:'宠物梳毛粘毛器',cand:4,price:1880,st:'ok',stamp:'2026-10-19 确认',title:'ペット用ブラシ 抜け毛クリーナー 粘着ローラー',spec:'M 号 / 灰色',cny:22,wt:'260',vol:'150 × 90 × 60',ref:21,pre:[30.8,34.9],c:{c2:62,c6:30,c7:22,c10:52},flags:{bat:'n',rad:'n',food:'n',kid:'n',mag:'n',blade:'n',carrier:'n'},dup:null})),
+    7:base({art:'divider',ja:'引き出し仕切り板',zh:'抽屉分隔板',cand:7,price:1580,url:'detail.1688.com/offer/DEMO-0007（演示）',title:'引き出し仕切り板 伸縮 4枚',spec:'4 片 / 白色',cny:17,moq:'200',wt:'240',vol:'400 × 80 × 10',from:'浙江 台州',ship:4,cons:1,brand:'none',hs:'3924.90',pre:[28.0,32.1],ref:16,c:{c2:62,c6:30,c7:20,c10:46},
+      imgs:[{lt:'supplier_license',ev:'',chain:''},{lt:'own_shot',ev:'样品自拍 2 张'}],flags:{bat:'n',rad:'n',food:'n',kid:'n',mag:'n',blade:'n',carrier:'n'},ck:[1,1,0,0,1],auto:{cny:1,wt:1,vol:1}}),
+    6:base({art:'rack',ja:'キッチン水切りラック',zh:'厨房沥水架',cand:6,price:2780,st:'new'}),
+    8:base({art:'hooks',ja:'マグネットフック6個入',zh:'磁吸挂钩6个装',cand:8,price:1180,st:'new'})
+  };
+  var cur=5;
+  function yen(n){ return '¥'+Number(n).toLocaleString('ja-JP'); }
+  function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;'); }
+  function c3(w){ w=+w; if(!w) return null; return w<=200?300:w<=300?340:w<=500?380:w<=800?520:680; }
+  function calc(p){
+    var cny=parseFloat(p.cny), c1=isNaN(cny)?null:Math.round(cny*FX), k3=c3(p.wt);
+    if(c1===null||k3===null) return {c1:c1,c3:k3,m:null};
+    var cost=c1+p.c.c2+k3+p.c.c6+p.c.c7+Math.round(p.price*.1)+Math.round(p.price*.03)+p.c.c10;
+    return {c1:c1,c3:k3,profit:p.price-cost,m:(p.price-cost)/p.price*100};
+  }
+  /* ---------- 校验：返回 缺项 / 阻断 ---------- */
+  function validate(p){
+    var miss=[], block=[], total=0, ok=0;
+    function req(cond,label){ total++; if(cond) ok++; else miss.push(label); }
+    req(String(p.url).trim(),'货源链接'); req(String(p.moq).trim(),'起订量'); req(String(p.wt).trim(),'重量');
+    var t=(+p.ship||0)+(+p.cons||0), tOk=String(p.ship)!==''&&String(p.cons)!=='';
+    total++; if(!tOk) miss.push('发货与集货时效'); else if(t>DISPATCH-BUF) block.push('时效超限（'+t+' 天 > '+(DISPATCH-BUF)+' 天）'); else ok++;
+    var usable=0;
+    p.imgs.forEach(function(im,i){ total++;
+      if(!im.lt) miss.push('图 '+(i+1)+' 授权类型');
+      else if(im.lt!=='none'&&!im.ev) miss.push('图 '+(i+1)+' 授权证据');
+      else if(im.lt==='supplier_license'&&!im.chain) miss.push('图 '+(i+1)+' 授权链声明');
+      else ok++;
+      if(im.lt&&im.lt!=='none') usable++; });
+    if(!usable) block.push('没有可进入素材的图');
+    var un=0; FL.forEach(function(f){ total++; var v=p.flags[f[0]]; if(!v) un++; else { ok++; if(v==='y'&&f[0]!=='food') block.push('命中不可售属性：'+f[1]); } });
+    if(un) miss.push('属性旗标 '+un+' 项');
+    var nck=p.ck.filter(Boolean).length; total+=5; ok+=nck; if(nck<5) miss.push('确认清单 '+(5-nck)+' 项');
+    if(p.auto){ total++; if(p.autoOk) ok++; else miss.push('确认自动带入值'); }
+    if(p.brandHit){ total++; if(p.brandOk) ok++; else miss.push('品牌/IP 人工确认'); }
+    return {miss:miss,block:block,pct:Math.round(ok/total*100),t:t,tOk:tOk};
+  }
+  /* ---------- 渲染 ---------- */
+  function fld(k,label,val,o){ o=o||{};
+    var m=o.req&&!String(val).trim();
+    return '<div class="field'+(o.full?' full':'')+'"><label for="f-'+k+'"'+(o.req?' class="req"':'')+'>'+label+'</label>'
+      +(o.unit?'<div class="unit">':'')+'<input class="input'+(m?' miss':'')+'" id="f-'+k+'" data-k="'+k+'" value="'+esc(val)+'"'+(o.ja?' lang="ja"':'')+(m?' placeholder="请补"':'')+'>'+(o.unit?'<span>'+o.unit+'</span></div>':'')
+      +(o.hint?'<span class="hint" id="h-'+k+'">'+o.hint+'</span>':'')
+      +(o.auto?'<span class="autob'+(o.autoOk?' done':'')+'"><span class="grade B">B</span>来源：采集工具导出 · 2026-10-20 09:12'+(o.autoOk?' · 已确认':'')+'</span>':'')+'</div>';
+  }
+  function render(id){
+    cur=id; var p=P[id], A=function(k){ return p.auto&&p.auto[k]?{auto:1,autoOk:p.autoOk}:{}; };
+    document.querySelectorAll('.kc[data-src]').forEach(function(b){ b.setAttribute('aria-current', b.dataset.src==id); b.title=b.querySelector('.t').textContent; });
+    var stB=p.st==='ok'?'<span class="badge ok">已确认 · '+(p.stamp||'')+'</span>':p.st==='new'?'<span class="badge">待录入</span>':'<span class="badge wait">待确认</span>';
+    var h='';
+    h+='<div class="shead"><span class="thumb lg" data-art="'+p.art+'"></span><div><h2 lang="ja">'+p.ja+'</h2><div class="small muted">'+p.zh+' · 来自候选 #'+p.cand+' · 售价 '+yen(p.price)+'（税込）· 方向 v6</div></div><div class="right">'+stB+'</div></div>';
+    h+='<div class="alert wait" id="needbar" style="margin-bottom:16px"><span><b id="needt"></b><div class="needlist" id="needl" style="margin-top:6px"></div></span></div>';
+    h+='<div class="two"><div class="stack">';
+    /* 表单 */
+    h+='<section class="card"><div class="card-head"><h2>货源字段</h2><span class="meta">系统不抓取页面，字段由你填写或从采集工具导出带入</span></div>'
+      +(p.auto?'<div class="autobar'+(p.autoOk?' done':'')+'" id="autobar"><span class="grade B">B</span><span class="tx">'+(p.autoOk?'带入值已确认（'+Object.keys(p.auto).length+' 项）':Object.keys(p.auto).length+' 项由采集工具导出自动带入'+(p.autoMiss?'；导出文件缺「'+p.autoMiss+'」，请补':'')+'，确认后才算数')+'</span>'+(p.autoOk?'':'<button class="btn sm right" id="autook" data-toast="已确认自动带入值（演示）">确认带入值</button>')+'</div>':'')
+      +'<div class="fg">'
+      +fld('url','货源链接',p.url,{req:1,full:1,hint:'链接为空不能确认：来源必须可追溯'})
+      +fld('title','标题（供应商原文）',p.title,{full:1,ja:1})
+      +fld('spec','规格',p.spec)+fld('cny','采购价',p.cny,Object.assign({unit:'CNY'},A('cny')))
+      +fld('tier','阶梯价',p.tier)+fld('moq','起订量',p.moq,{req:1,unit:'件'})
+      +fld('wt','重量',p.wt,Object.assign({req:1,unit:'g',hint:'决定 c3 国际运费档位'},A('wt')))+fld('vol','体积',p.vol,Object.assign({unit:'mm'},A('vol')))
+      +fld('from','发货地',p.from)+'<div class="field"><label for="f-brand">品牌 / 授权</label><select class="select" id="f-brand" data-k="brand"><option value="">请选择</option><option value="none"'+(p.brand==='none'?' selected':'')+'>无品牌（白牌）</option><option value="auth"'+(p.brand==='auth'?' selected':'')+'>有品牌 · 有授权（附证据）</option><option value="noauth"'+(p.brand==='noauth'?' selected':'')+'>有品牌 · 无授权</option></select></div>'
+      +fld('hs','HS 分类',p.hs,{full:1,hint:'用于 c4 关税；不作申报依据'})
+      +'</div></section>';
+    /* 时效 */
+    h+='<section class="card"><div class="card-head"><h2>发货时效</h2><span class="meta"><span lang="ja">発送まで</span> 4 営業日 · 缓冲 1</span><div class="tools" id="t-badge"></div></div>'
+      +'<div class="fg">'+fld('ship','供应商发货',p.ship,{unit:'天'})+fld('cons','集货',p.cons,{unit:'天'})+'</div>'
+      +'<div class="tbar" id="tbar"></div><div class="tleg"><span><i style="background:var(--primary)"></i>供应商发货</span><span><i style="background:color-mix(in srgb,var(--primary) 45%,var(--surface))"></i>集货</span><span><i style="background:repeating-linear-gradient(135deg,transparent 0 3px,var(--wait-solid) 3px 5px)"></i>缓冲</span></div>'
+      +'<p class="small faint" style="margin:8px 0 0">规则：供应商发货 + 集货 ≤ 店铺发货天数 − 缓冲；多货源以最慢的为准。超出即 BLOCK。</p></section>';
+    /* 预采 → 确认采 */
+    h+='<section class="card"><div class="card-head"><h2>预采 → 确认采</h2><span class="meta">同意 1 时的估值 vs 现在填的事实</span></div>'
+      +'<div class="cmpg"><div class="box"><small>参考采购价（同意 1）</small><b>'+(p.ref?yen(Math.round(p.ref*FX)):'—')+'</b><small>'+(p.ref?p.ref+' CNY × '+FX:'未估')+'</small></div><div class="faint" style="text-align:center">→</div><div class="box hl" id="cmp-now"></div></div>'
+      +'<div class="row" style="margin-top:16px"><b style="font-size:15px">毛利：区间 → 精确</b><span class="small faint right" id="rng-note"></span></div>'
+      +'<div class="rng" id="rng"></div>'
+      +'<p class="small faint" style="margin:0" id="rng-read"></p></section>';
+    h+='</div><div class="stack">';
+    /* 图片授权 */
+    h+='<section class="card"><div class="card-head"><h2>图片授权</h2><span class="meta">每张必选类型；除 none 外须附证据</span><div class="tools"><button class="btn sm" data-toast="上传图包（演示）">添加图片</button></div></div><div class="lics" id="lics">';
+    p.imgs.forEach(function(im,i){
+      h+='<div class="lic" data-i="'+i+'"><div class="ph v'+(i+1)+'">'+CP.art(p.art)+'<span class="l">图 '+(i+1)+(i===0?' · 主图':'')+'</span></div>'
+        +'<select class="select" data-img="'+i+'" aria-label="图 '+(i+1)+' 授权类型">'+LT.map(function(o){return '<option value="'+o[0]+'"'+(im.lt===o[0]?' selected':'')+'>'+o[1]+'</option>';}).join('')+'</select>'
+        +'<div class="chain"'+(im.lt==='supplier_license'?'':' hidden')+'><select class="select" data-chain="'+i+'" aria-label="图 '+(i+1)+' 授权链声明"><option value="">授权链声明：请选择</option><option value="yes"'+(im.chain==='yes'?' selected':'')+'>授权方是权利人</option><option value="sub"'+(im.chain==='sub'?' selected':'')+'>转授权（附上游授权）</option></select></div>'
+        +'<div class="ev" id="ev-'+i+'"></div></div>';
+    });
+    h+='</div></section>';
+    /* 属性旗标 */
+    h+='<section class="card"><div class="card-head"><h2>属性旗标</h2><span class="meta">七项都要明确回答，缺一不可</span><div class="tools" id="fl-n"></div></div><div class="fm" id="fm">';
+    FL.forEach(function(f){ var v=p.flags[f[0]]||'';
+      h+='<div class="fr" data-f="'+f[0]+'"><div class="k">'+f[1]+'<small>'+f[2]+'</small></div><div class="seg" role="group" aria-label="'+f[1]+'"><button data-v="y"'+(f[0]==='food'?' class="allow"':'')+' aria-pressed="'+(v==='y')+'">有</button><button data-v="n" aria-pressed="'+(v==='n')+'">无</button></div></div>'; });
+    h+='</div></section>';
+    /* 清单 + 初筛 */
+    h+='<section class="card"><div class="card-head"><h2>货源确认清单</h2><span class="meta" id="ck-n"></span></div><div class="meter ok" id="ck-m" style="margin-bottom:8px"><i></i></div><div class="ckl">';
+    CK.forEach(function(c,i){ h+='<label><input type="checkbox" data-ck="'+i+'"'+(p.ck[i]?' checked':'')+'> '+c[0]+'<small>'+c[1]+'</small></label>'; });
+    h+='</div></section>';
+    h+='<section class="card"><div class="card-head"><h2>品牌 / IP 初筛与去重</h2></div>';
+    if(p.brandHit){ h+='<div class="alert wait" style="margin-bottom:10px"><span><b>命中，需人工确认</b><br>供应商标题含「<span lang="ja">'+esc(p.brandHit)+'</span>」。素材里不得出现相关图案或表述。</span></div><label class="chk"><input type="checkbox" id="brandok"'+(p.brandOk?' checked':'')+'> 我已核对：商品与该品牌/IP 无关，或已去掉相关图案与表述</label>'; }
+    else h+='<div class="alert ok"><span><b>未命中</b>　标题与图片文字未发现品牌 / IP 词</span></div>';
+    h+='<div class="divider" style="margin:12px 0"></div><div class="row small">'+(p.dup?'<span class="badge info">去重</span><span>'+p.dup+'</span>':'<span class="badge">去重</span><span class="muted">未发现同源货源</span>')+'</div></section>';
+    h+='</div></div>';
+    var el=$('#src'); el.innerHTML=h; CP.hydrate(el);
+    update();
+  }
+  /* ---------- 局部更新 ---------- */
+  function update(){
+    var p=P[cur], v=validate(p), r=calc(p);
+    /* 缺项 */
+    var nb=$('#needbar'), btn=$('#confirm');
+    var okAll=!v.miss.length&&!v.block.length;
+    nb.className='alert '+(v.block.length?'block':okAll?'ok':'wait');
+    $('#needt').textContent=v.block.length?'不能确认：'+v.block.join('；'):okAll?(p.st==='ok'?'全部条件满足 · 已确认，可重新保存':'全部条件满足，可以确认货源'):'还差 '+v.miss.length+' 项才能确认 · 不猜、不用默认值';
+    $('#needl').innerHTML=v.miss.map(function(m){return '<span class="badge wait">请补：'+m+'</span>';}).join('');
+    btn.disabled=!okAll; btn.classList.toggle('disabled',!okAll);
+    $('#need').textContent=v.block.length?'不能确认：'+v.block[0]:v.miss.length?'请补：'+v.miss.slice(0,3).join('、')+(v.miss.length>3?' 等 '+v.miss.length+' 项':''):'';
+    /* 字段高亮 */
+    ['url','moq','wt'].forEach(function(k){ var i=$('#f-'+k); if(i) i.classList.toggle('miss',!String(p[k]).trim()); });
+    var hw=$('#h-wt'); if(hw){ hw.className='hint'+(String(p.wt).trim()?'':' miss'); hw.textContent=String(p.wt).trim()?('c3 国际运费档位 → '+yen(c3(p.wt))):(p.autoMiss==='重量'?'采集工具导出文件没有重量列，请补（不猜）。缺它 c3 国际运费不可算':'请补：重量（不猜）。缺它 c3 国际运费不可算'); }
+    /* 时效条 */
+    var MAXD=6, pc=function(d){return d/MAXD*100;}, s=+p.ship||0, c=+p.cons||0, bad=v.tOk&&v.t>DISPATCH-BUF;
+    $('#tbar').className='tbar'+(bad?' bad':'');
+    $('#tbar').innerHTML='<div class="buf" style="left:'+pc(DISPATCH-BUF)+'%;width:'+pc(BUF)+'%"></div><div class="trk"><i class="seg1" style="width:'+pc(s)+'%"></i><i class="seg2" style="width:'+pc(c)+'%"></i></div>'
+      +'<div class="lim" style="left:'+pc(DISPATCH)+'%"><b lang="ja">発送まで 4 営業日</b></div>'
+      +[0,1,2,3,4,5,6].map(function(d){return '<span class="ax" style="left:'+pc(d)+'%">'+d+'</span>';}).join('');
+    $('#t-badge').innerHTML=!v.tOk?'<span class="badge wait">请补时效</span>':bad?'<span class="badge block">BLOCK · '+v.t+' 天</span>':'<span class="badge ok">'+v.t+' / '+(DISPATCH-BUF)+' 天</span>';
+    /* 预采对照 */
+    var dv=r.c1!==null&&p.ref?((r.c1-Math.round(p.ref*FX))/Math.round(p.ref*FX)*100):null;
+    $('#cmp-now').innerHTML='<small>确认采购价（现在）</small><b>'+(r.c1===null?'未录入':yen(r.c1))+'</b><small>'+(r.c1===null?'请补采购价':p.cny+' CNY × '+FX+(dv===null?'':' · '+(dv>=0?'+':'')+dv.toFixed(1)+'%'+(Math.abs(dv)>5?'（超 5% 偏离线）':'')))+'</small>';
+    var lo=10, hi=40, X=function(m){return Math.max(0,Math.min(100,(m-lo)/(hi-lo)*100));}, rh='';
+    rh+='<div class="trk"></div>';
+    if(p.pre) rh+='<div class="band" style="left:'+X(p.pre[0])+'%;width:'+(X(p.pre[1])-X(p.pre[0]))+'%" data-tip="预采估值区间 '+p.pre[0]+'%–'+p.pre[1]+'%"></div><span class="lb t" style="left:'+X((p.pre[0]+p.pre[1])/2)+'%;color:var(--primary-strong)">预采 '+p.pre[0]+'–'+p.pre[1]+'%</span>';
+    rh+='<div class="fl" style="left:'+X(12)+'%"></div><span class="lb b" style="left:'+X(12)+'%;color:var(--block)">底线 12%</span>';
+    if(r.m!==null) rh+='<div class="pt" style="left:'+X(r.m)+'%" data-tip="精确毛利 '+r.m.toFixed(1)+'% · 利润 '+yen(r.profit)+'"></div><span class="lb b" style="left:'+X(r.m)+'%;color:var(--text);font-weight:600">精确 '+r.m.toFixed(1)+'%</span>';
+    [10,20,30,40].forEach(function(t){ if(t!==10) rh+=''; });
+    $('#rng').innerHTML=rh;
+    $('#rng-note').innerHTML=r.m===null?'<span class="badge wait">精确毛利不可算</span>':'<span class="badge ok">利润 '+yen(r.profit)+'</span>';
+    $('#rng-read').textContent=r.m===null?('缺'+(r.c1===null?'采购价':'')+(r.c3===null?(r.c1===null?'、':'')+'重量 → c3 国际运费':'')+'，只能显示预采区间；不会用估值代替精确值。'):(p.pre&&(r.m<p.pre[0]||r.m>p.pre[1])?'精确毛利落在预采区间之外，送审同意 2 时会附差异说明。':'精确毛利落在预采区间内。');
+    /* 图片授权 */
+    p.imgs.forEach(function(im,i){
+      var box=document.querySelector('.lic[data-i="'+i+'"]'); if(!box) return;
+      box.classList.toggle('none',im.lt==='none');
+      box.querySelector('.chain').hidden=im.lt!=='supplier_license';
+      var e=$('#ev-'+i), t;
+      if(!im.lt) t='<span class="badge wait">请选择授权类型</span>';
+      else if(im.lt==='none') t='<span style="color:var(--block);font-weight:600">仅内部比对，不会进入素材生成</span>';
+      else if(!im.ev) t='<span class="badge wait">证据未上传</span><button class="btn" data-up="'+i+'">上传</button>';
+      else t='<span class="badge ok">证据</span><span class="faint" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(im.ev)+'</span>';
+      e.innerHTML=t;
+    });
+    /* 旗标 */
+    var un=0;
+    FL.forEach(function(f){ var row=document.querySelector('.fr[data-f="'+f[0]+'"]'); var val=p.flags[f[0]]||'';
+      if(!val) un++;
+      row.classList.toggle('unans',!val); row.classList.toggle('hit',val==='y'&&f[0]!=='food');
+      row.querySelectorAll('button').forEach(function(b){ b.setAttribute('aria-pressed', b.dataset.v===val); });
+      var sm=row.querySelector('small'); sm.textContent=!val?'未回答 · 必须选择':(val==='y'&&f[0]!=='food')?'命中 → 不可售，不能进入素材':(val==='y'?'有 · 厨房小工具白名单允许，检测报告已附':f[2]); });
+    $('#fl-n').innerHTML=un?'<span class="badge wait">'+un+' 项未答</span>':'<span class="badge ok">7 / 7</span>';
+    /* 清单 */
+    var n=p.ck.filter(Boolean).length; $('#ck-n').textContent='已勾 '+n+' / 5'; $('#ck-m').className='meter '+(n===5?'ok':'wait'); $('#ck-m i').style.width=(n/5*100)+'%';
+    /* 卡片环 */
+    var kc=document.querySelector('.kc[data-src="'+cur+'"]');
+    if(kc){ var rg=kc.querySelector('.rg'), col=v.block.length?'block':okAll?'ok':'wait';
+      rg.innerHTML=CP.chart.ring({pct:v.pct,size:36,stroke:4,label:okAll?'✓':String(v.pct),fs:okAll?11:10,color:col});
+      var ma=kc.querySelector('.m.a'); if(ma){ ma.textContent=p.autoOk?'带入值已确认':'已自动带入 · 待确认'; ma.classList.toggle('done',!!p.autoOk); }
+      var m=kc.querySelector('.m'); if(p.st!=='ok'){ m.className='m '+(v.block.length?'b':okAll?'o':'w'); m.textContent=v.block.length?v.block[0].replace(/（.*/,''):okAll?'可以确认':(v.miss[0]==='重量'?'缺重量':'请补：'+v.miss[0]); } }
+    aside(p,v,r);
+  }
+  function aside(p,v,r){
+    var a=$('#aside'); if(!a) return;
+    var okAll=!v.miss.length&&!v.block.length;
+    function st(cls,ic,t,s){ return '<li><span class="ic '+cls+'">'+ic+'</span><div><b>'+t+'</b><span class="s">'+s+'</span></div></li>'; }
+    var imgMiss=v.miss.filter(function(m){return /^图/.test(m);}).length;
+    var flMiss=v.miss.filter(function(m){return /旗标/.test(m);})[0], flHit=v.block.filter(function(m){return /属性/.test(m);})[0];
+    var n=p.ck.filter(Boolean).length;
+    var h='<div class="dhead" style="display:grid;grid-template-columns:96px minmax(0,1fr);gap:14px;align-items:center"><div class="ph" data-art="'+p.art+'" style="border-radius:16px"></div><div><div class="small faint">货源 · 候选 #'+p.cand+'</div><h3 lang="ja" style="font-size:17px;letter-spacing:0;color:var(--text);margin:2px 0 0;line-height:1.4">'+p.ja+'</h3></div></div>'
+      +'<div class="row" style="margin:14px 0 4px;gap:14px"><div class="chart" data-chart="ring" data-cfg=\''+JSON.stringify({pct:v.pct,size:84,stroke:9,label:v.pct+'%',sub:'完成度',fs:17,color:v.block.length?'block':okAll?'ok':'wait'})+'\'></div>'
+      +'<dl class="kv" style="flex:1"><dt>售价</dt><dd>'+yen(p.price)+'</dd><dt>精确毛利</dt><dd>'+(r.m===null?'<span style="color:var(--wait)">不可算</span>':'<b>'+r.m.toFixed(1)+'%</b>')+'</dd><dt>首批资金</dt><dd>'+(r.c1!==null&&String(p.moq).trim()?yen(r.c1*(+p.moq))+'<span class="faint small">（MOQ × c1）</span>':'不可算')+'</dd></dl></div>'
+      +'<h3>采集箱处理</h3><ul class="stepv">'
+      +(p.auto?(p.autoOk?st('ok','✓','采集工具带入',Object.keys(p.auto).length+' 项 · 来源 B · 已确认'):st('w','!','采集工具带入',Object.keys(p.auto).length+' 项 · 来源 B · 待你确认')):'')
+      +st('ok','✓','去重',p.dup||'未发现同源')
+      +(p.brandHit?(p.brandOk?st('ok','✓','品牌 / IP 初筛','命中「'+esc(p.brandHit)+'」· 已人工确认'):st('w','!','品牌 / IP 初筛','命中「'+esc(p.brandHit)+'」· 需人工确认')):st('ok','✓','品牌 / IP 初筛','未命中'))
+      +(flHit?st('b','✗','属性旗标',flHit):flMiss?st('w','!','属性旗标',flMiss.replace('属性旗标 ','')+'未答'):st('ok','✓','属性旗标','7 / 7 已回答'))
+      +(!v.tOk?st('w','!','发货时效','请补'):v.t>DISPATCH-BUF?st('b','✗','发货时效',v.t+' 天，超过 '+(DISPATCH-BUF)+' 天 → BLOCK'):st('ok','✓','发货时效',v.t+' / '+(DISPATCH-BUF)+' 天'))
+      +(imgMiss?st('w','!','图片授权',imgMiss+' 张待补'):st('ok','✓','图片授权',p.imgs.filter(function(i){return i.lt==='none';}).length+' 张 none 仅内部比对'))
+      +(n<5?st('w','!','确认清单',n+' / 5'):st('ok','✓','确认清单','5 / 5'))
+      +(okAll?st('ok','✓','SOURCED','确认后素材自动开始生成'):st('','·','SOURCED','条件满足后可确认'))
+      +'</ul>'
+      +(p.st==='ok'?'<a class="btn sm" href="05-assets.html">去看素材</a>':'<p class="small muted" style="margin:0">确认后进入 <a href="05-assets.html">素材</a>；none 图不会进入生成管线。</p>');
+    a.innerHTML=h; CP.hydrate(a);
+  }
+  /* ---------- 事件 ---------- */
+  document.addEventListener('click',function(e){
+    var k=e.target.closest('.kc[data-src]'); if(k){ render(+k.dataset.src); return; }
+    var fb=e.target.closest('.fr .seg button'); if(fb){ P[cur].flags[fb.closest('.fr').dataset.f]=fb.dataset.v; update(); return; }
+    if(e.target.closest('#autook')){ P[cur].autoOk=true; render(cur); return; }
+    var up=e.target.closest('[data-up]'); if(up){ P[cur].imgs[+up.dataset.up].ev='授权证据.pdf（演示）'; CP.toast('已上传授权证据（演示）'); update(); }
+  });
+  function onField(e){
+    var t=e.target, p=P[cur]; if(!p) return;
+    if(t.dataset.k){ p[t.dataset.k]=t.value; update(); }
+    else if(t.dataset.img){ p.imgs[+t.dataset.img].lt=t.value; update(); }
+    else if(t.dataset.chain){ p.imgs[+t.dataset.chain].chain=t.value; update(); }
+    else if(t.dataset.ck){ p.ck[+t.dataset.ck]=t.checked?1:0; update(); }
+    else if(t.id==='brandok'){ p.brandOk=t.checked; update(); }
+  }
+  document.addEventListener('input',onField); document.addEventListener('change',onField);
+  render(5);
+})();
+</script>
+</body>
+</html>

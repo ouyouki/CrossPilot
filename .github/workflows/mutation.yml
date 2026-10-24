@@ -1,0 +1,33 @@
+# 变异测试(docs/运营规则.md 4.1):每周一次、手动。故意改坏代码,看测试能不能发现,衡量测试是不是真在检查。
+# 命令是 project.toml 的 [checks] mutation(空就跳过)。结果不挡合并;集成 Agent 的 /retro 读最近一次的结果。
+name: Mutation test
+on:
+  schedule:
+    - cron: "0 18 * * 6"        # 周日 03:00 JST
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: mutation
+  cancel-in-progress: true
+jobs:
+  mutation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: 变异测试(project.toml 的 [checks] mutation)
+        run: |
+          python - <<'PY'
+          import subprocess, sys, tomllib
+          cmds = tomllib.load(open("project.toml", "rb"))["checks"].get("mutation", [])
+          if not cmds:
+              print("project.toml 的 [checks] mutation 是空的:跳过")
+          for c in cmds:
+              print("==", c, flush=True)
+              if subprocess.run(["bash", "-c", c]).returncode:
+                  sys.exit(1)
+          PY

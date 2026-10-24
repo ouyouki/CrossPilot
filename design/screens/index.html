@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>CrossPilot 画面原型</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="assets/cp2.css">
+<style>
+/* —— 原型入口专用 —— */
+.idx{max-width:1300px;margin:0 auto;padding:28px 24px 64px}
+.brandline{display:flex;align-items:center;gap:10px;font-weight:600;font-size:17px;margin-bottom:18px}
+.brandline i{width:30px;height:30px;border-radius:9px;background:linear-gradient(145deg,#0B6E73,#16939A);display:grid;place-items:center}
+.brandline i svg{width:17px;height:17px}
+.hero{padding:34px 34px 30px}
+.hero h1{font-size:36px;letter-spacing:-.02em}
+.hero .lead{color:#B9CCCA;font-size:17px;margin:8px 0 6px;max-width:720px}
+.hero .meta{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0 26px}
+.hero .meta span{font-size:14px;padding:4px 10px;border-radius:999px;background:rgba(255,255,255,.08);color:#CFE0DE}
+.hero .route .wp .s{font-size:13px}
+.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px;margin-top:26px}
+.scr{background:var(--surface);border-radius:16px;box-shadow:var(--shadow-1);overflow:hidden;display:flex;flex-direction:column;transition:box-shadow .15s,transform .15s}
+.scr:hover{box-shadow:var(--shadow-2);transform:translateY(-2px)}
+.shot{position:relative;height:252px;overflow:hidden;background:var(--surface-3);border-bottom:1px solid var(--border)}
+.shot iframe{position:absolute;left:0;top:0;width:1440px;height:900px;border:0;transform:scale(.28);transform-origin:0 0;pointer-events:none;background:var(--bg)}
+.shot .no{position:absolute;left:12px;top:12px;z-index:1;font:600 14px var(--font-mono);background:var(--ink);color:#fff;border-radius:7px;padding:3px 8px}
+.shot .grp{position:absolute;right:12px;top:12px;z-index:1}
+.scr .body{padding:16px 18px 18px;display:flex;flex-direction:column;gap:8px;flex:1}
+.scr .body h2{font-size:19px}
+.scr .body p{margin:0;color:var(--text-2);font-size:15px}
+.scr .foot{display:flex;align-items:center;gap:8px;margin-top:auto;padding-top:6px}
+.scr a.open{margin-left:auto;font-weight:600;font-size:15px}
+.howto{grid-column:span 2;display:flex;flex-direction:column}
+.keys{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:6px;flex:1}
+.key{border-radius:12px;padding:12px 14px;background:var(--surface-2);font-size:15px}
+.key b{display:block;margin-bottom:4px}
+.key.wait{background:var(--wait-bg);color:var(--wait)} .key.block{background:var(--block-bg);color:var(--block)} .key.ok{background:var(--ok-bg);color:var(--ok)} .key.pri{background:var(--primary-bg);color:var(--primary-strong)}
+@media (max-width:1100px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}.howto{grid-column:1 / -1}.keys{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:700px){.grid{grid-template-columns:1fr}.keys{grid-template-columns:1fr}.hero .route{flex-wrap:wrap;row-gap:16px}.hero .route .wp{flex:0 0 20%}}
+</style>
+</head>
+<body>
+<div class="idx">
+  <div class="brandline"><i><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l7 17-7-4-7 4z"/></svg></i>CrossPilot</div>
+
+  <section class="dark-panel hero">
+    <div style="position:relative;z-index:1">
+      <span class="eyebrow" style="color:#7FD6D9">PROTOTYPE · 10 SCREENS</span>
+      <h1>CrossPilot 画面原型</h1>
+      <p class="lead">TikTok Shop 日本站的自动运营：Agent 干活，人只做决定；未批准绝不执行。</p>
+      <div class="meta"><span>店铺 JP-01 日本站（跨境直邮）</span><span>用户 林薇 · 单人运行</span><span>演示日 2026-10-20</span><span>演示数据 · 非平台事实</span><span>浅 / 深色自动</span></div>
+      <nav class="route" aria-label="画面顺序">
+        <a class="wp done" href="01-today.html"><span class="node">01</span><b>今日</b><span class="s">起点</span></a>
+        <a class="wp done" href="02-direction.html"><span class="node">02</span><b>方向</b><span class="s">人给方向</span></a>
+        <a class="wp done" href="03-candidates.html"><span class="node">03</span><b>选品</b><span class="s">候选 24</span></a>
+        <a class="wp done" href="04-sourcing.html"><span class="node">04</span><b>货源</b><span class="s">同意 1 之后</span></a>
+        <a class="wp done" href="05-assets.html"><span class="node">05</span><b>素材</b><span class="s">G1–G4</span></a>
+        <a class="wp wait" href="06-approvals.html"><span class="node">06</span><b>待批</b><span class="s">同意 1 · 同意 2</span></a>
+        <a class="wp now" href="07-listing.html"><span class="node">07</span><b>上架</b><span class="s">照清单做</span></a>
+        <a class="wp" href="08-grants.html"><span class="node">08</span><b>授权</b><span class="s">只能收窄</span></a>
+        <a class="wp" href="09-audit.html"><span class="node">09</span><b>审计</b><span class="s">只读</span></a>
+        <a class="wp" href="10-settings.html"><span class="node">10</span><b>设置</b><span class="s">往松 24h</span></a>
+      </nav>
+    </div>
+  </section>
+
+  <div class="grid">
+    <article class="scr">
+      <div class="shot"><span class="no">01</span><iframe src="01-today.html" loading="lazy" tabindex="-1" title="今日 缩略预览" aria-hidden="true"></iframe></div>
+      <div class="body"><h2>今日</h2><p>今天该你做的几件事、流水线走到哪、哪里不对。</p>
+        <div class="foot"><span class="badge primary">主按钮：去处理第一件</span><a class="open" href="01-today.html">打开 →</a></div></div>
+    </article>
+    <article class="scr">
+      <div class="shot"><span class="no">02</span><span class="grp badge">流水线</span><iframe src="02-direction.html" loading="lazy" tabindex="-1" title="方向 缩略预览" aria-hidden="true"></iframe></div>
+      <div class="body"><h2>方向</h2><p>给方向：类目、价格带、毛利底线、数量、避开项、权重。</p>
+        <div class="foot"><span class="badge primary">主按钮：保存方向</span><a class="open" href="02-direction.html">打开 →</a></div></div>
+    </article>
+    <article class="scr">
+      <div class="shot"><span class="no">03</span><span class="grp badge">流水线</span><iframe src="03-candidates.html" loading="lazy" tabindex="-1" title="选品 缩略预览" aria-hidden="true"></iframe></div>
+      <div class="body"><h2>选品</h2><p>候选清单与数据缺口，勾选并发起同意 1。</p>
+        <div class="foot"><span class="badge primary">主按钮：发起同意 1（勾 N 个）</span><a class="open" href="03-candidates.html">打开 →</a></div></div>
+    </article>
+    <article class="scr">
+      <div class="shot"><span class="no">04</span><span class="grp badge">流水线</span><iframe src="04-sourcing.html" loading="lazy" tabindex="-1" title="货源 缩略预览" aria-hidden="true"></iframe></div>
+      <div class="body"><h2>货源</h2><p>录入货源、确认授权与属性，进采集箱。</p>
+        <div class="foot"><span class="badge primary">主按钮：保存并确认货源</span><a class="open" href="04-sourcing.html">打开 →</a></div></div>
+    </article>
+    <article class="scr">
+      <div class="shot"><span class="no">05</span><span class="grp badge">流水线</span><iframe src="05-assets.html" loading="lazy" tabindex="-1" title="素材 缩略预览" aria-hidden="true"></iframe></div>
+      <div class="body"><h2>素材</h2><p>看素材、日文与回译、合规结果，退回或送审。</p>
+        <div class="foot"><span class="badge primary">主按钮：送审同意 2</span><a class="open" href="05-assets.html">打开 →</a></div></div>
+    </article>
+    <article class="scr">
+      <div class="shot"><span class="no">06</span><span class="grp badge wait">治理</span><iframe src="06-approvals.html" loading="lazy" tabindex="-1" title="待批 缩略预览" aria-hidden="true"></iframe></div>
+      <div class="body"><h2>待批</h2><p>统一的审批单：同意 1、同意 2、例外；挂起也在这里。</p>
+        <div class="foot"><span class="badge primary">主按钮：批准</span><a class="open" href="06-approvals.html">打开 →</a></div></div>
+    </article>
+    <article class="scr">
+      <div class="shot"><span class="no">07</span><span class="grp badge">流水线</span><iframe src="07-listing.html" loading="lazy" tabindex="-1" title="上架 缩略预览" aria-hidden="true"></iframe></div>
+      <div class="body"><h2>上架</h2><p>执行清单：照做、回填后台实际值、读回核对。</p>
+        <div class="foot"><span class="badge primary">主按钮：复制全部并去后台</span><a class="open" href="07-listing.html">打开 →</a></div></div>
+    </article>
+    <article class="scr">
+      <div class="shot"><span class="no">08</span><span class="grp badge wait">治理</span><iframe src="08-grants.html" loading="lazy" tabindex="-1" title="授权清单 缩略预览" aria-hidden="true"></iframe></div>
+      <div class="body"><h2>授权清单</h2><p>Pilot 被授权代批什么，随时收窄或撤销；没有“放宽”。</p>
+        <div class="foot"><span class="badge primary">主按钮：新建授权（经审批）</span><a class="open" href="08-grants.html">打开 →</a></div></div>
+    </article>
+    <article class="scr">
+      <div class="shot"><span class="no">09</span><span class="grp badge wait">治理</span><iframe src="09-audit.html" loading="lazy" tabindex="-1" title="审计 缩略预览" aria-hidden="true"></iframe></div>
+      <div class="body"><h2>审计</h2><p>谁、何时、依据什么、结果如何，含被拒绝的尝试。</p>
+        <div class="foot"><span class="badge primary">主按钮：导出（脱敏，留痕）</span><a class="open" href="09-audit.html">打开 →</a></div></div>
+    </article>
+    <article class="scr">
+      <div class="shot"><span class="no">10</span><span class="grp badge">设置</span><iframe src="10-settings.html" loading="lazy" tabindex="-1" title="设置 缩略预览" aria-hidden="true"></iframe></div>
+      <div class="body"><h2>设置</h2><p>费率卡、白名单、店铺档案、规则库、安全带、Agent、预算、成员。</p>
+        <div class="foot"><span class="badge primary">主按钮：保存</span><a class="open" href="10-settings.html">打开 →</a></div></div>
+    </article>
+    <article class="scr">
+      <div class="shot"><span class="no">00</span><span class="grp badge">入口</span><iframe src="00-login.html" loading="lazy" tabindex="-1" title="登录 缩略预览" aria-hidden="true"></iframe></div>
+      <div class="body"><h2>登录</h2><p>账号密码 + 二步验证；含失败、锁定、忘记密码、首次激活五种状态。</p>
+        <div class="foot"><span class="badge primary">主按钮：登录</span><a class="open" href="00-login.html">打开 →</a></div></div>
+    </article>
+    <section class="card howto">
+      <div class="card-head"><h2>如何读这套原型</h2><span class="meta">一个颜色一个意思</span></div>
+      <div class="keys">
+        <div class="key pri"><b>左侧导航 = 流水线顺序</b>方向 → 选品 → 货源 → 素材 → 上架；治理与设置在下方</div>
+        <div class="key wait"><b>琥珀 = 等你</b>待批、挂起、数据待补</div>
+        <div class="key block"><b>红 = 被拦</b>不可售、规则命中、读回不一致</div>
+        <div class="key ok"><b>绿 = 已核对</b>合规通过、读回一致、LIVE</div>
+        <div class="key pri"><b>换肤</b>顶栏“换肤”按钮或 Alt+1–6，6 套配色，跨页记住</div>
+        <div class="key"><b>演示数据</b>非平台事实；按钮只弹提示，不会写入任何系统</div>
+      </div>
+    </section>
+  </div>
+
+</div>
+</body>
+</html>

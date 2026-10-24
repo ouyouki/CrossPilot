@@ -1,0 +1,715 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>上架 · CrossPilot</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="assets/cp2.css">
+<style>
+/* ===== 上架页专用 ===== */
+.sec{margin-bottom:16px}
+.lhead{display:grid;grid-template-columns:72px minmax(0,1fr) auto;gap:16px;align-items:center}
+.lhead h2{font-size:20px}
+.lhead .meta{font-size:14px;color:var(--text-3);margin-top:2px}
+.cring{display:flex;align-items:center;gap:12px}
+.cring svg{width:68px;height:68px;display:block}
+.cring .bg{stroke:var(--surface-3)} .cring .fg{stroke:var(--primary);transition:stroke-dasharray .25s}
+.cring.full .fg{stroke:var(--ok)}
+.cring text{font:600 17px var(--font-latin);fill:var(--text)}
+.cring .lab{font-size:14px;color:var(--text-3);line-height:1.5}
+.cring .lab b{display:block;font-size:15px;color:var(--text)}
+.lgrid{display:grid;grid-template-columns:minmax(0,1fr) 284px;gap:16px;align-items:start}
+
+.fl{width:100%;border-collapse:collapse;font-size:12.5px}
+.fl td{padding:9px 10px;border-top:1px solid var(--border);vertical-align:top}
+.fl tr:first-child td{border-top:0}
+.fl td.k{width:118px;color:var(--text-2);white-space:nowrap}
+.fl td.k .n{font:500 12px var(--font-mono);color:var(--text-3);margin-right:6px}
+.fl td.v{line-height:1.6;white-space:pre-line}
+.fl td.c{width:76px;text-align:right}
+.fl tr.done{background:color-mix(in srgb,var(--ok-bg) 60%,transparent)}
+.fl tr.done td.k{color:var(--ok)}
+.fl tr.done .btn{border-color:transparent;background:var(--ok-bg);color:var(--ok)}
+.fl .ref{font-size:14px;color:var(--text-3)}
+
+.phone{width:252px}
+.phone .gal{position:relative}
+.phone .gal .ph{border-radius:0}
+.phone .cnt{position:absolute;right:8px;top:8px;font-size:12px;background:rgba(0,0,0,.45);color:#fff;border-radius:8px;padding:0 6px}
+.phone .p-price{display:flex;align-items:baseline;gap:2px}
+.phone .p-row b{color:#111;font-weight:600}
+.phone .p-cta{display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:8px 12px 12px}
+.phone .p-cta span{height:30px;border-radius:15px;display:grid;place-items:center;font-size:13px;font-weight:600}
+.phone .p-cta span:first-child{background:#FFE5E8;color:#E8233B} .phone .p-cta span:last-child{background:#E8233B;color:#fff}
+.ph .af{position:absolute;inset:0;display:block}
+.wall{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:5px}
+.wall .ph{border-radius:7px}
+.wall .ph.v{aspect-ratio:1/1;background:var(--ink)}
+.wall .ph.v::after{content:"";position:absolute;left:50%;top:50%;transform:translate(-40%,-50%);border-left:9px solid #fff;border-top:6px solid transparent;border-bottom:6px solid transparent}
+.files{font:500 10.5px var(--font-mono);color:var(--text-3);line-height:1.7;margin-top:8px;max-height:72px;overflow:hidden;-webkit-mask-image:linear-gradient(#000 60%,transparent)}
+
+.bf{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:0 12px}
+.bf .field{margin-bottom:12px}
+.bf .wide{grid-column:span 2}
+.drop{height:34px;border:1px dashed var(--border-strong);border-radius:9px;display:flex;align-items:center;justify-content:center;gap:6px;font-size:14px;color:var(--text-3);cursor:pointer;background:var(--surface-2)}
+
+.verdict{display:flex;align-items:center;gap:16px;border-radius:16px;padding:16px 18px;margin-bottom:14px}
+.verdict .ic{width:48px;height:48px;border-radius:50%;display:grid;place-items:center;font-size:26px;font-weight:600;flex:none}
+.verdict b{font-size:22px;letter-spacing:-.01em;display:block}
+.verdict span.s{font-size:12.5px}
+.verdict.ok{background:var(--ok-bg);color:var(--ok)} .verdict.ok .ic{background:var(--ok);color:var(--surface)}
+.verdict.bad{background:var(--block-bg);color:var(--block)} .verdict.bad .ic{background:var(--block);color:var(--surface)}
+.verdict.wait{background:var(--wait-bg);color:var(--wait)} .verdict.wait .ic{background:var(--wait-solid);color:#2B1D00}
+.verdict .right{text-align:right}
+
+.rb{width:100%;border-collapse:separate;border-spacing:0;font-size:12.5px;border-radius:12px;overflow:hidden;box-shadow:0 0 0 1px var(--border)}
+.rb th{font-size:13px;font-weight:600;letter-spacing:.06em;text-align:left;color:var(--text-3);padding:8px 12px;background:var(--surface-2)}
+.rb td{padding:9px 12px;border-top:1px solid var(--border);vertical-align:middle}
+.rb td.k{color:var(--text-2);white-space:nowrap;width:130px}
+.rb td.k i{font-style:normal;font:500 12px var(--font-mono);color:var(--text-3);margin-left:4px}
+.rb td.r{width:92px;text-align:right}
+.rb tr.x td{background:var(--block-bg)}
+.rb tr.x td.act{color:var(--block);font-weight:600}
+.rb tr.s td{background:var(--wait-bg)}
+.rb tr.s td.act{color:var(--wait);font-weight:600}
+.rb .mini{display:flex;gap:6px;align-items:center}
+.rb .mini .thumb{width:34px;height:34px;border-radius:8px}
+
+.confirm{display:flex;flex-direction:column;gap:10px}
+.confirm .row .input{width:110px}
+.review{display:flex;gap:8px;flex-wrap:wrap}
+.review label{display:flex;align-items:center;gap:8px;height:36px;padding:0 14px;border-radius:10px;background:var(--surface-2);cursor:pointer;font-size:15px;box-shadow:0 0 0 1px var(--border)}
+.review label:has(input:checked){background:var(--primary-bg);box-shadow:0 0 0 2px var(--primary);color:var(--primary-strong);font-weight:600}
+.review input{accent-color:var(--primary)}
+
+.stale{background:var(--block-bg);border-radius:16px;padding:16px 18px}
+.stale h3{color:var(--block);font-size:16px}
+.stale .vb{display:grid;grid-template-columns:90px minmax(0,1fr) 60px;gap:10px;align-items:center;font-size:14px;margin-top:8px}
+.stale .tr{position:relative;height:12px;background:var(--surface);border-radius:4px}
+.stale .tr i{position:absolute;left:0;top:0;bottom:0;border-radius:4px}
+.stale .tr .tol{position:absolute;top:-5px;bottom:-5px;border-left:2px dashed var(--block)}
+
+.dead{background:var(--block-bg);border-radius:18px;padding:20px;color:var(--text)}
+.dead .big{display:flex;align-items:center;gap:14px}
+.dead .big .ic{width:52px;height:52px;border-radius:14px;background:var(--block);color:var(--surface);display:grid;place-items:center;font-size:28px;font-weight:600}
+.dead .big b{font-size:22px;color:var(--block);display:block}
+.dead .inner{background:var(--surface);border-radius:14px;padding:6px 14px;margin-top:14px;opacity:.75}
+.dead .inner .fl td{color:var(--text-3);text-decoration:line-through}
+.dead .inner .fl td.k{text-decoration:none}
+.dead .skus{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:14px}
+.dead .sku{background:var(--surface);border-radius:12px;padding:10px 12px;font-size:14px}
+.dead .sku.hit{box-shadow:0 0 0 2px var(--block)}
+.foot-note{display:flex;align-items:center;gap:10px;margin-top:8px;font-size:14px;color:var(--text-3);background:var(--surface-2);border-radius:12px;padding:10px 14px;position:sticky;bottom:12px;z-index:5;box-shadow:var(--shadow-1)}
+
+/* 通道对比条 */
+.chs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.ch{background:var(--surface);border-radius:14px;box-shadow:var(--shadow-1);padding:11px 14px;min-width:0}
+.ch b{font-size:14px;font-weight:600;white-space:nowrap}
+.ch .row{flex-wrap:wrap;gap:4px 6px}
+.ch .badge{height:22px;font-size:12.5px;padding:0 8px}
+.ch .tm{font:600 22px var(--font-latin);margin:4px 0 2px;letter-spacing:-.01em}
+.ch .tm small{font-size:13px;font-weight:400;color:var(--text-3);margin-left:2px}
+.ch .s{font-size:13px;color:var(--text-3);line-height:1.4}
+.ch.on{background:var(--primary-bg);box-shadow:0 0 0 2px var(--primary)}
+.ch.on .tm{color:var(--primary-strong)}
+.ch.off{background:var(--surface-2);box-shadow:none;color:var(--text-3)}
+.ch.off .tm{color:var(--text-3)}
+
+/* 批量上架包 */
+.bgrid{display:grid;grid-template-columns:minmax(0,.85fr) minmax(0,1.4fr);gap:16px;align-items:start}
+.grp{background:var(--surface-2);border-radius:12px;padding:8px 10px;margin-bottom:8px}
+.grp .gh{display:flex;flex-wrap:wrap;align-items:center;gap:8px;justify-content:space-between;font-size:13px;font-weight:600;color:var(--text-2);margin:0 2px 6px}
+.bi,.xi{display:grid;grid-template-columns:36px minmax(0,1fr);gap:8px;align-items:center;background:var(--surface);border-radius:10px;padding:7px 8px;margin-top:6px}
+.bi .thumb{width:36px;height:36px;border-radius:9px}
+.bi b,.xi b{display:block;font-size:13.5px;font-weight:600;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bi .mono{display:block;font-size:12px;color:var(--text-2)}
+.bi .s,.xi .s{display:block;font-size:12px;color:var(--text-3)}
+.bi .badge,.xi .badge{height:20px;font-size:12px;padding:0 7px;margin-top:3px}
+.xi > .badge{grid-column:2;justify-self:start;margin-top:0}
+.bi .mono{white-space:nowrap}
+.xi{background:var(--block-bg);margin-top:0}
+.xi .thumb{filter:grayscale(1);opacity:.7}
+.xi .s{color:var(--block)}
+.sc1 .card-head h2{display:flex;align-items:center;gap:8px}
+.sc1 .no{width:22px;height:22px;border-radius:50%;display:inline-grid;place-items:center;font:600 13px var(--font-mono);background:var(--primary-bg);color:var(--primary-strong)}
+.sc1.now{box-shadow:0 0 0 2px var(--primary),var(--shadow-2)}
+.sc1.now .no{background:var(--primary);color:var(--on-primary)}
+.chk3{display:grid;gap:6px}
+.chk3 > div{display:grid;grid-template-columns:20px 74px minmax(0,1fr);gap:8px;align-items:baseline;font-size:14px}
+.chk3 .ok{color:var(--ok);font-weight:600}
+.chk3 .s{color:var(--text-3);font-size:13px}
+.path{background:var(--surface-2);border-radius:10px;padding:8px 12px;font-size:14px}
+.path b{color:var(--primary-strong)}
+.dl{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.sc1 .seg button{white-space:nowrap}
+.sc1 .row{flex-wrap:wrap}
+.mbox{background:var(--surface-2);border-radius:10px;padding:10px 12px;margin-top:10px}
+.fail{background:var(--block-bg);border-radius:12px;padding:10px 12px;margin-top:8px}
+.fail .fh{display:grid;grid-template-columns:30px minmax(0,1fr) auto;gap:8px;align-items:center;margin-bottom:6px}
+.fail .fh b{display:block;font-size:14px}
+.fail .fh .mono{font-size:12px;color:var(--text-2)}
+.fr2{display:grid;grid-template-columns:64px minmax(0,1fr);gap:8px;font-size:13.5px;padding:3px 0;line-height:1.5}
+.fr2 .k{color:var(--text-3)}
+.bigdrop{border:1.5px dashed var(--border-strong);border-radius:12px;background:var(--surface-2);padding:14px;text-align:center;cursor:pointer}
+.bigdrop b{display:block;font-size:14.5px;color:var(--primary-strong)}
+.bigdrop span{font-size:13px;color:var(--text-3)}
+.mx{width:100%;border-collapse:collapse;font-size:12.5px}
+.mx th{font-size:12px;font-weight:600;color:var(--text-3);text-align:center;padding:6px 3px;background:var(--surface-2);white-space:nowrap}
+.mx th:first-child{text-align:left;padding-left:8px}
+.mx td{border-top:1px solid var(--border);padding:6px 3px;text-align:center}
+.mx td:first-child{text-align:left;white-space:nowrap;padding-left:8px}
+.mx td:first-child .thumb{width:24px;height:24px;border-radius:6px;vertical-align:middle;margin-right:6px}
+.mx td:first-child .mono{font-size:11.5px;color:var(--text-2);display:inline}
+.mx tr.na td{color:var(--text-3);font-size:12.5px}
+.mx tr.na td[colspan]{text-align:left}
+i.y,i.n,i.u{font-style:normal;display:inline-grid;place-items:center;width:18px;height:18px;border-radius:50%;font-size:11px;font-weight:600}
+i.y{background:var(--ok-bg);color:var(--ok)} i.n{background:var(--block-bg);color:var(--block)} i.u{background:var(--wait-bg);color:var(--wait)}
+.legend span{display:inline-flex;align-items:center;gap:4px;margin-right:12px}
+details.fb{margin-top:10px}
+details.fb > summary{cursor:pointer;font-size:14px;font-weight:600;color:var(--text-2);display:flex;gap:10px;align-items:center}
+.rvl{display:grid;gap:6px}
+.rvl > div{display:flex;align-items:center;gap:8px;background:var(--surface-2);border-radius:10px;padding:6px 10px;font-size:13.5px}
+.rvl .thumb{width:26px;height:26px;border-radius:7px}
+.rvl b{font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rvl .badge{height:22px;font-size:12.5px;flex:none}
+.rvl .na{color:var(--text-3)}
+@media (max-width:1400px){.bgrid{grid-template-columns:1fr}.chs{grid-template-columns:repeat(2,minmax(0,1fr))}}
+[hidden]{display:none!important}
+</style>
+</head>
+<body data-page="listing" data-crumb="流水线 / 上架">
+<template id="main-tpl">
+  <div class="page-head">
+    <div>
+      <span class="eyebrow">LISTING · 批次 B-1020-01 · 2026-10-20</span>
+      <h1>上架：本批 4 个品已打包，2 个上传失败待修正</h1>
+      <p>4 个品各自已过同意 2，系统只把它们打成一个上传包。你在卖家后台一次上传，失败与读回由系统解析</p>
+    </div>
+    <div class="actions">
+      <button class="help" data-toast="操作手册：上架页（演示）" aria-label="帮助">?</button>
+      <button class="btn" id="copyAll" data-toast="已切到逐项照做（兜底）：已复制全部字段，正在打开卖家后台（演示）">逐项照做（兜底）</button>
+      <button class="btn primary lg" data-toast="下载 B-1020-01 上架包：3 个类目模板 + 素材包（演示）">下载本批上架包</button>
+    </div>
+  </div>
+
+  <div class="alert wait sec"><span><b>提醒</b>　本期无写接口：请在卖家后台照清单操作，并回填后台实际值；平台侧是否写入以卖家后台为准。批量上传是官方功能，由你手动上传，系统不操作卖家后台。</span></div>
+
+  <div class="chs sec" role="list" aria-label="上架通道">
+    <div class="ch" role="listitem"><div class="row between"><b>A1 逐项照做</b><span class="badge">兜底</span></div><div class="tm">≈19′<small>/品</small></div><div class="s">复制字段，在后台逐个新建，再回填</div></div>
+    <div class="ch on" role="listitem" aria-current="true"><div class="row between"><b>A2 批量上架包</b><span class="badge primary">推荐 · 当前</span></div><div class="tm">≈2.8′<small>/品</small></div><div class="s">一次上传模板，失败与读回自动解析</div></div>
+    <div class="ch off" role="listitem"><div class="row between"><b>B 写接口直传</b><span class="badge">未启用</span></div><div class="tm">0′<small>/品</small></div><div class="s">U-1/U-2 答复后启用</div></div>
+    <div class="ch off" role="listitem"><div class="row between"><b>C 授权 ERP 通道</b><span class="badge">未启用</span></div><div class="tm">≈1′<small>/品</small></div><div class="s">服务商支持与条款待核实（U-20）</div></div>
+  </div>
+
+  <div data-tabs>
+    <div class="tabs" role="tablist" aria-label="上架状态">
+      <button role="tab" data-tab="batch" aria-selected="true">批量上架包<span class="n">4</span></button>
+      <button role="tab" data-tab="todo" aria-selected="false">待执行<span class="n">1</span></button>
+      <button role="tab" data-tab="ok" aria-selected="false">读回一致<span class="n">1</span></button>
+      <button role="tab" data-tab="bad" aria-selected="false">关键字段不一致<span class="n">1</span></button>
+      <button role="tab" data-tab="soft" aria-selected="false">非关键差异<span class="n">1</span></button>
+      <button role="tab" data-tab="dead" aria-selected="false">整张不可执行<span class="n">1</span></button>
+    </div>
+
+    <!-- ===================== 批量上架包 ===================== -->
+    <div data-pane="batch">
+      <div class="steps sec">
+            <div class="st done"><i>1</i>生成</div>
+            <div class="st done"><i>2</i>一次上传</div>
+            <div class="st now"><i>3</i>失败回收</div>
+            <div class="st"><i>4</i>自动读回</div>
+            <div class="st"><i>5</i>审核状态</div>
+          </div>
+      <div class="bgrid sec">
+        <!-- 左：批次构成 -->
+        <div class="card">
+          <div class="card-head"><h2>批次构成</h2><span class="meta">4 个品 · 3 个类目模板</span></div>
+          <p class="small faint" style="margin:0 0 10px">只收已过同意 2 的品，每个品一张审批单。批次只是执行打包，不是批量批准；未批准的品不进批次，清单与素材包不可下载。</p>
+          <div class="grp">
+            <div class="gh"><span lang="ja">キッチンツール &gt; 調理スプーン・ヘラ</span><span class="tag">模板 v3</span></div>
+            <div class="bi"><span class="thumb" data-art="spoons"></span><div><b lang="ja">シリコン調理スプーン5点セット</b><span class="mono">CP-0002-3f9a1c07</span><span class="s">同意 2 · 10-20 10:05 · 已批准</span><span class="badge ok">已上传</span></div></div>
+          </div>
+          <div class="grp">
+            <div class="gh"><span lang="ja">収納用品 &gt; 引き出し収納</span><span class="tag">模板 v2</span></div>
+            <div class="bi"><span class="thumb" data-art="divider"></span><div><b lang="ja">引き出し仕切り板</b><span class="mono">CP-0007-a47d2b10</span><span class="s">同意 2 · 10-19 18:40 · 已批准</span><span class="badge ok">已上传</span></div></div>
+            <div class="bi"><span class="thumb" data-art="cable"></span><div><b lang="ja">デスクケーブルオーガナイザー</b><span class="mono">CP-0003-b81e4d22</span><span class="s">同意 2 · 10-20 10:07 · 已批准</span><span class="badge block">失败</span></div></div>
+          </div>
+          <div class="grp">
+            <div class="gh"><span lang="ja">ペット用品 &gt; ブラシ・コーム</span><span class="tag">模板 v1</span></div>
+            <div class="bi"><span class="thumb" data-art="brush"></span><div><b lang="ja">ペット用ブラシ 抜け毛クリーナー</b><span class="mono">CP-0004-6c05e9af</span><span class="s">同意 2 · 10-20 10:12 · 已批准</span><span class="badge block">失败</span></div></div>
+          </div>
+          <p class="small faint" style="margin:8px 0 6px">每个末级类目一个模板（官方限制），一行一个 SKU。</p>
+          <div class="xi">
+            <span class="thumb sm" data-art="powerbank"></span><div><b lang="ja">LEDデスクライト 充電式</b><span class="s">已排除：打包时重检命中 G0 · 含电池</span></div><span class="badge block">不进批次</span>
+          </div>
+          <div class="divider" style="margin:12px 0"></div>
+          <dl class="kv small"><dt>每批上限</dt><dd>20 个品（本批 4）</dd><dt>失败重试</dt><dd>不自动重试，须你确认</dd><dt>关联键</dt><dd>卖家 SKU 末 8 位 = 批准内容指纹</dd></dl>
+        </div>
+
+        <!-- 右：五步流程 -->
+        <div class="stack">
+
+          <div class="card sc1">
+            <div class="card-head"><h2><span class="no">1</span>生成</h2><span class="meta">10-20 10:20 · 系统</span><div class="tools"><span class="badge ok">完成</span></div></div>
+            <div class="chk3">
+              <div><span class="ok">✓</span><b>模板版本</b><span class="s">3 个类目模板 v3 / v2 / v1，与你上次上传的一致</span></div>
+              <div><span class="ok">✓</span><b>列映射</b><span class="s">全部列已映射；版本或列变了会停在这一步，不猜</span></div>
+              <div><span class="ok">✓</span><b>素材包</b><span class="s">36 图（9 图 × 4 品）+ 4 段视频 · 按卖家 SKU 命名</span></div>
+            </div>
+          </div>
+
+          <div class="card sc1">
+            <div class="card-head"><h2><span class="no">2</span>你在卖家后台一次上传</h2><span class="meta">10-20 10:40 · 林薇</span><div class="tools"><span class="badge ok">已上传</span></div></div>
+            <div class="path">卖家后台 → 商品 → <b>批量操作</b> → <b>上传模板</b> → 依次上传 3 个文件</div>
+            <div class="dl">
+              <button class="btn sm" data-toast="下载 キッチンツール_v3_B-1020-01.xlsx（演示）">キッチンツール v3 · 1 行</button>
+              <button class="btn sm" data-toast="下载 引き出し収納_v2_B-1020-01.xlsx（演示）">引き出し収納 v2 · 2 行</button>
+              <button class="btn sm" data-toast="下载 ブラシ・コーム_v1_B-1020-01.xlsx（演示）">ブラシ・コーム v1 · 1 行</button>
+            </div>
+            <div class="row" style="margin-top:12px"><b class="small">图片模式</b>
+              <div class="seg" role="group" aria-label="图片模式">
+                <button data-view="space" data-group="media" aria-pressed="true">图片空间</button>
+                <button data-view="link" data-group="media" aria-pressed="false">限时链接</button>
+              </div>
+              <span class="small faint right">方式待核实（U-22）· 默认图片空间</span>
+            </div>
+            <div data-pane-view="space" data-group="media" class="mbox">
+              <p class="small" style="margin:0 0 8px">下载素材包，一次拖进后台“图片空间”；文件名就是卖家 SKU，模板里的图片列按文件名对应。不生成任何公网链接。</p>
+              <button class="btn sm" data-toast="下载 B-1020-01_assets.zip · 72.4 MB（演示）">下载素材包 · 72.4 MB</button>
+            </div>
+            <div data-pane-view="link" data-group="media" class="mbox" hidden>
+              <p class="small" style="margin:0 0 8px">模板里填系统给的限时链接：只含本批已批准素材，链接不可猜，每次访问记审计。</p>
+              <div class="row small"><span>剩余 <b>46 小时 12 分</b> / 48 小时</span><span class="faint right">批次结束即失效</span></div>
+              <div class="meter" style="margin-top:6px"><i style="width:96%"></i></div>
+              <button class="btn sm" style="margin-top:10px" data-toast="限时链接已写入模板图片列，重新下载模板（演示）">把链接写入模板并重新下载</button>
+            </div>
+          </div>
+
+          <div class="card sc1 now">
+            <div class="card-head"><h2><span class="no">3</span>失败回收</h2><span class="meta">10-20 10:52 解析后台失败文件</span><div class="tools"><span class="badge block">2 行失败</span></div></div>
+            <div class="row small" style="margin-bottom:10px"><span class="badge ok">2 行成功</span><span class="faint">把后台返回的失败文件传上来，系统读首列“失败原因”并对应到字段</span><button class="btn sm right" data-toast="选择后台返回的失败文件（演示）">上传失败文件</button></div>
+            <div class="fail">
+              <div class="fh"><span class="thumb sm" data-art="brush"></span><div><b lang="ja">ペット用ブラシ 抜け毛クリーナー</b><span class="mono">CP-0004-6c05e9af</span></div><span class="badge block">缺必填属性</span></div>
+              <div class="fr2"><span class="k">后台原因</span><span lang="ja">必須属性「素材」が入力されていません</span></div>
+              <div class="fr2"><span class="k">对应字段</span><span>属性 · 材质（模板第 14 列）</span></div>
+              <div class="fr2"><span class="k">修正建议</span><span>批准内容的商品説明已写“素材：TPR・ABS”，只需填进属性列；对外内容不变，不用重走同意 2</span></div>
+              <div class="row" style="margin-top:8px"><button class="btn sm primary" data-toast="已按建议填入材质列，重新生成 ブラシ・コーム v1 模板（演示）">修正后重新生成</button></div>
+            </div>
+            <div class="fail">
+              <div class="fh"><span class="thumb sm" data-art="cable"></span><div><b lang="ja">デスクケーブルオーガナイザー</b><span class="mono">CP-0003-b81e4d22</span></div><span class="badge block">类目与模板不符</span></div>
+              <div class="fr2"><span class="k">后台原因</span><span lang="ja">カテゴリがテンプレートと一致しません</span></div>
+              <div class="fr2"><span class="k">对应字段</span><span>类目（批准值：<span lang="ja">収納用品 &gt; 引き出し収納</span>）</span></div>
+              <div class="fr2"><span class="k">修正建议</span><span>改到 <span lang="ja">収納用品 &gt; デスク収納</span>，单独一个模板</span></div>
+              <div class="alert wait" style="margin-top:8px;font-size:14px;padding:9px 12px"><span>类目是对外内容：这次修正会让原批准作废，需重走同意 2，批准后再进下一批。</span></div>
+              <div class="row" style="margin-top:8px"><button class="btn sm" data-toast="已生成该品的同意 2 新单（附类目差异），请到待批查看（演示）">修正类目并重走同意 2</button></div>
+            </div>
+            <p class="small faint" style="margin:8px 0 0">失败行不会自动重传：每次重传都要你点。</p>
+          </div>
+
+          <div class="card sc1">
+            <div class="card-head"><h2><span class="no">4</span>自动读回</h2><span class="meta">导入商品导出文件 · 10:58</span><div class="tools"><span class="badge ok">2 / 2 一致</span></div></div>
+            <div class="bigdrop" data-toast="选择卖家后台导出的商品列表文件（演示）"><b>＋ 拖入卖家后台“商品导出文件”</b><span>后台 → 商品 → 导出；系统逐品逐字段对照，不用你逐项回填</span></div>
+            <div class="tblwrap" style="margin-top:10px">
+            <table class="mx">
+              <thead><tr><th>品 · 关联键</th><th>标题</th><th>价格</th><th>送料</th><th lang="ja">発送</th><th>类目</th><th lang="ja">原産</th><th>返品</th><th>图数</th></tr></thead>
+              <tbody>
+                <tr><td><span class="thumb sm" data-art="spoons"></span><span class="mono">…3f9a1c07</span></td><td><i class="y">✓</i></td><td><i class="y">✓</i></td><td><i class="y">✓</i></td><td><i class="y">✓</i></td><td><i class="y">✓</i></td><td><i class="y">✓</i></td><td><i class="y">✓</i></td><td><i class="y">✓</i></td></tr>
+                <tr><td><span class="thumb sm" data-art="divider"></span><span class="mono">…a47d2b10</span></td><td><i class="y">✓</i></td><td><i class="y">✓</i></td><td><i class="y">✓</i></td><td><i class="y">✓</i></td><td><i class="y">✓</i></td><td><i class="y">✓</i></td><td><i class="y">✓</i></td><td><i class="y">✓</i></td></tr>
+                <tr class="na"><td><span class="thumb sm" data-art="cable"></span><span class="mono">…b81e4d22</span></td><td colspan="8">未上传成功 · 修正后随下次导出读回</td></tr>
+                <tr class="na"><td><span class="thumb sm" data-art="brush"></span><span class="mono">…6c05e9af</span></td><td colspan="8">未上传成功 · 修正后随下次导出读回</td></tr>
+              </tbody>
+            </table>
+            </div>
+            <div class="legend small" style="margin-top:8px"><span><i class="y">✓</i> 一致</span><span><i class="n">✗</i> 不一致 → 挂起</span><span><i class="u">?</i> 导出文件缺列 · 未知</span></div>
+            <p class="small faint" style="margin:6px 0 0">关联键是卖家 SKU 末 8 位：后台改过内容，指纹对不上，即判不一致。</p>
+            <details class="fb">
+              <summary>逐项回填（兜底）<span class="small faint">仅当导出文件缺列（U-23）时使用</span></summary>
+              <div class="bf" style="margin-top:10px">
+                <div class="field"><label>卖家 SKU</label><input class="input" placeholder="CP-…"></div>
+                <div class="field"><label>缺列字段</label><select class="select"><option>请选择导出文件缺的列</option><option>発送までの日数</option><option>送料</option><option>审核状态</option></select></div>
+                <div class="field wide"><label>后台实际值</label><input class="input" lang="ja" placeholder="照后台页面填写"></div>
+              </div>
+              <button class="btn sm" data-toast="已补填缺列字段并重新比对（演示）">补填并比对</button>
+            </details>
+          </div>
+
+          <div class="card sc1">
+            <div class="card-head"><h2><span class="no">5</span>平台审核状态</h2><span class="meta">从导出文件的状态列带出</span><div class="tools"><button class="btn sm" data-toast="重新导入导出文件以刷新审核状态（演示）">刷新</button></div></div>
+            <div class="rvl">
+              <div><span class="thumb sm" data-art="spoons"></span><b lang="ja">シリコン調理スプーン5点セット</b><span class="badge info right">审核中</span></div>
+              <div><span class="thumb sm" data-art="divider"></span><b lang="ja">引き出し仕切り板</b><span class="badge ok right">已上线</span></div>
+              <div class="na"><span class="thumb sm" data-art="cable"></span><b lang="ja">デスクケーブルオーガナイザー</b><span class="badge right">未知 · 未上传成功</span></div>
+              <div class="na"><span class="thumb sm" data-art="brush"></span><b lang="ja">ペット用ブラシ 抜け毛クリーナー</b><span class="badge right">未知 · 未上传成功</span></div>
+            </div>
+            <p class="small faint" style="margin:8px 0 0">驳回时带出驳回原因，商品回到素材；导出文件没有状态列时显示“未知”，去后台看。</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===================== 待执行（兜底：逐项照做） ===================== -->
+    <div data-pane="todo" hidden>
+      <div class="alert info sec"><span><b>兜底视图</b>　本批的品都在“批量上架包”里执行。只有批量模板不可用（U-21）或单个品需要单独补做时，才按下面的字段清单逐项照做；以 <span lang="ja">引き出し仕切り板</span> 为例。</span></div>
+      <div class="steps sec">
+        <div class="st done"><i>1</i>清单已生成</div>
+        <div class="st now"><i>2</i>去后台照做</div>
+        <div class="st"><i>3</i>导入导出</div>
+        <div class="st"><i>4</i>读回核对</div>
+        <div class="st"><i>5</i>平台审核</div>
+      </div>
+      <div class="card sec">
+        <div class="lhead">
+          <span class="thumb lg" data-art="divider"></span>
+          <div><h2 lang="ja">引き出し仕切り板</h2><div class="meta">清单 1/1 · 同意 2 已批 10-19 18:40（林薇）· 售价 ¥1,580 · 毛利 30.2% · <span class="badge wait" style="height:18px;font-size:13px">等你在后台新建</span></div></div>
+          <div class="cring" id="cring"><svg viewBox="0 0 68 68" aria-label="已复制进度"><circle class="bg" cx="34" cy="34" r="28" fill="none" stroke-width="8"/><circle class="fg" id="cringFg" cx="34" cy="34" r="28" fill="none" stroke-width="8" stroke-linecap="round" stroke-dasharray="0 176" transform="rotate(-90 34 34)"/><text x="34" y="39" text-anchor="middle" id="cringT">0</text></svg><div class="lab"><b id="cringL">已复制 0/12</b>逐行复制，<br>行会标记已复制</div></div>
+        </div>
+      </div>
+
+      <div class="lgrid sec">
+        <div class="card flush">
+          <div class="card-head"><h2>字段清单</h2><span class="meta">值与批准内容逐字段相同</span></div>
+          <div style="padding:4px 10px 10px">
+          <table class="fl" id="fl"><tbody>
+            <tr><td class="k"><span class="n">01</span>商品タイトル</td><td class="v" lang="ja">引き出し 仕切り板 伸縮 キッチン 小物 整理 収納 組み合わせ自由</td><td class="c"><button class="btn sm" data-copy="引き出し 仕切り板 伸縮 キッチン 小物 整理 収納 組み合わせ自由">复制</button></td></tr>
+            <tr><td class="k"><span class="n">02</span>商品説明</td><td class="v" lang="ja">引き出しの中をすっきり整理できる、長さ調節式の仕切り板です。キッチン・デスク・洗面所など幅広く使えます。
+・素材：ポリプロピレン
+・サイズ：高さ 5cm／長さ 25〜40cm
+・原産国：中国</td><td class="c"><button class="btn sm" data-copy="引き出しの中をすっきり整理できる、長さ調節式の仕切り板です。キッチン・デスク・洗面所など幅広く使えます。&#10;・素材：ポリプロピレン&#10;・サイズ：高さ 5cm／長さ 25〜40cm&#10;・原産国：中国">复制</button></td></tr>
+            <tr><td class="k"><span class="n">03</span>カテゴリ</td><td class="v" lang="ja">ホーム・キッチン &gt; 収納用品 &gt; 引き出し収納</td><td class="c"><button class="btn sm" data-copy="ホーム・キッチン > 収納用品 > 引き出し収納">复制</button></td></tr>
+            <tr><td class="k"><span class="n">04</span>ブランド</td><td class="v" lang="ja">ノーブランド</td><td class="c"><button class="btn sm" data-copy="ノーブランド">复制</button></td></tr>
+            <tr><td class="k"><span class="n">05</span>原産国</td><td class="v" lang="ja">中国</td><td class="c"><button class="btn sm" data-copy="中国">复制</button></td></tr>
+            <tr><td class="k"><span class="n">06</span>販売価格（税込）</td><td class="v"><b>¥1,580</b></td><td class="c"><button class="btn sm" data-copy="1580">复制</button></td></tr>
+            <tr><td class="k"><span class="n">07</span>在庫（初值）</td><td class="v">30</td><td class="c"><button class="btn sm" data-copy="30">复制</button></td></tr>
+            <tr><td class="k"><span class="n">08</span>送料</td><td class="v" lang="ja">送料無料（売主負担）</td><td class="c"><button class="btn sm" data-copy="送料無料（売主負担）">复制</button></td></tr>
+            <tr><td class="k"><span class="n">09</span>発送までの日数</td><td class="v" lang="ja">4営業日以内に発送</td><td class="c"><button class="btn sm" data-copy="4営業日以内に発送">复制</button></td></tr>
+            <tr><td class="k"><span class="n">10</span>返品条件</td><td class="v" lang="ja">商品到着後7日以内・未使用に限り返品可（返送料はお客様負担）</td><td class="c"><button class="btn sm" data-copy="商品到着後7日以内・未使用に限り返品可（返送料はお客様負担）">复制</button></td></tr>
+            <tr><td class="k"><span class="n">11</span>保証/販売条件</td><td class="v" lang="ja">初期不良は到着後7日以内にご連絡ください。交換または返金で対応します。</td><td class="c"><button class="btn sm" data-copy="初期不良は到着後7日以内にご連絡ください。交換または返金で対応します。">复制</button></td></tr>
+            <tr><td class="k"><span class="n">12</span>特商法表示</td><td class="v"><span class="ref">引用店铺档案 · 已确认 10-12 · <a href="10-settings.html">查看</a></span></td><td class="c"><button class="btn sm" data-copy="（特定商取引法に基づく表記：店铺档案已确认版本）">复制</button></td></tr>
+          </tbody></table>
+          </div>
+        </div>
+        <div class="stack">
+          <div>
+            <div data-phone='{"art": "divider", "count": "1/8", "price": 1580, "title": "引き出し 仕切り板 伸縮 キッチン 小物 整理 収納 組み合わせ自由", "bullets": ["伸縮式で引き出しにぴったり", "組み合わせ自由", "キッチン小物の整理に"]}'></div>
+            <div class="small faint" style="text-align:center;margin-top:8px">照做后应长这样 · 非平台实际渲染</div>
+          </div>
+          <div class="card">
+            <div class="card-head"><h2>素材包</h2><span class="meta">8 图 + 1 视频 · 按 SKU 命名</span></div>
+            <div class="wall" id="wall"></div>
+            <div class="files">JP01-DIVIDER-01_main.jpg<br>JP01-DIVIDER-02_point.jpg<br>JP01-DIVIDER-03_point.jpg<br>JP01-DIVIDER-04_spec.jpg<br>JP01-DIVIDER-05_scene.jpg<br>JP01-DIVIDER-06_pack.jpg<br>JP01-DIVIDER-07_detail.jpg<br>JP01-DIVIDER-08_detail.jpg<br>JP01-DIVIDER-V1.mp4</div>
+            <button class="btn" style="width:100%;margin-top:10px" data-toast="下载 JP01-DIVIDER_assets.zip（演示）">下载素材包 · 18.6 MB</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card sec">
+        <div class="card-head"><h2>读回</h2><span class="meta">照做后，导入后台“商品导出文件”即自动比对，并再检一遍前置条件</span></div>
+        <div class="bigdrop" data-toast="选择卖家后台导出的商品列表文件（演示）"><b>＋ 拖入卖家后台“商品导出文件”</b><span>系统按卖家 SKU 找到这一行，逐字段对照批准内容</span></div>
+      </div>
+      <details class="card sec fb">
+        <summary>逐项回填（兜底）<span class="small faint">仅当导出文件缺列（U-23）时使用</span></summary>
+        <div class="bf" style="margin-top:12px">
+          <div class="field"><label class="req">商品 ID</label><input class="input" placeholder="后台生成的商品 ID"></div>
+          <div class="field wide"><label class="req">标题（后台实际）</label><input class="input" lang="ja" placeholder="粘贴后台标题"></div>
+          <div class="field"><label class="req">价格（税込）</label><input class="input" placeholder="¥"></div>
+          <div class="field"><label class="req">库存</label><input class="input"></div>
+          <div class="field"><label class="req">类目（后台实际）</label><input class="input" lang="ja"></div>
+          <div class="field"><label class="req">图片数</label><input class="input"></div>
+          <div class="field"><label class="req">送料</label><input class="input" lang="ja"></div>
+          <div class="field"><label class="req">発送までの日数</label><input class="input" lang="ja"></div>
+          <div class="field wide"><label class="req">主图截图</label><div class="drop" data-toast="选择主图截图（演示）">＋ 上传后台主图截图（与批准主图比对）</div></div>
+        </div>
+        <div class="row"><button class="btn" data-toast="已提交回填，正在读回比对（演示）">提交回填并比对</button><span class="faint small">未读回前，该商品不算已上架。单人运行：本次为“自批自执”，进审计高危视图。</span></div>
+      </details>
+    </div>
+
+    <!-- ===================== 读回一致 ===================== -->
+    <div data-pane="ok" hidden>
+      <div class="steps sec">
+        <div class="st done"><i>1</i>清单已生成</div>
+        <div class="st done"><i>2</i>批次上传</div>
+        <div class="st done"><i>3</i>导入导出</div>
+        <div class="st done"><i>4</i>读回核对</div>
+        <div class="st done"><i>5</i>平台审核 · 已上线</div>
+      </div>
+      <div class="card sec">
+        <div class="lhead" style="margin-bottom:14px"><span class="thumb lg" data-art="rack"></span><div><h2 lang="ja">キッチン水切りラック</h2><div class="meta">售价 ¥2,780 · 毛利 27.1% · 商品 ID <span class="mono">1729000000001</span>（示意）· 导出文件读回 10-19 16:50 · 批次 B-1019-01</div></div><span></span></div>
+        <div class="verdict ok"><span class="ic">✓</span><div><b>读回一致 · 关键字段 9/9</b><span class="s">导出文件里的值与批准内容逐项相同（已做空白、全半角、〜/～ 规范化）</span></div></div>
+        <table class="rb" lang="ja"><thead lang="zh-CN"><tr><th>字段</th><th>批准值</th><th>导出文件值</th><th class="r">结果</th></tr></thead><tbody>
+          <tr><td class="k" lang="zh-CN">商品タイトル<i>关键</i></td><td>キッチン 水切りラック 2段 伸縮 大容量</td><td>キッチン 水切りラック 2段 伸縮 大容量</td><td class="r" lang="zh-CN"><span class="badge ok">一致</span></td></tr>
+          <tr><td class="k" lang="zh-CN">販売価格<i>关键</i></td><td>¥2,780</td><td>¥2,780</td><td class="r" lang="zh-CN"><span class="badge ok">一致</span></td></tr>
+          <tr><td class="k" lang="zh-CN">送料<i>关键</i></td><td>送料無料（売主負担）</td><td>送料無料（売主負担）</td><td class="r" lang="zh-CN"><span class="badge ok">一致</span></td></tr>
+          <tr><td class="k" lang="zh-CN">発送までの日数<i>关键</i></td><td>4営業日以内に発送</td><td>4営業日以内に発送</td><td class="r" lang="zh-CN"><span class="badge ok">一致</span></td></tr>
+          <tr><td class="k" lang="zh-CN">カテゴリ<i>关键</i></td><td>ホーム・キッチン &gt; キッチン収納</td><td>ホーム・キッチン &gt; キッチン収納</td><td class="r" lang="zh-CN"><span class="badge ok">一致</span></td></tr>
+          <tr><td class="k" lang="zh-CN">原産国<i>关键</i></td><td>中国</td><td>中国</td><td class="r" lang="zh-CN"><span class="badge ok">一致</span></td></tr>
+          <tr><td class="k" lang="zh-CN">返品条件<i>关键</i></td><td>到着後7日以内・未使用</td><td>到着後7日以内・未使用</td><td class="r" lang="zh-CN"><span class="badge ok">一致</span></td></tr>
+          <tr><td class="k" lang="zh-CN">图片数<i>关键</i></td><td>9</td><td>9</td><td class="r" lang="zh-CN"><span class="badge ok">一致</span></td></tr>
+          <tr><td class="k" lang="zh-CN">主图<i>关键</i></td><td><span class="mini"><span class="thumb" data-art="rack"></span><span lang="zh-CN" class="small faint">批准主图</span></span></td><td><span class="mini"><span class="thumb" data-art="rack"></span><span lang="zh-CN" class="small faint">后台截图 · 感知比对一致</span></span></td><td class="r" lang="zh-CN"><span class="badge ok">一致</span></td></tr>
+        </tbody></table>
+      </div>
+      <div class="g2 sec">
+        <div class="card">
+          <div class="card-head"><h2>末尾确认</h2><span class="meta">在系统外完成，这里留记录</span></div>
+          <div class="confirm">
+            <label class="chk"><input type="checkbox"> 店铺运费模板已在后台核对</label>
+            <label class="chk"><input type="checkbox" id="aff"> 已加入联盟公开计划（仅当店铺已开通）</label>
+            <div class="row" id="affRow" hidden><label class="small req" for="affRate">联盟佣金率</label><input class="input" id="affRate" placeholder="例如 10" inputmode="decimal"><span class="small faint">% · 必填，驱动 c11，不得为 0</span></div>
+            <p class="small faint" style="margin:0">联盟达人内容须标注广告（ステマ），系统无法检查，是已知盲区。</p>
+            <div><button class="btn" id="affSave" data-toast="确认记录已保存（演示）">记录确认</button></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-head"><h2>平台审核结果</h2><span class="meta">从导出文件状态列带出 · 缺列时你来选</span></div>
+          <div class="review">
+            <label><input type="radio" name="rv" value="ing"> 审核中</label>
+            <label><input type="radio" name="rv" value="live" checked> 已上线</label>
+            <label><input type="radio" name="rv" value="rej"> 驳回</label>
+          </div>
+          <div class="field" id="rejBox" style="margin-top:12px" hidden><label class="req">驳回原因（驳回后回到素材）</label><textarea class="textarea" rows="2" placeholder="粘贴后台显示的驳回原因"></textarea></div>
+          <button class="btn" style="margin-top:12px" data-toast="审核结果已记录（演示）">提交审核结果</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===================== 关键字段不一致 ===================== -->
+    <div data-pane="bad" hidden>
+      <div class="steps sec">
+        <div class="st done"><i>1</i>清单已生成</div>
+        <div class="st done"><i>2</i>批次上传</div>
+        <div class="st done"><i>3</i>导入导出</div>
+        <div class="st block"><i>4</i>读回不一致</div>
+        <div class="st"><i>5</i>平台审核</div>
+      </div>
+      <div class="card sec">
+        <div class="lhead" style="margin-bottom:14px"><span class="thumb lg" data-art="box"></span><div><h2 lang="ja">折叠収納ボックス3個セット</h2><div class="meta">已在后台提交 · 商品 ID <span class="mono">1729000000014</span>（示意）· 导出文件读回 11:20 · 批次 B-1019-01</div></div><span></span></div>
+        <div class="verdict bad"><span class="ic">✗</span><div><b>读回不一致 · 已挂起</b><span class="s">关键字段 8/9 一致 · 販売価格不一致 · 已挂起 3 小时，不会自动放行或放弃</span></div></div>
+        <table class="rb" lang="ja"><thead lang="zh-CN"><tr><th>字段</th><th>批准值</th><th>导出文件值</th><th class="r">结果</th></tr></thead><tbody>
+          <tr><td class="k" lang="zh-CN">商品タイトル<i>关键</i></td><td>折りたたみ 収納ボックス 3個セット 大容量 衣類 小物</td><td>折りたたみ 収納ボックス 3個セット 大容量 衣類 小物</td><td class="r" lang="zh-CN"><span class="badge ok">一致</span></td></tr>
+          <tr class="x"><td class="k" lang="zh-CN">販売価格<i>关键</i></td><td>¥2,480</td><td class="act">¥2,680</td><td class="r" lang="zh-CN"><span class="badge block">不一致</span></td></tr>
+          <tr><td class="k" lang="zh-CN">送料<i>关键</i></td><td>送料無料（売主負担）</td><td>送料無料（売主負担）</td><td class="r" lang="zh-CN"><span class="badge ok">一致</span></td></tr>
+          <tr><td class="k" lang="zh-CN">発送までの日数<i>关键</i></td><td>4営業日以内に発送</td><td>4営業日以内に発送</td><td class="r" lang="zh-CN"><span class="badge ok">一致</span></td></tr>
+          <tr><td class="k" lang="zh-CN">カテゴリ<i>关键</i></td><td>ホーム・キッチン &gt; 収納用品</td><td>ホーム・キッチン &gt; 収納用品</td><td class="r" lang="zh-CN"><span class="badge ok">一致</span></td></tr>
+          <tr><td class="k" lang="zh-CN">原産国 · 返品条件<i>关键</i></td><td>中国 · 到着後7日以内</td><td>中国 · 到着後7日以内</td><td class="r" lang="zh-CN"><span class="badge ok">一致</span></td></tr>
+          <tr><td class="k" lang="zh-CN">图片数 · 主图<i>关键</i></td><td>9 · 批准主图</td><td>9 · 感知比对一致</td><td class="r" lang="zh-CN"><span class="badge ok">一致</span></td></tr>
+        </tbody></table>
+        <div class="row wrap" style="margin-top:14px">
+          <button class="btn" data-toast="去后台把价格改回 ¥2,480，改后重新导入导出文件（演示）">去后台改后重新导入</button>
+          <button class="btn danger" data-toast="跳转卖家后台，在后台下架该商品（演示）">去后台下架</button>
+          <span class="small faint">关键字段不一致不能“接受”；下架不会消除平台违规记录。</span>
+        </div>
+      </div>
+      <div class="stale sec">
+        <div class="row"><span class="badge block">执行时事实已变</span><h3>另一种挂起：清单发放后汇率偏离</h3><span class="tag right">形态示例</span></div>
+        <p class="small" style="margin:8px 0 0">清单在 10-17 发放，你 10-20 才在后台提交。读回时再检前置条件：汇率已偏离 +3.4%（容忍 3%），原批准已失效。</p>
+        <div class="vb"><span>批准时 20.80</span><span class="tr"><i style="width:50%;background:var(--s1)"></i><span class="tol" style="left:88.75%"></span></span><span></span></div>
+        <div class="vb"><span>读回时 21.51</span><span class="tr"><i style="width:94.4%;background:var(--block)"></i><span class="tol" style="left:88.75%"></span></span><span class="small" style="color:var(--block)">+3.4%</span></div>
+        <p class="small" style="margin:10px 0 0;color:var(--block)">已提交的商品只能去后台下架，或走新单补批；没有“已核对”。</p>
+        <div class="row" style="margin-top:10px"><button class="btn danger sm" data-toast="跳转卖家后台下架（演示）">去后台下架</button><button class="btn sm" data-toast="已生成补批新单，附差异说明（演示）">走新单补批</button></div>
+      </div>
+    </div>
+
+    <!-- ===================== 非关键差异 ===================== -->
+    <div data-pane="soft" hidden>
+      <div class="steps sec">
+        <div class="st done"><i>1</i>清单已生成</div>
+        <div class="st done"><i>2</i>批次上传</div>
+        <div class="st done"><i>3</i>导入导出</div>
+        <div class="st wait"><i>4</i>非关键差异 · 等 Owner</div>
+        <div class="st"><i>5</i>平台审核</div>
+      </div>
+      <div class="card sec">
+        <div class="lhead" style="margin-bottom:14px"><span class="thumb lg" data-art="hooks"></span><div><h2 lang="ja">マグネットフック6個入</h2><div class="meta">售价 ¥1,180 · 毛利 26.0% · 导出文件读回 13:05 · 批次 B-1020-00</div></div><span></span></div>
+        <div class="verdict wait"><span class="ic">!</span><div><b>关键字段 9/9 一致 · 1 处非关键差异</b><span class="s">只有后台自动整形的尺寸写法不同；需 Owner 填理由接受</span></div></div>
+        <table class="rb" lang="ja"><thead lang="zh-CN"><tr><th>字段</th><th>批准值</th><th>导出文件值</th><th class="r">结果</th></tr></thead><tbody>
+          <tr><td class="k" lang="zh-CN">关键字段 ×9</td><td colspan="2" lang="zh-CN" class="small faint">标题、价格、送料、発送日数、类目、原産国、返品条件、图片数、主图</td><td class="r" lang="zh-CN"><span class="badge ok">全部一致</span></td></tr>
+          <tr class="s"><td class="k" lang="zh-CN">サイズ表記<i>非关键</i></td><td>幅約8cm × 高さ約3cm</td><td class="act">幅約8CM × 高さ約3CM</td><td class="r" lang="zh-CN"><span class="badge wait">大小写不同</span></td></tr>
+        </tbody></table>
+        <p class="small faint" style="margin:8px 0 0">已先做空白、全半角、〜/～ 规范化；规范化造成的差异不算不一致。</p>
+        <div class="field" style="margin-top:12px"><label class="req" for="softWhy">接受理由（必填）</label><textarea class="textarea" id="softWhy" rows="2" placeholder="例如：后台自动把单位转成大写，含义无差别"></textarea></div>
+        <div class="row wrap">
+          <button class="btn" id="softOk" disabled data-toast="已提交 Owner 审批：接受差异（演示）">提交 Owner 审批：接受差异</button>
+          <button class="btn" data-toast="去后台改后重新导入导出文件（演示）">去后台改后重新导入</button>
+          <span class="faint small">接受后不可撤回，并写入审计。</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===================== 整张不可执行 ===================== -->
+    <div data-pane="dead" hidden>
+      <div class="steps sec">
+        <div class="st block"><i>1</i>打包时重检 · 命中 G0</div>
+        <div class="st"><i>2</i>批次上传</div>
+        <div class="st"><i>3</i>导入导出</div>
+        <div class="st"><i>4</i>读回核对</div>
+        <div class="st"><i>5</i>平台审核</div>
+      </div>
+      <div class="dead sec">
+        <div class="big"><span class="ic">✗</span><div><b>整张清单不可执行 · 已排除出批次</b><span class="small">上架清单 L-03 · <span lang="ja">LEDデスクライト 充電式</span> · 3 个 SKU</span></div><span class="badge block right">不要执行</span></div>
+        <p class="small" style="margin:12px 0 0">打包进批次 B-1020-01 时再次检查品类准入，1 个 SKU 命中 <b>G0：含电池，白名单未允许</b>。整张清单不进批次：模板行不生成，复制入口与素材包下载一并失效。命中 G1（如特商法表示未确认）同样整张不可执行。</p>
+        <div class="skus">
+          <div class="sku hit"><span class="thumb sm" data-art="powerbank"></span><div class="mono" style="margin-top:6px">JP01-LED-01</div><div lang="ja">ホワイト</div><span class="badge block">命中 G0 · 含电池</span></div>
+          <div class="sku"><span class="thumb sm" data-art="powerbank" style="filter:grayscale(1)"></span><div class="mono" style="margin-top:6px">JP01-LED-02</div><div lang="ja">ブラック</div><span class="badge">随清单不可执行</span></div>
+          <div class="sku"><span class="thumb sm" data-art="powerbank" style="filter:grayscale(1)"></span><div class="mono" style="margin-top:6px">JP01-LED-03</div><div lang="ja">ピンク</div><span class="badge">随清单不可执行</span></div>
+        </div>
+        <div class="inner"><table class="fl"><tbody>
+          <tr><td class="k">商品タイトル</td><td lang="ja">LEDデスクライト 充電式 調光 コードレス</td><td class="c"><span class="small faint" style="text-decoration:none">已失效</span></td></tr>
+          <tr><td class="k">販売価格（税込）</td><td>¥2,980</td><td class="c"><span class="small faint">已失效</span></td></tr>
+          <tr><td class="k">素材包</td><td>JP01-LED_assets.zip</td><td class="c"><span class="small faint">已失效</span></td></tr>
+        </tbody></table></div>
+        <div class="row wrap" style="margin-top:14px">
+          <button class="btn" data-toast="去货源页核对属性旗标（演示）">去货源页核对属性</button>
+          <button class="btn" data-toast="已将其余 SKU 拆为新清单，需重新送审同意 2（演示）">拆出其余 SKU 重批</button>
+          <span class="small" style="color:var(--block)">没有“强行上架”入口。</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="foot-note">改价、改库存、下架不在这里：请去卖家后台操作。<a class="right" href="#" data-toast="跳转：TikTok Shop 卖家后台（演示）">去卖家后台 →</a></div>
+</template>
+
+<template id="detail-tpl">
+  <h3>批次 <span class="mono">B-1020-01</span></h3>
+  <p class="small muted" style="margin:0 0 12px">批量上架包 · 2 行上传失败，等你修正</p>
+  <dl class="kv">
+    <dt>通道</dt><dd>A2 批量上架包</dd>
+    <dt>品数</dt><dd>4 个（另 1 个因 G0 排除）</dd>
+    <dt>审批</dt><dd>4 张同意 2，一品一单，均已批准</dd>
+    <dt>类目模板</dt><dd>3 个 · 版本与列映射已核对</dd>
+    <dt>合规</dt><dd><span class="badge ok">打包时重检 G0–G4</span></dd>
+    <dt>汇率</dt><dd>20.80 · 自动获取 · 偏离 1.2%</dd>
+  </dl>
+  <h3>预计用时</h3>
+  <div class="small">上传与处理约 12′ + 导入导出约 2′ = <b>约 14′</b>，每品约 2.8′（逐项照做约 19′/品）。设计估算，需实测。</div>
+  <h3>状态时间线</h3>
+  <ul class="timeline">
+    <li><span class="pt human"></span><div class="when">10-19 18:40 / 10-20 10:05–10:12 · 林薇</div><div class="what">4 个品各自批准同意 2</div></li>
+    <li><span class="pt ok"></span><div class="when">10-20 10:20 · LISTER</div><div class="what">打包：3 个模板 + 素材包；1 个品命中 G0 排除</div></li>
+    <li><span class="pt human"></span><div class="when">10-20 10:40 · 林薇</div><div class="what">在卖家后台批量上传 3 个模板</div></li>
+    <li><span class="pt block"></span><div class="when">10-20 10:52 · 失败回收</div><div class="what">2 行失败：缺材质、类目与模板不符</div></li>
+    <li><span class="pt ok"></span><div class="when">10-20 10:58 · 读回</div><div class="what">2 行成功，导出文件比对 9/9 一致</div></li>
+    <li><span class="pt wait"></span><div class="when">现在</div><div class="what">等你修正 2 行失败</div></li>
+  </ul>
+  <div class="alert wait" style="margin-top:4px"><span>单人运行：同一人批准并上传，标“自批自执”进审计高危视图。</span></div>
+  <p class="small faint" style="margin:12px 0 0">打包后事实若变化（汇率、规则库、店铺档案），对应的品会被移出批次并标“作废，不要执行”，模板与素材下载同时失效。</p>
+</template>
+<template id="d-todo">
+  <h3 lang="ja">引き出し仕切り板</h3>
+  <p class="small muted" style="margin:0 0 12px">执行清单 · 等你在后台新建</p>
+  <h3>这张清单依据什么</h3>
+  <dl class="kv">
+    <dt>同意 2</dt><dd>10-19 18:40 · 林薇本人批准</dd>
+    <dt>售价 / 毛利</dt><dd>¥1,580 · 30.2%</dd>
+    <dt>合规</dt><dd><span class="badge ok">G0–G4 通过</span></dd>
+    <dt>规则库</dt><dd>2026-10-20 版</dd>
+    <dt>汇率</dt><dd>20.80 · 偏离 1.2%</dd>
+    <dt>店铺档案</dt><dd>特商法 · 运费模板 · 発送日数 已确认</dd>
+  </dl>
+  <h3>状态时间线</h3>
+  <ul class="timeline">
+    <li><span class="pt human"></span><div class="when">10-19 18:40 · 林薇</div><div class="what">批准同意 2</div></li>
+    <li><span class="pt ok"></span><div class="when">10-19 18:41 · LISTER</div><div class="what">生成执行清单与素材包</div></li>
+    <li><span class="pt wait"></span><div class="when">现在</div><div class="what">等你在后台照做（已发放 20 小时）</div></li>
+    <li><span class="pt" style="border-color:var(--border-strong)"></span><div class="when">之后</div><div class="what faint">导入导出文件 → 读回核对 → 平台审核</div></li>
+  </ul>
+  <div class="alert wait" style="margin-top:4px"><span>单人运行：同一人批准并执行，标“自批自执”进审计高危视图。</span></div>
+  <p class="small faint" style="margin:12px 0 0">清单发放后事实若变化（汇率、规则库、店铺档案），清单会标“作废，不要执行”，复制与下载同时失效。</p>
+</template>
+<template id="d-ok">
+  <h3 lang="ja">キッチン水切りラック</h3>
+  <p class="small muted" style="margin:0 0 12px">读回一致 · 已上线（LIVE）</p>
+  <h3>状态时间线</h3>
+  <ul class="timeline">
+    <li><span class="pt human"></span><div class="when">10-18 20:10 · 林薇</div><div class="what">批准同意 2 · ¥2,780</div></li>
+    <li><span class="pt ok"></span><div class="when">10-18 20:11 · LISTER</div><div class="what">生成执行清单</div></li>
+    <li><span class="pt human"></span><div class="when">10-19 16:50 · 林薇</div><div class="what">导入商品导出文件</div></li>
+    <li><span class="pt ok"></span><div class="when">10-19 16:50 · 读回</div><div class="what">9/9 关键字段一致 · 已提交</div></li>
+    <li><span class="pt human"></span><div class="when">10-19 17:20 · 林薇</div><div class="what">导出文件状态列：已上线（LIVE）</div></li>
+  </ul>
+</template>
+<template id="d-bad">
+  <h3 lang="ja">折叠収納ボックス3個セット</h3>
+  <p class="small muted" style="margin:0 0 12px">读回不一致 · 已挂起 3 小时</p>
+  <dl class="kv"><dt>批准价</dt><dd>¥2,480（毛利 31.7%）</dd><dt>后台实际</dt><dd><b style="color:var(--block)">¥2,680</b></dd></dl>
+  <h3>状态时间线</h3>
+  <ul class="timeline">
+    <li><span class="pt human"></span><div class="when">10-19 18:40 · 林薇</div><div class="what">批准同意 2 · ¥2,480</div></li>
+    <li><span class="pt ok"></span><div class="when">10-19 18:41 · LISTER</div><div class="what">生成执行清单</div></li>
+    <li><span class="pt human"></span><div class="when">11:20 · 林薇</div><div class="what">导入商品导出文件（自批自执）</div></li>
+    <li><span class="pt block"></span><div class="when">11:20 · 读回</div><div class="what">販売価格不一致 → 挂起</div></li>
+    <li><span class="pt wait"></span><div class="when">14:30 · 提醒</div><div class="what">仍挂起，等你去后台处理</div></li>
+  </ul>
+</template>
+<template id="d-soft">
+  <h3 lang="ja">マグネットフック6個入</h3>
+  <p class="small muted" style="margin:0 0 12px">非关键差异 · 等 Owner 填理由</p>
+  <p class="small muted">标题、价格、送料、発送日数、类目、原産国、返品条件、图片数、主图都是关键字段，不一致不能接受，只能改后重新导入或下架。</p>
+  <h3>状态时间线</h3>
+  <ul class="timeline">
+    <li><span class="pt human"></span><div class="when">13:05 · 林薇</div><div class="what">导入商品导出文件</div></li>
+    <li><span class="pt wait"></span><div class="when">13:05 · 读回</div><div class="what">1 处非关键差异 · 等 Owner</div></li>
+  </ul>
+</template>
+<template id="d-dead">
+  <h3>G0 命中</h3>
+  <dl class="kv"><dt>SKU</dt><dd>JP01-LED-01</dd><dt>命中</dt><dd><span class="badge block">含电池</span></dd><dt>依据</dt><dd>白名单未允许“含电池”；货源页属性旗标已勾选“有电池”</dd><dt>规则库</dt><dd>2026-10-20 版</dd></dl>
+  <h3>状态时间线</h3>
+  <ul class="timeline">
+    <li><span class="pt human"></span><div class="when">10-19 · 林薇</div><div class="what">批准同意 2</div></li>
+    <li><span class="pt block"></span><div class="when">10-20 10:20 · 打包时重检</div><div class="what">命中 G0 → 整张不可执行，排除出批次</div></li>
+  </ul>
+</template>
+
+<script src="assets/art.js"></script>
+<script src="assets/charts.js"></script>
+<script src="assets/phone.js"></script>
+<script src="assets/cp2.js"></script>
+<script>
+(function(){
+  /* 素材包缩略图墙 */
+  var w='', K=['','','','','s','p','z','z'];
+  K.forEach(function(k){ w+='<div class="ph"><span class="af" data-art="divider"'+(k==='z'?' style="transform:scale(1.6)"':k==='p'?' style="inset:20%;border-radius:6px;overflow:hidden"':'')+'></span></div>'; });
+  w+='<div class="ph v" data-tip="竖版视频 9:16 · 18 秒"></div>';
+  var wall=document.getElementById('wall'); wall.innerHTML=w; CP.hydrate(wall);
+
+  /* 逐行复制 → 行标记已复制，进度环实时更新 */
+  var fl=document.getElementById('fl'), rows=fl.querySelectorAll('tr'), L=2*Math.PI*28;
+  function ring(){
+    var n=fl.querySelectorAll('tr.done').length, t=rows.length;
+    document.getElementById('cringFg').setAttribute('stroke-dasharray',(L*n/t).toFixed(1)+' '+L.toFixed(1));
+    document.getElementById('cringT').textContent=n;
+    document.getElementById('cringL').textContent='已复制 '+n+'/'+t;
+    document.getElementById('cring').classList.toggle('full',n===t);
+  }
+  fl.addEventListener('click',function(e){
+    var b=e.target.closest('[data-copy]'); if(!b) return;
+    var tr=b.closest('tr'); tr.classList.add('done'); b.textContent='✓ 已复制'; ring();
+  });
+  document.getElementById('copyAll').addEventListener('click',function(){
+    var tt=document.querySelector('.tabs [role=tab][data-tab=todo]'); if(tt) tt.click();
+    rows.forEach(function(tr){ tr.classList.add('done'); var b=tr.querySelector('[data-copy]'); if(b) b.textContent='✓ 已复制'; }); ring();
+  });
+  ring();
+
+  /* 联盟：勾选后佣金率必填 */
+  var aff=document.getElementById('aff'), rate=document.getElementById('affRate'), save=document.getElementById('affSave');
+  function affUpd(){ document.getElementById('affRow').hidden=!aff.checked; var bad=aff.checked&&!(parseFloat(rate.value)>0); save.disabled=bad; save.classList.toggle('disabled',bad); }
+  aff.addEventListener('change',affUpd); rate.addEventListener('input',affUpd);
+  /* 审核结果：驳回时原因必填 */
+  document.querySelectorAll('input[name=rv]').forEach(function(r){ r.addEventListener('change',function(){ document.getElementById('rejBox').hidden = r.value!=='rej'; }); });
+  /* 非关键差异：理由必填 */
+  var why=document.getElementById('softWhy'), sok=document.getElementById('softOk');
+  why.addEventListener('input',function(){ var e=!why.value.trim(); sok.disabled=e; sok.classList.toggle('disabled',e); });
+
+  /* 标签页 → 右栏时间线 */
+  var MAP={batch:'detail-tpl',todo:'d-todo',ok:'d-ok',bad:'d-bad',soft:'d-soft',dead:'d-dead'};
+  document.addEventListener('click',function(e){
+    var t=e.target.closest('.tabs [role=tab]'); if(!t||!MAP[t.dataset.tab]) return;
+    var d=document.getElementById('detail'); d.innerHTML=document.getElementById(MAP[t.dataset.tab]).innerHTML; CP.hydrate(d); d.scrollTop=0;
+  });
+  var hx=document.querySelector('.tabs [role=tab][data-tab="'+location.hash.slice(1)+'"]'); if(hx) hx.click();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,675 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>素材 · CrossPilot</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="assets/cp2.css">
+<style>
+/* ===== 素材页专用 ===== */
+.as-layout{display:grid;grid-template-columns:188px minmax(0,1fr);gap:16px;align-items:start}
+.plist{display:flex;flex-direction:column;gap:8px;position:sticky;top:76px}
+.plist h4{margin:0 0 2px;font:500 13px var(--font-mono);letter-spacing:.12em;color:var(--text-3)}
+.pi{display:grid;grid-template-columns:50px minmax(0,1fr);gap:10px;align-items:center;text-align:left;width:100%;background:var(--surface);border:0;border-radius:14px;padding:10px;box-shadow:var(--shadow-1);cursor:pointer;color:var(--text);transition:box-shadow .12s,background .12s}
+.pi:hover{background:var(--surface-2)}
+.pi[aria-selected=true]{background:var(--primary-bg);box-shadow:0 0 0 2px var(--primary)}
+.pi .t{font-size:14px;font-weight:600;line-height:1.35;display:block;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.pi .m{display:flex;flex-direction:column;gap:4px;margin-top:4px;font-size:13px;color:var(--text-3)}
+.pi .badge{align-self:flex-start;height:20px;font-size:13px;padding:0 8px}
+.sring{--p:50%;--c:var(--ok);width:50px;height:50px;border-radius:14px;padding:3px;background:conic-gradient(var(--c) var(--p),var(--surface-3) 0)}
+.sring .thumb{width:44px;height:44px;border-radius:11px;box-shadow:0 0 0 2px var(--surface)}
+.plist .sum{background:var(--surface-2);border-radius:12px;padding:10px 12px;font-size:14px;color:var(--text-2);line-height:1.6}
+
+.pane-head{display:flex;align-items:center;gap:14px;margin-bottom:14px}
+.pane-head h2{font-size:20px}
+.pane-head .meta{font-size:14px;color:var(--text-3)}
+.sec{margin-bottom:16px}
+
+/* 手机预览 + 文案 */
+.pv{display:grid;grid-template-columns:244px minmax(0,1fr);gap:16px;align-items:start}
+.phone{width:244px}
+.phone .gal{position:relative}
+.phone .gal .ph{border-radius:0}
+.phone .dots{position:absolute;left:0;right:0;bottom:8px;display:flex;justify-content:center;gap:4px}
+.phone .dots i{width:5px;height:5px;border-radius:50%;background:rgba(255,255,255,.7)}
+.phone .dots i:first-child{background:#fff;width:14px;border-radius:3px}
+.phone .cnt{position:absolute;right:8px;top:8px;font-size:12px;background:rgba(0,0,0,.45);color:#fff;border-radius:8px;padding:0 6px}
+.phone .p-price{display:flex;align-items:baseline;gap:2px}
+.phone .p-shop{display:flex;align-items:center;gap:8px;padding:8px 12px;border-top:6px solid #F3F3F3;font-size:13px;color:#555}
+.phone .p-shop i{width:22px;height:22px;border-radius:50%;background:#E8EEED;display:inline-block}
+.phone .p-row b{color:#111;font-weight:600}
+.phone .p-cta{display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:8px 12px 12px}
+.phone .p-cta span{height:30px;border-radius:15px;display:grid;place-items:center;font-size:13px;font-weight:600}
+.phone .p-cta span:first-child{background:#FFE5E8;color:#E8233B} .phone .p-cta span:last-child{background:#E8233B;color:#fff}
+.phone mark.hit{background:#FBE4E2;color:#B3261E}
+.phone-cap{text-align:center;font-size:13px;color:var(--text-3);margin-top:8px}
+
+.cp{display:flex;flex-direction:column;gap:6px}
+.cp-row{display:grid;grid-template-columns:44px minmax(0,1fr) minmax(0,1fr);gap:10px;padding:9px 10px;border-radius:10px;background:var(--surface-2);font-size:12.5px;line-height:1.55}
+.cp-row .lb{font:500 13px var(--font-mono);color:var(--text-3);padding-top:2px}
+.cp-row .cn{color:var(--text-2)}
+.cp-row .tm{grid-column:2/4;display:flex;gap:6px;flex-wrap:wrap}
+.cp-row .tm .badge{height:20px;font-size:13px}
+.cp-row.block{background:var(--block-bg)} .cp-row.warn{background:var(--wait-bg)}
+.cp-head{display:grid;grid-template-columns:44px minmax(0,1fr) minmax(0,1fr);gap:10px;padding:0 10px;font-size:13px;color:var(--text-3);letter-spacing:.06em}
+mark{border-radius:4px;padding:0 2px}
+mark.hit{background:var(--block);color:var(--surface);font-weight:600}
+mark.wr{background:color-mix(in srgb,var(--wait-solid) 45%,transparent);color:inherit}
+mark.term{background:var(--info-bg);color:var(--info)}
+.intro{font-size:12.5px;line-height:1.8;white-space:pre-line}
+
+/* 9 宫格 */
+.gallery{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:16px;align-items:start}
+.tiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.tile{border:0;padding:0;background:none;cursor:pointer;text-align:left;border-radius:12px;color:inherit;position:relative}
+.tile .ph{box-shadow:0 0 0 1px var(--border)}
+.tile[aria-pressed=true] .ph{box-shadow:0 0 0 3px var(--primary)}
+.tile .cap{display:flex;justify-content:space-between;gap:4px;font-size:13px;color:var(--text-3);margin-top:4px;white-space:nowrap;overflow:hidden}
+.ph .af{position:absolute;inset:0;display:block}
+.ph .af svg{width:100%;height:100%}
+.ph .af.zoom svg{transform:scale(1.75) translate(4%,6%)}
+.ph .af.small{inset:16% 16% 22% 16%;border-radius:10px;overflow:hidden;box-shadow:0 6px 14px rgba(0,0,0,.15)}
+.ph .band{position:absolute;left:0;right:0;bottom:0;padding:5px 6px;font-size:12px;font-weight:600;background:color-mix(in srgb,var(--ink) 78%,transparent);color:#fff;text-align:center;line-height:1.3}
+.ph .band.hit{background:var(--block);color:#fff}
+.ph .dim{position:absolute;inset:0;width:100%;height:100%}
+.ph .scene{position:absolute;inset:0;background:linear-gradient(180deg,var(--art-e) 0 62%,var(--art-b) 62%)}
+.ph .wm{position:absolute;right:5px;top:5px;font-size:11px;font-weight:600;padding:1px 5px;border-radius:4px;background:rgba(0,0,0,.55);color:#fff}
+.ph .lv{position:absolute;left:5px;top:5px;font:600 12px var(--font-mono);padding:2px 5px;border-radius:5px;background:var(--surface);color:var(--text-2)}
+.ph .lv.L2{background:var(--wait-bg);color:var(--wait)}
+.ph .no{position:absolute;left:5px;bottom:5px;font:600 12px var(--font-mono);color:var(--text-3)}
+.ph.photo{filter:saturate(.75) contrast(.95)}
+.cmpbox{background:var(--surface-2);border-radius:14px;padding:14px}
+.cmpbox .cmp .lab{font-size:13px;color:var(--text-3);margin-top:4px}
+.licbar{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
+
+/* 视频 */
+.vid{display:grid;grid-template-columns:150px minmax(0,1fr);gap:18px;align-items:start}
+.player{position:relative;border-radius:14px;overflow:hidden;background:var(--ink);aspect-ratio:9/16;box-shadow:var(--shadow-2)}
+.player .af{position:absolute;left:0;right:0;top:18%;height:46%}
+.player .play{position:absolute;left:50%;top:44%;transform:translate(-50%,-50%);width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.88);display:grid;place-items:center;border:0;cursor:pointer}
+.player .play::after{content:"";border-left:12px solid #10262A;border-top:8px solid transparent;border-bottom:8px solid transparent;margin-left:3px}
+.player .sub{position:absolute;left:8px;right:8px;bottom:30px;text-align:center;font-size:13px;font-weight:600;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.8)}
+.player .prog{position:absolute;left:8px;right:8px;bottom:12px;height:3px;border-radius:2px;background:rgba(255,255,255,.25)}
+.player .prog i{display:block;width:34%;height:100%;background:#fff;border-radius:2px}
+.player .aitag{position:absolute;left:8px;top:8px;font-size:12px;font-weight:600;background:rgba(0,0,0,.55);color:#fff;border-radius:4px;padding:1px 6px}
+.sb{display:flex;flex-direction:column;gap:6px}
+.sb .trk{display:grid;grid-template-columns:62px minmax(0,1fr);gap:8px;align-items:center;font-size:13px;color:var(--text-3)}
+.sb .lane{display:flex;gap:3px;height:42px}
+.sb .seg{border-radius:7px;overflow:hidden;position:relative;background:var(--surface-3);display:flex;gap:2px;padding:2px}
+.sb .seg .fr{flex:1;border-radius:5px;overflow:hidden;position:relative;min-width:0}
+.sb .seg .fr .af{position:absolute;inset:0}
+.sb .seg.open{background:var(--primary-bg);color:var(--primary-strong);display:grid;place-items:center;font-size:13px;font-weight:600}
+.sb .seg.end{background:var(--surface-3);display:grid;place-items:center;font-size:13px;color:var(--text-2)}
+.sb .lane.thin{height:22px}
+.sb .lane.thin .seg{display:flex;align-items:center;padding:0 8px;font-size:13px;color:var(--text-2);white-space:nowrap;overflow:hidden}
+.sb .ruler{display:flex;justify-content:space-between;font:500 12px var(--font-mono);color:var(--text-3);margin-left:70px}
+.checks{list-style:none;margin:12px 0 0;padding:0;display:grid;grid-template-columns:1fr 1fr;gap:6px 14px;font-size:14px}
+.checks li{display:flex;gap:6px;align-items:flex-start}
+.checks li::before{content:"✓";color:var(--ok);font-weight:600}
+.checks li.w::before{content:"!";color:var(--wait)}
+
+/* 合规报告 */
+.heat{display:flex;gap:10px;align-items:flex-end}
+.heat .grp{min-width:0} .heat .cells i{flex:1;width:auto}
+.heat .grp{display:flex;flex-direction:column;gap:5px}
+.heat .cells{display:flex;gap:2px}
+.heat .cells i{width:15px;height:22px;border-radius:4px;background:var(--ok);opacity:.85;display:block;cursor:default}
+.heat .cells i.w{background:var(--wait-solid);opacity:1}
+.heat .cells i.b{background:var(--block);opacity:1}
+.heat .gl{font:500 12px var(--font-mono);color:var(--text-3)}
+.heat-sum{display:flex;gap:16px;font-size:14px;margin-top:10px;color:var(--text-2)}
+.heat-sum b{font-size:18px;font-weight:600;margin-right:4px}
+.hit-card{border-radius:14px;padding:14px 16px;margin-top:12px}
+.hit-card.block{background:var(--block-bg)} .hit-card.warn{background:var(--wait-bg)}
+.hit-card .hd{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.hit-card .hd b{font-size:16px}
+.hit-card.block .hd b{color:var(--block)} .hit-card.warn .hd b{color:var(--wait)}
+.hit-card .kv{font-size:12.5px}
+.hit-card .kv dt{color:var(--text-2)}
+.hit-card .fix{background:var(--surface);border-radius:10px;padding:8px 10px;margin-top:2px}
+.gtbl td{padding:9px 12px}
+.gtbl .meter{width:120px}
+
+/* 价格卡 */
+.price{display:grid;grid-template-columns:minmax(0,1fr) 250px;gap:20px;align-items:start}
+.pbar{position:relative;height:56px;margin:22px 4px 0}
+.pbar .ax{position:absolute;left:0;right:0;top:24px;height:8px;border-radius:4px;background:var(--surface-3)}
+.pbar .band{position:absolute;top:24px;height:8px;background:var(--primary-bg);border-radius:4px}
+.pbar .mk{position:absolute;top:12px;width:2px;height:32px;transform:translateX(-1px)}
+.pbar .mk span{position:absolute;top:34px;left:50%;transform:translateX(-50%);font-size:12px;white-space:nowrap;color:var(--text-3)}
+.pbar .mk.floor{background:var(--block)} .pbar .mk.floor span{color:var(--block);font-weight:600;top:-16px}
+.pbar .mk.line{background:var(--text-3)}
+.pbar .dot{position:absolute;top:19px;width:18px;height:18px;border-radius:50%;background:var(--primary);border:3px solid var(--surface);box-shadow:0 0 0 1px var(--primary);transform:translateX(-9px);transition:left .2s}
+.pbar .dot.bad{background:var(--block);box-shadow:0 0 0 1px var(--block)}
+.pbar .dot span{position:absolute;bottom:20px;left:50%;transform:translateX(-50%);font-size:13px;font-weight:600;color:var(--text);white-space:nowrap}
+.trial{display:flex;align-items:center;gap:8px;margin-top:14px}
+.trial .input{width:110px}
+.trial-out{font-size:14px}
+.trial-out.bad{color:var(--block);font-weight:600}
+.pkv{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;font-size:12.5px;margin:10px 0 0}
+.pkv dt{color:var(--text-3)} .pkv dd{margin:0;text-align:right}
+.pcard-bad .pbig{color:var(--block)}
+.pbig{font-size:28px;font-weight:600;letter-spacing:-.02em}
+.ret{display:grid;grid-template-columns:200px minmax(0,1fr) auto;gap:8px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.note-bad{font-size:14px;color:var(--block);font-weight:500}
+.card-head .seg button{white-space:nowrap}
+.card-head h2{white-space:nowrap}
+[hidden]{display:none!important}
+</style>
+</head>
+<body data-page="assets" data-crumb="流水线 / 素材">
+<template id="main-tpl">
+  <div class="page-head">
+    <div>
+      <span class="eyebrow">ASSETS · 2026-10-20 · 检查于 10:42</span>
+      <h1>素材：3 个品，1 个被 BLOCK 拦下</h1>
+      <p>看素材、核对日文与回译、处理合规命中，再送审同意 2</p>
+    </div>
+    <div class="actions">
+      <span class="note-bad" id="sendNote" hidden></span>
+      <button class="help" data-toast="操作手册：素材页（演示）" aria-label="帮助">?</button>
+      <button class="btn primary lg" id="sendBtn" data-toast="已送审同意 2，请到「待批」查看（演示）">送审同意 2</button>
+    </div>
+  </div>
+
+  <div class="as-layout" data-tabs>
+    <!-- 左：商品列表 -->
+    <div class="plist" role="tablist" aria-label="商品列表">
+      <h4>商品 · 3</h4>
+      <button class="pi" role="tab" data-tab="spoons" aria-selected="true">
+        <span class="sring" style="--p:97%;--c:var(--ok)" data-tip="检查 32 项：31 通过 · 1 WARN · 0 BLOCK"><span class="thumb" data-art="spoons"></span></span>
+        <span><span class="t" lang="ja">シリコン調理スプーン5点セット</span><span class="m"><span class="badge ok">已检查</span><span>1 WARN · 毛利 34.2%</span></span></span>
+      </button>
+      <button class="pi" role="tab" data-tab="cable" aria-selected="false">
+        <span class="sring" style="--p:94%;--c:var(--wait-solid)" data-tip="检查 32 项：30 通过 · 2 WARN · 0 BLOCK"><span class="thumb" data-art="cable"></span></span>
+        <span><span class="t" lang="ja">デスクケーブルオーガナイザー</span><span class="m"><span class="badge wait">2 条 WARN</span><span>同意 2 时逐条确认</span></span></span>
+      </button>
+      <button class="pi" role="tab" data-tab="brush" aria-selected="false">
+        <span class="sring" style="--p:94%;--c:var(--block)" data-tip="检查 32 项：30 通过 · 1 WARN · 1 BLOCK"><span class="thumb" data-art="brush"></span></span>
+        <span><span class="t" lang="ja">ペット用ブラシ 抜け毛クリーナー</span><span class="m"><span class="badge block">检查未过</span><span>1 BLOCK · 改写 1/3</span></span></span>
+      </button>
+      <div class="sum">状态环 = 32 项检查的通过比例；颜色表示最严重的命中。</div>
+    </div>
+
+    <!-- ===================== #2 已通过检查 ===================== -->
+    <div data-pane="spoons">
+      <div class="pane-head">
+        <span class="thumb lg" data-art="spoons"></span>
+        <div><h2 lang="ja">シリコン調理スプーン5点セット</h2><div class="meta">候选 #2 · 素材 v1 · 9 图 + 1 视频 · 售价 ¥1,980 · 毛利 34.2%</div></div>
+      </div>
+      <div class="steps sec">
+        <div class="st done"><i>1</i>生成 · 10:12</div>
+        <div class="st done"><i>2</i>G0–G4 检查 · 31/32</div>
+        <div class="st wait"><i>3</i>待同意 2 · 可送审</div>
+      </div>
+      <div class="alert ok sec"><span><b>已通过检查：0 BLOCK</b> · 1 条 WARN（场景图 L2）会带进同意 2，由你逐条确认。</span></div>
+
+      <section class="card sec">
+        <div class="card-head"><h2>商品页预览与文案</h2><span class="meta">回译仅帮你读懂，不参与判定</span>
+          <div class="tools"><div class="seg"><button data-view="sp-b" data-group="sp" aria-pressed="true">标题 + 卖点</button><button data-view="sp-i" data-group="sp" aria-pressed="false">介绍页</button></div></div></div>
+        <div class="pv">
+          <div>
+            <div data-phone='{"art": "spoons", "count": "1/9", "price": 1980, "title": "シリコン調理スプーン5点セット 耐熱 キッチンツール 食洗機対応", "bullets": ["耐熱230℃のシリコン製", "食洗機対応でお手入れ簡単", "5点セットで調理がスムーズ"]}'></div>
+            <div class="phone-cap">日本站商品页模拟 · 非平台实际渲染</div>
+          </div>
+          <div>
+            <div data-pane-view="sp-b" data-group="sp">
+              <div class="cp-head"><span></span><span>日文原文</span><span>中文回译</span></div>
+              <div class="cp" style="margin-top:6px">
+                <div class="cp-row"><span class="lb">标题</span><span lang="ja">シリコン調理スプーン5点セット 耐熱 キッチンツール <mark class="term">食洗機</mark>対応</span><span class="cn">硅胶烹饪勺 5 件套 耐热 厨房工具 可用洗碗机</span><span class="tm"><span class="badge ok">食洗機 = 洗碗机</span><span class="tag">38 / 60 字</span></span></div>
+                <div class="cp-row"><span class="lb">卖点1</span><span lang="ja">5点セットで、調理に必要なスプーンがそろいます。</span><span class="cn">五件套，烹饪所需的勺子一应俱全。</span></div>
+                <div class="cp-row"><span class="lb">卖点2</span><span lang="ja"><mark class="term">耐熱</mark>230℃のシリコン製で、鍋やフライパンを傷つけにくいです。</span><span class="cn">耐热 230℃ 的硅胶材质，不易划伤锅具。</span><span class="tm"><span class="badge ok">耐熱 = 耐热</span><span class="badge ok">230℃ 有来源：货源属性</span></span></div>
+                <div class="cp-row"><span class="lb">卖点3</span><span lang="ja"><mark class="term">食洗機</mark>対応で、お手入れが簡単です。</span><span class="cn">可用洗碗机，清洗方便。</span></div>
+                <div class="cp-row"><span class="lb">卖点4</span><span lang="ja">持ち手が長く、深い鍋でも使いやすいです。</span><span class="cn">手柄较长，深锅也好用。</span></div>
+                <div class="cp-row"><span class="lb">卖点5</span><span lang="ja">吊り下げ用の穴付きで、すっきり収納できます。</span><span class="cn">带挂孔，收纳整齐。</span></div>
+              </div>
+            </div>
+            <div data-pane-view="sp-i" data-group="sp" hidden>
+              <div class="cp-head"><span></span><span>日文原文</span><span>中文回译</span></div>
+              <div class="cp" style="margin-top:6px">
+                <div class="cp-row"><span class="lb">説明</span><span lang="ja" class="intro">【商品説明】
+調理に必要な5種類のスプーンをセットにしました。シリコン製で鍋を傷つけにくく、毎日の料理に使いやすい形です。</span><span class="cn intro">【商品说明】
+把烹饪所需的 5 种勺子做成一套。硅胶材质不易划伤锅具，形状便于日常烹饪。</span></div>
+                <div class="cp-row"><span class="lb">規格</span><span lang="ja" class="intro">【サイズ】全長約28cm
+【素材】シリコン、ナイロン芯
+【<mark class="term">原産国</mark>】中国</span><span class="cn intro">【尺寸】全长约 28cm
+【材质】硅胶、尼龙芯
+【原产国】中国</span><span class="tm"><span class="badge ok">原産国 = 原产国</span><span class="badge ok">28cm 有来源</span></span></div>
+                <div class="cp-row"><span class="lb">注意</span><span lang="ja" class="intro">直火・オーブンでの使用はお避けください。</span><span class="cn intro">请避免明火、烤箱中使用。</span></div>
+                <div class="cp-row"><span class="lb">配送</span><span lang="ja" class="intro">販売価格：1,980円（<mark class="term">税込</mark>）。<mark class="term">送料</mark>無料。4営業日以内に発送します。</span><span class="cn intro">销售价格：1,980 日元（含税）。免运费。4 个工作日内发货。</span><span class="tm"><span class="badge ok">税込 = 含税</span><span class="badge ok">送料 = 运费</span></span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="card sec">
+        <div class="card-head"><h2>图片 9 张</h2><span class="meta">AIGC 等级 · 授权类型 · 点开看依据图并排</span>
+          <div class="tools"><span class="badge">L0 ×3</span><span class="badge">L1 ×5</span><span class="badge wait">L2 ×1</span></div></div>
+        <div class="gallery">
+          <div class="tiles" data-tiles="spoons"></div>
+          <div class="cmpbox" data-cmp="spoons"></div>
+        </div>
+      </section>
+
+      <section class="card sec">
+        <div class="card-head"><h2>竖版视频</h2><span class="meta">9:16 · 18 秒 · 5.9 MB · 图片轮播 + 日文字幕 + 免版权音乐</span></div>
+        <div class="vid">
+          <div class="player"><span class="aitag">AI生成（场景帧）</span><span class="af" data-art="spoons"></span><button class="play" data-toast="播放视频（演示）" aria-label="播放"></button><div class="sub" lang="ja">耐熱230℃で安心</div><div class="prog"><i></i></div></div>
+          <div>
+            <div class="sb">
+              <div class="ruler"><span>0s</span><span>4s</span><span>8s</span><span>12s</span><span>18s</span></div>
+              <div class="trk"><span>分镜</span><div class="lane">
+                <div class="seg open" style="flex:2">开场 2s</div>
+                <div class="seg" style="flex:13"><span class="fr"><span class="af" data-art="spoons"></span></span><span class="fr"><span class="af" data-art="spoons"></span></span><span class="fr" data-tip="场景图 L2：帧上已叠加「AI生成」"><span class="af" data-art="spoons"></span></span><span class="fr"><span class="af" data-art="spoons"></span></span><span class="fr"><span class="af" data-art="spoons"></span></span></div>
+                <div class="seg end" style="flex:3">结尾 3s</div></div></div>
+              <div class="trk"><span>日文字幕</span><div class="lane thin">
+                <div class="seg" style="flex:2" lang="ja">5点セット</div><div class="seg" style="flex:13" lang="ja">耐熱230℃ · 食洗機対応 · 吊り下げ収納</div><div class="seg" style="flex:3" lang="ja">¥1,980 税込</div></div></div>
+              <div class="trk"><span>音频</span><div class="lane thin"><div class="seg" style="flex:1">BGM 免版权 · 已登记授权 · 无 AI 配音</div></div></div>
+            </div>
+            <ul class="checks">
+              <li>画面比例 9:16</li><li>时长 18 秒（要求 15–30 秒）</li>
+              <li>MP4 · 5.9 MB（≤10 MB）</li><li>字体与 BGM 已登记授权</li>
+              <li>L2 场景帧已叠加「AI生成」</li><li>未用 AI 配音或 AI 头像</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <section class="card sec">
+        <div class="card-head"><h2>合规报告 G1–G4</h2><span class="meta">规则库 2026-10-20 版 · 校验于 10:38 · 复核于 10:42</span>
+          <div class="tools"><span class="badge ok">0 BLOCK</span><span class="badge wait">1 WARN</span></div></div>
+        <div class="heat" data-heat="spoons"></div>
+        <div class="heat-sum"><span><b style="color:var(--ok)">31</b>项通过</span><span><b style="color:var(--wait)">1</b>WARN</span><span><b>0</b>BLOCK</span><span class="faint">悬停色块看规则</span></div>
+        <div class="hit-card warn">
+          <div class="hd"><span class="badge wait">WARN</span><b>G3-002 · AIGC 等级与“AI生成”标注</b><span class="right small faint">待在同意 2 逐条确认</span></div>
+          <dl class="kv"><dt>命中</dt><dd>图 5 场景图（L2，AI 生成的厨房场景）</dd><dt>需确认</dt><dd>以本 SKU 实拍图（图 8）为底图，商品本体像素与比例未改动；画面已标注「AI生成」</dd></dl>
+        </div>
+        <table class="tbl gtbl" style="margin-top:12px"><thead><tr><th scope="col">分组</th><th scope="col">通过</th><th scope="col">进度</th><th scope="col">结果</th></tr></thead><tbody>
+          <tr><td>G1 上架必备表示</td><td>6 / 6</td><td><div class="meter ok"><i style="width:100%"></i></div></td><td><span class="badge ok">通过</span></td></tr>
+          <tr><td>G2 文案</td><td>11 / 11</td><td><div class="meter ok"><i style="width:100%"></i></div></td><td><span class="badge ok">通过</span></td></tr>
+          <tr><td>G3 图片视频</td><td>9 / 10</td><td><div class="meter ok"><i style="width:90%"></i></div></td><td><span class="badge wait">WARN 1</span></td></tr>
+          <tr><td>G4 平台规格</td><td>5 / 5</td><td><div class="meter ok"><i style="width:100%"></i></div></td><td><span class="badge ok">通过</span></td></tr>
+        </tbody></table>
+      </section>
+
+      <section class="card sec" data-price="spoons">
+        <div class="card-head"><h2>价格</h2><span class="meta">建议价 · 成本分项 · 地板价</span></div>
+        <div class="price">
+          <div>
+            <div class="small muted" style="margin-bottom:6px">成本瀑布：售价逐项扣减到利润（单件，JPY；汇率 20.80）</div>
+            <div class="chart" data-chart="waterfall" data-cfg='{"w":400,"lw":110,"rowH":24,"items":[{"label":"售价（税込）","value":1980,"type":"revenue"},{"label":"c1 采购价","value":499,"type":"cost","color":"s1","tip":"24 CNY × 20.80 · 货源确认 10-18"},{"label":"c2 国内段运费","value":62,"type":"cost","color":"s1"},{"label":"c3 国际运费","value":380,"type":"cost","color":"s1"},{"label":"c6 通関 · c7 包材","value":52,"type":"cost","color":"s1","tip":"c4 关税 ¥0 · c5 输入消費税 ¥0（演示假设）"},{"label":"c8 佣金 10%","value":198,"type":"cost","color":"s4"},{"label":"c9 手续费 3%","value":59,"type":"cost","color":"s4"},{"label":"c10 退货损耗","value":53,"type":"cost","color":"s2"},{"label":"利润","value":677,"type":"profit"}],"legend":[{"label":"到岸成本 ¥993","color":"s1"},{"label":"佣金与手续费","color":"s4"},{"label":"退货损耗","color":"s2"}]}'></div>
+          </div>
+          <div>
+            <div class="row" style="gap:14px">
+              <div class="chart" data-chart="ring" data-cfg='{"pct":34.2,"size":92,"stroke":10,"label":"34.2%","sub":"毛利","color":"ok","fs":17,"tip":"利润 ¥677 ÷ 营收 ¥1,980"}'></div>
+              <div><div class="small faint">建议售价（税込）</div><div class="pbig" data-pv>¥1,980</div><div class="small muted">落在竞品带 ¥1,780–2,480</div></div>
+            </div>
+            <dl class="pkv">
+              <dt>成本地板价（利润 = 0）</dt><dd>¥1,178</dd>
+              <dt>底线价（毛利 12%）</dt><dd>¥1,373</dd>
+              <dt>目标价（毛利 32%）</dt><dd>¥1,898</dd>
+            </dl>
+          </div>
+        </div>
+        <div class="pbar" data-pbar data-min="1000" data-max="2600" data-floor="1178" data-line="1373" data-b0="1780" data-b1="2480" data-p="1980"></div>
+        <div class="trial">
+          <label class="small muted" for="tp-spoons">试算售价</label>
+          <input class="input" id="tp-spoons" data-trial="spoons" value="1980" inputmode="numeric">
+          <span class="trial-out" data-trial-out>毛利 34.2% · 高于底线 12%</span>
+          <span class="right small faint">改价会生成新版本并重新检查</span>
+        </div>
+      </section>
+
+      <section class="card sec">
+        <div class="card-head"><h2>退回 / 重生成</h2><span class="meta">原因进语料库，下一版默认规避</span></div>
+        <div class="ret">
+          <select class="select" data-reason aria-label="退回原因"><option value="">选择原因（必选）</option><option>措辞</option><option>图片</option><option>价格</option><option>合规</option><option>其他</option></select>
+          <input class="input" placeholder="补充说明（选填）" aria-label="补充说明">
+          <button class="btn" data-ret disabled data-toast="已退回，Creator 将带着原因重新生成（演示）">退回重生成</button>
+        </div>
+      </section>
+    </div>
+
+    <!-- ===================== #3 两条 WARN（简版） ===================== -->
+    <div data-pane="cable" hidden>
+      <div class="pane-head">
+        <span class="thumb lg" data-art="cable"></span>
+        <div><h2 lang="ja">デスクケーブルオーガナイザー</h2><div class="meta">候选 #3 · 素材 v1 · 9 图 + 1 视频 · 售价 ¥1,680 · 毛利 29.8%</div></div>
+      </div>
+      <div class="steps sec">
+        <div class="st done"><i>1</i>生成 · 10:20</div>
+        <div class="st done"><i>2</i>G0–G4 检查 · 30/32</div>
+        <div class="st wait"><i>3</i>待同意 2 · 可送审</div>
+      </div>
+      <div class="alert wait sec"><span><b>0 BLOCK · 2 条 WARN</b>：可以送审；两条 WARN 会在同意 2 里逐条确认并选依据。</span></div>
+      <section class="card sec">
+        <div class="card-head"><h2>商品页预览与文案</h2><span class="meta">日文原文 · 中文回译 · 术语核对</span></div>
+        <div class="pv">
+          <div><div data-phone='{"art": "cable", "count": "1/9", "price": 1680, "title": "デスクケーブルオーガナイザー 配線整理 クリップ 5連", "bullets": ["クリップで配線をすっきり整理", "デスクにしっかり固定", "5連タイプ"]}'></div></div>
+          <div>
+            <div class="cp-head"><span></span><span>日文原文</span><span>中文回译</span></div>
+            <div class="cp" style="margin-top:6px">
+              <div class="cp-row"><span class="lb">标题</span><span lang="ja">デスクケーブルオーガナイザー 配線整理 クリップ 5連</span><span class="cn">桌面理线器 走线整理 夹子 5 连</span></div>
+              <div class="cp-row"><span class="lb">卖点1</span><span lang="ja">デスクの端に貼るだけで、ケーブルをすっきりまとめます。</span><span class="cn">只需贴在桌边，就能整齐收拢线缆。</span></div>
+              <div class="cp-row"><span class="lb">卖点2</span><span lang="ja">5本までのケーブルを個別に固定できます。</span><span class="cn">最多可分别固定 5 根线缆。</span><span class="tm"><span class="badge ok">5本 有来源</span></span></div>
+              <div class="cp-row"><span class="lb">卖点3</span><span lang="ja">粘着テープ付きで、工具は不要です。</span><span class="cn">自带粘胶，无需工具。</span></div>
+              <div class="cp-row warn"><span class="lb">卖点4</span><span lang="ja"><mark class="wr">ケーブルの迷子を防止することができるでしょう。</mark></span><span class="cn">能够防止线缆走失吧。</span><span class="tm"><span class="badge wait">G2-008 机翻腔</span></span></div>
+              <div class="cp-row"><span class="lb">卖点5</span><span lang="ja">シリコン製で、ケーブルを傷つけにくいです。</span><span class="cn">硅胶材质，不易伤线。</span></div>
+            </div>
+          </div>
+        </div>
+      </section>
+      <section class="card sec">
+        <div class="card-head"><h2>图片 9 张</h2><span class="meta">点开看依据图并排</span><div class="tools"><span class="badge">L0 ×2</span><span class="badge">L1 ×6</span><span class="badge wait">L2 ×1</span></div></div>
+        <div class="gallery"><div class="tiles" data-tiles="cable"></div><div class="cmpbox" data-cmp="cable"></div></div>
+      </section>
+      <section class="card sec">
+        <div class="card-head"><h2>合规报告 G1–G4</h2><span class="meta">规则库 2026-10-20 版 · 校验于 10:40</span><div class="tools"><span class="badge ok">0 BLOCK</span><span class="badge wait">2 WARN</span></div></div>
+        <div class="heat" data-heat="cable"></div>
+        <div class="heat-sum"><span><b style="color:var(--ok)">30</b>项通过</span><span><b style="color:var(--wait)">2</b>WARN</span><span><b>0</b>BLOCK</span></div>
+        <div class="hit-card warn"><div class="hd"><span class="badge wait">WARN</span><b>G2-008 · 机翻腔</b><span class="right small faint">只出 WARN，不可降级</span></div>
+          <dl class="kv"><dt>命中片段</dt><dd lang="ja">卖点 4「ケーブルの迷子を防止することができるでしょう」</dd><dt>建议</dt><dd>改成「ケーブルが落ちにくくなります」（线缆不易掉落），或在同意 2 确认后保留</dd></dl></div>
+        <div class="hit-card warn"><div class="hd"><span class="badge wait">WARN</span><b>G3-002 · AIGC 等级 L2</b><span class="right small faint">待在同意 2 逐条确认</span></div>
+          <dl class="kv"><dt>命中</dt><dd>图 6 桌面场景图（L2），底图为自有实拍图 2</dd></dl></div>
+      </section>
+      <section class="card sec">
+        <div class="card-head"><h2>价格</h2><span class="meta">建议价 · 成本分项</span></div>
+        <div class="price">
+          <div class="chart" data-chart="waterfall" data-cfg='{"w":400,"lw":110,"rowH":24,"items":[{"label":"售价（税込）","value":1680,"type":"revenue"},{"label":"c1 采购价","value":354,"type":"cost","color":"s1","tip":"17 CNY × 20.80"},{"label":"c2 国内段运费","value":62,"type":"cost","color":"s1"},{"label":"c3 国际运费","value":420,"type":"cost","color":"s1"},{"label":"c6 通関 · c7 包材","value":52,"type":"cost","color":"s1"},{"label":"c8 佣金 10%","value":168,"type":"cost","color":"s4"},{"label":"c9 手续费 3%","value":50,"type":"cost","color":"s4"},{"label":"c10 退货损耗","value":73,"type":"cost","color":"s2"},{"label":"利润","value":501,"type":"profit"}],"legend":[{"label":"到岸成本 ¥888","color":"s1"},{"label":"佣金与手续费","color":"s4"},{"label":"退货损耗","color":"s2"}]}'></div>
+          <div><div class="row" style="gap:14px"><div class="chart" data-chart="ring" data-cfg='{"pct":29.8,"size":92,"stroke":10,"label":"29.8%","sub":"毛利","color":"ok","fs":17}'></div><div><div class="small faint">建议售价（税込）</div><div class="pbig">¥1,680</div><div class="small muted">运费占比 25%（警告线 30%）</div></div></div>
+            <dl class="pkv"><dt>成本地板价</dt><dd>¥1,075</dd><dt>底线价（毛利 12%）</dt><dd>¥1,260</dd></dl></div>
+        </div>
+      </section>
+      <section class="card sec">
+        <div class="card-head"><h2>退回 / 重生成</h2><span class="meta">原因进语料库，下一版默认规避</span></div>
+        <div class="ret">
+          <select class="select" data-reason aria-label="退回原因"><option value="">选择原因（必选）</option><option>措辞</option><option>图片</option><option>价格</option><option>合规</option><option>其他</option></select>
+          <input class="input" placeholder="补充说明（选填）" aria-label="补充说明">
+          <button class="btn" data-ret disabled data-toast="已退回，Creator 将带着原因重新生成（演示）">退回重生成</button>
+        </div>
+      </section>
+    </div>
+
+    <!-- ===================== #4 BLOCK 示例 ===================== -->
+    <div data-pane="brush" hidden>
+      <div class="pane-head">
+        <span class="thumb lg" data-art="brush"></span>
+        <div><h2 lang="ja">ペット用ブラシ 抜け毛クリーナー</h2><div class="meta">候选 #4 · 素材 v2（v1 被拦后自动改写 1 次，仍命中）· 9 图 + 1 视频 · 售价 ¥1,880</div></div>
+      </div>
+      <div class="steps sec">
+        <div class="st done"><i>1</i>生成 v2 · 10:31</div>
+        <div class="st block"><i>2</i>G0–G4 检查 · 1 BLOCK</div>
+        <div class="st"><i>3</i>待同意 2 · 不可送审</div>
+      </div>
+
+      <section class="card sec">
+        <div class="card-head"><h2>合规报告 G1–G4</h2><span class="meta">规则库 2026-10-20 版 · 校验于 10:36</span>
+          <div class="tools"><span class="badge block">1 BLOCK</span><span class="badge wait">1 WARN</span></div></div>
+        <div class="heat" data-heat="brush"></div>
+        <div class="heat-sum"><span><b style="color:var(--ok)">30</b>项通过</span><span><b style="color:var(--wait)">1</b>WARN</span><span><b style="color:var(--block)">1</b>BLOCK</span></div>
+
+        <div class="hit-card block">
+          <div class="hd"><span class="badge block">BLOCK</span><b>G2-001 · 功效・医疗暗示表达</b><span class="right small" style="color:var(--block)">Creator 自动改写 1/3 · 仍命中</span></div>
+          <dl class="kv">
+            <dt>命中片段</dt><dd><span lang="ja">「<mark class="hit">涙やけのシミが消える</mark>」</span> · 出现在 标题、卖点 2、图 3 文字层（OCR）</dd>
+            <dt>规则</dt><dd>不得使用暗示功效或医疗效果的表达（薬機法型表达）；规范化后匹配，变体「シ ミが消える」「ｼﾐが消える」同样命中</dd>
+            <dt>改法</dt><dd><div class="fix">删掉功效表达，改为事实描述，例如 <span lang="ja">「目元まわりの毛をやさしく整えます」</span>（轻柔梳理眼周毛发）；图 3 的文字层同步改掉</div></dd>
+          </dl>
+          <div class="row wrap" style="margin-top:12px">
+            <button class="btn primary sm" data-toast="打开文案与图 3 文字层编辑；保存后生成 v3 并重新校验（演示）">改写后重新校验</button>
+            <button class="btn sm" data-toast="换用卖点图模板 B 并重新校验（演示）">换掉图 3</button>
+            <span class="small" style="color:var(--block)">BLOCK 只能改文案或换图，改后自动重检</span>
+          </div>
+        </div>
+        <div class="hit-card warn">
+          <div class="hd"><span class="badge wait">WARN</span><b>G2-008 · 机翻腔</b><span class="right small faint">待在同意 2 逐条确认</span></div>
+          <dl class="kv"><dt>命中片段</dt><dd lang="ja">卖点 4「あなたのペットの毎日をサポートするところのブラシです。」</dd></dl>
+        </div>
+        <table class="tbl gtbl" style="margin-top:12px"><thead><tr><th scope="col">分组</th><th scope="col">通过</th><th scope="col">进度</th><th scope="col">结果</th></tr></thead><tbody>
+          <tr><td>G1 上架必备表示</td><td>6 / 6</td><td><div class="meter ok"><i style="width:100%"></i></div></td><td><span class="badge ok">通过</span></td></tr>
+          <tr><td>G2 文案</td><td>9 / 11</td><td><div class="meter block"><i style="width:82%"></i></div></td><td><span class="badge block">BLOCK 1</span> <span class="badge wait">WARN 1</span></td></tr>
+          <tr><td>G3 图片视频</td><td>10 / 10</td><td><div class="meter ok"><i style="width:100%"></i></div></td><td><span class="badge ok">通过</span></td></tr>
+          <tr><td>G4 平台规格</td><td>5 / 5</td><td><div class="meter ok"><i style="width:100%"></i></div></td><td><span class="badge ok">通过</span></td></tr>
+        </tbody></table>
+      </section>
+
+      <section class="card sec">
+        <div class="card-head"><h2>商品页预览与文案</h2><span class="meta">命中片段在日文原文里标红</span></div>
+        <div class="pv">
+          <div><div data-phone='{"art": "brush", "count": "1/9", "price": 1880, "titleHtml": "ペット用ブラシ 抜け毛クリーナー 犬 猫 <mark class=\"hit\">涙やけのシミが消える</mark>", "bullets": ["抜け毛をしっかりキャッチ", "犬・猫どちらにも", "お手入れ簡単"]}'></div><div class="phone-cap">命中 BLOCK 的版本不会进入待批</div></div>
+          <div>
+            <div class="cp-head"><span></span><span>日文原文</span><span>中文回译</span></div>
+            <div class="cp" style="margin-top:6px">
+              <div class="cp-row block"><span class="lb">标题</span><span lang="ja">ペット用ブラシ 抜け毛クリーナー 犬 猫 <mark class="hit">涙やけのシミが消える</mark></span><span class="cn">宠物梳 去浮毛清洁器 狗 猫 泪痕污渍会消失</span><span class="tm"><span class="badge block">G2-001</span></span></div>
+              <div class="cp-row"><span class="lb">卖点1</span><span lang="ja">ボタンを押すだけで、集めた抜け毛をワンタッチで取り除けます。</span><span class="cn">只需按下按钮，一键清除收集的浮毛。</span></div>
+              <div class="cp-row block"><span class="lb">卖点2</span><span lang="ja">毎日のブラッシングで<mark class="hit">涙やけのシミが消える</mark>。</span><span class="cn">每天梳理，泪痕污渍会消失。</span><span class="tm"><span class="badge block">G2-001</span></span></div>
+              <div class="cp-row"><span class="lb">卖点3</span><span lang="ja">先端が丸いピンで、肌にやさしく使えます。</span><span class="cn">针头圆润，对皮肤温和。</span></div>
+              <div class="cp-row warn"><span class="lb">卖点4</span><span lang="ja"><mark class="wr">あなたのペットの毎日をサポートするところのブラシです。</mark></span><span class="cn">支持你宠物日常的梳子。</span><span class="tm"><span class="badge wait">G2-008 机翻腔</span></span></div>
+              <div class="cp-row"><span class="lb">卖点5</span><span lang="ja">犬・猫どちらにも使えます。</span><span class="cn">狗、猫都能用。</span></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="card sec">
+        <div class="card-head"><h2>图片 9 张</h2><span class="meta">图 3 文字层命中 G2-001</span><div class="tools"><span class="badge">L0 ×3</span><span class="badge">L1 ×6</span></div></div>
+        <div class="gallery"><div class="tiles" data-tiles="brush"></div><div class="cmpbox" data-cmp="brush"></div></div>
+      </section>
+
+      <section class="card sec">
+        <div class="card-head"><h2>价格</h2><span class="meta">建议价 · 成本分项 · 地板价</span></div>
+        <div class="price">
+          <div class="chart" data-chart="waterfall" data-cfg='{"w":400,"lw":110,"rowH":24,"items":[{"label":"售价（税込）","value":1880,"type":"revenue"},{"label":"c1 采购价","value":416,"type":"cost","color":"s1","tip":"20 CNY × 20.80"},{"label":"c2 国内段运费","value":62,"type":"cost","color":"s1"},{"label":"c3 国际运费","value":440,"type":"cost","color":"s1"},{"label":"c6 通関 · c7 包材","value":52,"type":"cost","color":"s1"},{"label":"c8 佣金 10%","value":188,"type":"cost","color":"s4"},{"label":"c9 手续费 3%","value":56,"type":"cost","color":"s4"},{"label":"c10 退货损耗","value":46,"type":"cost","color":"s2"},{"label":"利润","value":620,"type":"profit"}],"legend":[{"label":"到岸成本 ¥970","color":"s1"},{"label":"佣金与手续费","color":"s4"},{"label":"退货损耗","color":"s2"}]}'></div>
+          <div><div class="row" style="gap:14px"><div class="chart" data-chart="ring" data-cfg='{"pct":33.0,"size":92,"stroke":10,"label":"33.0%","sub":"毛利","color":"ok","fs":17}'></div><div><div class="small faint">建议售价（税込）</div><div class="pbig" data-pv>¥1,880</div><div class="small muted">竞品带 ¥1,580–2,280</div></div></div>
+            <dl class="pkv"><dt>成本地板价（利润 = 0）</dt><dd>¥1,147</dd><dt>底线价（毛利 12%）</dt><dd>¥1,337</dd></dl></div>
+        </div>
+        <div class="pbar" data-pbar data-min="1000" data-max="2600" data-floor="1147" data-line="1337" data-b0="1580" data-b1="2280" data-p="1880"></div>
+        <div class="trial">
+          <label class="small muted" for="tp-brush">试算售价</label>
+          <input class="input" id="tp-brush" data-trial="brush" value="1880" inputmode="numeric">
+          <span class="trial-out" data-trial-out>毛利 33.0% · 高于底线 12%</span>
+          <span class="right small faint">试 ¥1,100 看地板价拦截</span>
+        </div>
+      </section>
+
+      <section class="card sec">
+        <div class="card-head"><h2>退回 / 重生成</h2><span class="meta">原因进语料库，下一版默认规避</span></div>
+        <div class="ret">
+          <select class="select" data-reason aria-label="退回原因"><option value="">选择原因（必选）</option><option>措辞</option><option>图片</option><option>价格</option><option>合规</option><option>其他</option></select>
+          <input class="input" placeholder="补充说明（选填）" aria-label="补充说明">
+          <button class="btn" data-ret disabled data-toast="已退回，Creator 将带着原因重新生成（演示）">退回重生成</button>
+        </div>
+      </section>
+    </div>
+  </div>
+</template>
+
+<template id="detail-tpl">
+  <h3 lang="ja">シリコン調理スプーン5点セット</h3>
+  <p class="small muted" style="margin:0 0 12px">素材 v1 · 已检查 · 可送审同意 2</p>
+  <div class="row" style="gap:16px">
+    <div class="chart" data-chart="ring" data-cfg='{"pct":96.9,"size":96,"stroke":10,"label":"31/32","sub":"检查通过","color":"ok","fs":18}'></div>
+    <div class="small" style="line-height:1.9"><div><b>0</b> BLOCK</div><div style="color:var(--wait)"><b>1</b> WARN（同意 2 确认）</div><div class="faint">规则库 10-20 版</div></div>
+  </div>
+  <h3>图片授权构成</h3>
+  <div class="chart" data-chart="donut" data-cfg='{"size":104,"stroke":16,"label":"9","sub":"张","items":[{"label":"supplier_license","value":5,"color":"s1","text":"5"},{"label":"own_shot","value":3,"color":"s3","text":"3"},{"label":"ai_from_own_photo","value":1,"color":"s4","text":"1"}]}'></div>
+  <h3>AIGC 等级</h3>
+  <div class="chart" data-chart="stack" data-cfg='{"h":12,"items":[{"label":"L0 实拍","value":3,"color":"s1","text":"3"},{"label":"L1 背景/信息层","value":5,"color":"s3","text":"5"},{"label":"L2 AI 场景","value":1,"color":"s4","text":"1"}]}'></div>
+  <h3>生成预算</h3>
+  <div class="row between small"><span>本品已用 ¥96 · 重试 0/3</span><span class="faint">今日 ¥312 / ¥1,500</span></div>
+  <div class="meter" style="margin-top:6px"><i style="width:21%"></i></div>
+  <h3>版本时间线</h3>
+  <ul class="timeline">
+    <li><span class="pt ok"></span><div class="when">10:42 · CHECKER</div><div class="what">复核完成：成本与 G0–G4 复算一致</div></li>
+    <li><span class="pt wait"></span><div class="when">10:38 · 合规校验</div><div class="what">31 通过 · 1 WARN（图 5 L2）</div></li>
+    <li><span class="pt"></span><div class="when">10:12 · CREATOR</div><div class="what">生成 v1：标题、5 卖点、介绍页、9 图、视频</div></li>
+    <li><span class="pt ok"></span><div class="when">10-18 · 货源</div><div class="what">货源确认 · 图包授权 supplier_license</div></li>
+  </ul>
+  <p class="small faint" style="margin:0">人工改文案或换图会生成新版本并重新检查；已批准的素材不能被悄悄修改。</p>
+</template>
+
+<template id="det-cable">
+  <h3 lang="ja">デスクケーブルオーガナイザー</h3>
+  <p class="small muted" style="margin:0 0 12px">素材 v1 · 已检查 · 2 条 WARN</p>
+  <div class="row" style="gap:16px">
+    <div class="chart" data-chart="ring" data-cfg='{"pct":93.8,"size":96,"stroke":10,"label":"30/32","sub":"检查通过","color":"wait","fs":18}'></div>
+    <div class="small" style="line-height:1.9"><div><b>0</b> BLOCK</div><div style="color:var(--wait)"><b>2</b> WARN（同意 2 确认）</div></div>
+  </div>
+  <h3>图片授权构成</h3>
+  <div class="chart" data-chart="donut" data-cfg='{"size":104,"stroke":16,"label":"9","sub":"张","items":[{"label":"supplier_license","value":6,"color":"s1","text":"6"},{"label":"own_shot","value":2,"color":"s3","text":"2"},{"label":"ai_from_own_photo","value":1,"color":"s4","text":"1"}]}'></div>
+  <h3>版本时间线</h3>
+  <ul class="timeline">
+    <li><span class="pt wait"></span><div class="when">10:40 · 合规校验</div><div class="what">30 通过 · 2 WARN</div></li>
+    <li><span class="pt"></span><div class="when">10:20 · CREATOR</div><div class="what">生成 v1</div></li>
+  </ul>
+</template>
+
+<template id="det-brush">
+  <h3 lang="ja">ペット用ブラシ 抜け毛クリーナー</h3>
+  <p class="small muted" style="margin:0 0 12px">素材 v2 · 检查未过 · 不进待批队列</p>
+  <div class="row" style="gap:16px">
+    <div class="chart" data-chart="ring" data-cfg='{"pct":93.8,"size":96,"stroke":10,"label":"30/32","sub":"检查通过","color":"block","fs":18}'></div>
+    <div class="small" style="line-height:1.9"><div style="color:var(--block)"><b>1</b> BLOCK</div><div style="color:var(--wait)"><b>1</b> WARN</div></div>
+  </div>
+  <div class="alert block" style="margin-top:12px"><span><b>BLOCK 没有“忽略”</b>：只能改文案或换图并重走复检。自动改写 3 次仍不过，会挂起交给你。</span></div>
+  <h3>自动改写</h3>
+  <div class="row between small"><span>已用 1 / 3 次</span><span class="faint">剩 2 次</span></div>
+  <div class="meter block" style="margin-top:6px"><i style="width:33%"></i></div>
+  <h3>版本时间线</h3>
+  <ul class="timeline">
+    <li><span class="pt block"></span><div class="when">10:36 · 合规校验 v2</div><div class="what">G2-001 仍命中：标题、卖点 2、图 3 文字层</div></li>
+    <li><span class="pt"></span><div class="when">10:31 · CREATOR</div><div class="what">自动改写 v2（1/3）</div></li>
+    <li><span class="pt block"></span><div class="when">10:24 · 合规校验 v1</div><div class="what">G2-001 命中「シミが消える」</div></li>
+    <li><span class="pt"></span><div class="when">10:16 · CREATOR</div><div class="what">生成 v1</div></li>
+  </ul>
+</template>
+
+<script src="assets/art.js"></script>
+<script src="assets/charts.js"></script>
+<script src="assets/phone.js"></script>
+<script src="assets/cp2.js"></script>
+<script>
+(function(){
+  var LIC = {sup:['supplier_license','供应商书面授权'], own:['own_shot','自有拍摄'], ai:['ai_from_own_photo','自有实拍为底图的 AI 加工']};
+  var EV = {
+    sup:'供应商授权书.pdf · 2026-10-18 上传 · 授权链声明：授权方为权利人',
+    own:'自有拍摄原图 · 样品拍摄记录 2026-10-17',
+    ai:'底图为自有实拍（图 8），商品本体像素与比例未改动'
+  };
+  /* [名称, AIGC, 授权, 形态, 文字层] 形态：main 主图 / pt 卖点 / spec 规格 / scene 场景 / pack 包装 / zoom 细节 */
+  var SETS = {
+    spoons:{art:'spoons', items:[['白底主图','L1','sup','main'],['卖点图·耐熱','L1','sup','pt','耐熱230℃'],['卖点图·食洗機','L1','sup','pt','食洗機OK'],['规格图','L1','sup','spec','全長約28cm'],['场景图（AI 场景）','L2','ai','scene'],['卖点图·収納','L1','sup','pt','吊り下げ収納'],['包装图','L0','own','pack'],['细节图','L0','own','zoom'],['配件图','L0','own','zoom']]},
+    cable:{art:'cable', items:[['白底主图','L1','sup','main'],['卖点图·5連','L1','sup','pt','5本まとめて'],['规格图','L1','sup','spec','幅約8cm'],['卖点图·貼るだけ','L1','sup','pt','工具不要'],['细节图','L0','own','zoom'],['场景图（AI 场景）','L2','ai','scene'],['卖点图·シリコン','L1','sup','pt','シリコン製'],['包装图','L0','own','pack'],['使用图','L1','sup','main']]},
+    brush:{art:'brush', items:[['白底主图','L1','sup','main'],['卖点图·ワンタッチ','L1','sup','pt','ワンタッチで除去'],['卖点图·涙やけ','L1','sup','pt','涙やけのシミが消える','hit'],['规格图','L1','sup','spec','全長約18cm'],['细节图','L0','own','zoom'],['卖点图·犬猫','L1','sup','pt','犬・猫OK'],['包装图','L0','own','pack'],['细节图·ピン','L0','own','zoom'],['使用图','L1','sup','main']]}
+  };
+  function face(set,t,i,photo){
+    var a=set.art, k=t[3], h='<div class="ph'+(photo?' photo':'')+'">';
+    if(k==='scene'){ h+='<span class="scene"></span><span class="af small" data-art="'+a+'"></span>'; if(!photo) h+='<span class="wm">AI生成</span>'; }
+    else if(k==='zoom'){ h+='<span class="af zoom" data-art="'+a+'"></span>'; }
+    else if(k==='pack'){ h+='<span class="af small" data-art="'+a+'" style="inset:20%"></span>'; }
+    else { h+='<span class="af" data-art="'+a+'"></span>'; }
+    if(k==='spec' && !photo){ h+='<svg class="dim" viewBox="0 0 100 100" aria-hidden="true"><path d="M10 90 H90 M10 86 V94 M90 86 V94" stroke="var(--text-2)" stroke-width="1.2" fill="none"/></svg><span class="band">'+t[4]+'</span>'; }
+    if(k==='pt' && !photo){ h+='<span class="band'+(t[5]?' hit':'')+'" lang="ja">'+t[4]+'</span>'; }
+    if(!photo){ h+='<span class="lv '+t[1]+'">'+t[1]+'</span>'; }
+    return h+'</div>';
+  }
+  document.querySelectorAll('[data-tiles]').forEach(function(box){
+    var key=box.dataset.tiles, set=SETS[key], h='';
+    set.items.forEach(function(t,i){
+      h+='<button class="tile" data-i="'+i+'" data-set="'+key+'" aria-pressed="'+(i===(key==='brush'?2:4)?'true':'false')+'">'+face(set,t,i)
+        +'<span class="cap"><span>图 '+(i+1)+' · '+t[0].split('（')[0].split('·')[0]+'</span></span></button>';
+    });
+    box.innerHTML=h; CP.hydrate(box);
+  });
+  function showCmp(key,i){
+    var set=SETS[key], t=set.items[i], n=i+1, l2=t[1]==='L2', hit=t[5];
+    var base = t[2]==='ai' ? '自有实拍（图 8）' : (t[2]==='own' ? '样品实拍原图' : '供应商图包 #0'+n);
+    var h='<div class="row between" style="margin-bottom:10px"><b style="font-size:15px">图 '+n+' · '+t[0]+'</b><span class="badge'+(l2?' wait':'')+'">AIGC '+t[1]+'</span></div>'
+      +'<div class="cmp"><div>'+face(set,[t[0],t[1],t[2],t[3]==='scene'?'main':t[3]],i,true)+'<div class="lab">依据图 · '+base+'</div></div>'
+      +'<div>'+face(set,t,i,false)+'<div class="lab">本张（派生图）</div></div></div>'
+      +'<dl class="kv" style="margin-top:12px;font-size:14px"><dt>授权类型</dt><dd><span class="tag">'+LIC[t[2]][0]+'</span> '+LIC[t[2]][1]+'</dd>'
+      +'<dt>授权证据</dt><dd>'+EV[t[2]]+'</dd><dt>相似度</dt><dd>与本店已有素材最高 0.41（阈值 0.9）</dd></dl>';
+    if(l2) h+='<div class="alert wait" style="margin-top:10px"><span><b>WARN</b> AI 生成场景：仅当以本 SKU 实拍为底图且商品本体未改动时可用；已标注「AI生成」，同意 2 时逐条确认。</span></div>';
+    if(hit) h+='<div class="alert block" style="margin-top:10px"><span><b>BLOCK G2-001</b> 文字层 OCR「<span lang="ja">涙やけのシミが消える</span>」（泪痕污渍会消失）。只能改文字层或换图。</span></div>';
+    var box=document.querySelector('[data-cmp="'+key+'"]'); box.innerHTML=h; CP.hydrate(box);
+  }
+  showCmp('spoons',4); showCmp('cable',5); showCmp('brush',2);
+  document.addEventListener('click',function(e){
+    var tile=e.target.closest('.tile'); if(!tile) return;
+    tile.parentElement.querySelectorAll('.tile').forEach(function(x){ x.setAttribute('aria-pressed', x===tile); });
+    showCmp(tile.dataset.set, +tile.dataset.i);
+  });
+
+  /* 合规热力条：G1 6 · G2 11 · G3 10 · G4 5 = 32 项 */
+  var RULES = {
+    G1:['G1-001 特商法表示','G1-002 送料','G1-003 発送までの日数','G1-004 返品条件','G1-005 原産国','G1-006 税込総額表示'],
+    G2:['G2-001 功效/医疗暗示','G2-002 最上級・No.1','G2-003 二重価格','G2-004 ステマ','G2-005 数字断言来源','G2-006 品牌/IP 词','G2-007 敏感表达','G2-008 机翻腔','G2-009 原産国誤認','G2-010 健康暗示','G2-011 简体字形混入'],
+    G3:['G3-001 授权类型','G3-002 AIGC 标注 · 图片','G3-002 AIGC 标注 · 视频','G3-003 水印/logo · 图片','G3-003 水印/logo · 视频','G3-004 人脸','G3-005 近同素材','G3-006 认证标志','G3-007 BGM 登记','G3-007 字体登记'],
+    G4:['G4-001 张数 ≤9','G4-001 尺寸/格式','G4-002 视频规格','G4-003 字符上限','G4-004 类目必填属性']
+  };
+  var HITS = { spoons:{'G3-002 AIGC 标注 · 图片':'w'}, cable:{'G2-008 机翻腔':'w','G3-002 AIGC 标注 · 图片':'w'}, brush:{'G2-001 功效/医疗暗示':'b','G2-008 机翻腔':'w'} };
+  var NAMES = {G1:'G1 必备表示',G2:'G2 文案',G3:'G3 图片视频',G4:'G4 平台规格'};
+  document.querySelectorAll('[data-heat]').forEach(function(box){
+    var hits=HITS[box.dataset.heat], h='';
+    Object.keys(RULES).forEach(function(g){
+      h+='<div class="grp" style="flex:'+RULES[g].length+'"><div class="cells">'+RULES[g].map(function(r){ var s=hits[r]; return '<i class="'+(s||'')+'" data-tip="'+r+' · '+(s==='b'?'BLOCK':s==='w'?'WARN':'通过')+'"></i>'; }).join('')+'</div><span class="gl">'+NAMES[g]+'</span></div>';
+    });
+    box.innerHTML=h;
+  });
+
+  /* 价格位置条 + 试算 */
+  var COST = { spoons:{fixed:993, rate:(198+59+53)/1980}, brush:{fixed:970, rate:(188+56+46)/1880} };
+  function yen(n){ return '¥'+Math.round(n).toLocaleString('ja-JP'); }
+  function drawBar(el,p){
+    var mn=+el.dataset.min, mx=+el.dataset.max, pos=function(v){ return Math.max(0,Math.min(100,(v-mn)/(mx-mn)*100)); };
+    var bad=p<=+el.dataset.floor;
+    el.innerHTML='<div class="ax"></div><div class="band" style="left:'+pos(+el.dataset.b0)+'%;width:'+(pos(+el.dataset.b1)-pos(+el.dataset.b0))+'%" data-tip="竞品价格带 '+yen(el.dataset.b0)+'–'+yen(el.dataset.b1)+'"></div>'
+      +'<div class="mk floor" style="left:'+pos(+el.dataset.floor)+'%"><span>地板价 '+yen(el.dataset.floor)+'</span></div>'
+      +'<div class="mk line" style="left:'+pos(+el.dataset.line)+'%"><span>底线 12% '+yen(el.dataset.line)+'</span></div>'
+      +'<div class="dot'+(bad?' bad':'')+'" style="left:'+pos(p)+'%"><span>'+yen(p)+'</span></div>';
+  }
+  document.querySelectorAll('[data-pbar]').forEach(function(el){ drawBar(el,+el.dataset.p); });
+  var priceBad={};
+  document.addEventListener('input',function(e){
+    var inp=e.target; if(!inp.matches('[data-trial]')) return;
+    var key=inp.dataset.trial, c=COST[key], p=parseInt(String(inp.value).replace(/[^\d]/g,''),10);
+    var card=inp.closest('section'), out=card.querySelector('[data-trial-out]'), bar=card.querySelector('[data-pbar]'), pv=card.querySelector('[data-pv]');
+    if(!p){ out.textContent='请输入整数价格'; out.className='trial-out'; return; }
+    var profit=p*(1-c.rate)-c.fixed, m=profit/p*100, floor=+bar.dataset.floor;
+    drawBar(bar,p); pv.textContent=yen(p);
+    var bad=p<=floor; priceBad[key]=bad; card.classList.toggle('pcard-bad',bad);
+    out.className='trial-out'+(bad?' bad':'');
+    out.textContent= bad ? '低于成本地板价 '+yen(floor)+'：利润 '+yen(profit)+'，不可送审' : '毛利 '+m.toFixed(1)+'% · '+(m>=12?'高于底线 12%':'低于底线 12%（会在同意 2 被拦）');
+    syncSend();
+  });
+
+  /* 页首主按钮：随选中商品切换；BLOCK 或低于地板价时禁用并说明 */
+  var STATE={spoons:'',cable:'',brush:'有 1 项 BLOCK，改写并重检通过后才能送审'};
+  var cur='spoons';
+  function syncSend(){
+    var b=document.getElementById('sendBtn'), n=document.getElementById('sendNote');
+    var why=STATE[cur] || (priceBad[cur]?'售价低于成本地板价，不可送审':'');
+    b.disabled=!!why; b.classList.toggle('disabled',!!why); n.hidden=!why; n.textContent=why;
+  }
+  document.addEventListener('click',function(e){
+    var t=e.target.closest('.pi[role=tab]'); if(!t) return;
+    cur=t.dataset.tab; syncSend();
+    var tpl=document.getElementById(cur==='spoons'?'detail-tpl':'det-'+cur), d=document.getElementById('detail');
+    d.innerHTML=tpl.innerHTML; CP.hydrate(d); d.scrollTop=0;
+  });
+  syncSend();
+  /* 深链：05-assets.html#brush 直接打开该商品 */
+  var hx=document.querySelector('[role=tab][data-tab="'+location.hash.slice(1)+'"]'); if(hx) hx.click();
+
+  /* 退回原因必选 */
+  document.addEventListener('change',function(e){
+    var s=e.target; if(!s.matches('[data-reason]')) return;
+    var b=s.closest('.ret').querySelector('[data-ret]'); b.disabled=!s.value; b.classList.toggle('disabled',!s.value);
+  });
+})();
+</script>
+</body>
+</html>

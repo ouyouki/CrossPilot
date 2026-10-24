@@ -1,0 +1,843 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>设置 · CrossPilot</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="assets/cp2.css">
+<style>
+/* —— 设置页专用 —— */
+.set{display:grid;grid-template-columns:172px minmax(0,1fr);gap:18px;align-items:start}
+.set > .tabs{flex-direction:column;border-bottom:0;gap:2px;position:sticky;top:76px;background:var(--surface);border-radius:14px;box-shadow:var(--shadow-1);padding:8px;margin:0}
+.set > .tabs button{height:38px;text-align:left;border-bottom:0;border-radius:9px;margin:0;display:flex;align-items:center;gap:8px;padding:0 12px;font-size:15px}
+.set > .tabs button:hover{background:var(--surface-2)}
+.set > .tabs button[aria-selected=true]{background:var(--primary-bg);border-bottom:0}
+.set > .tabs .st{margin-left:auto;width:8px;height:8px;border-radius:50%;background:var(--ok);flex:none}
+.set > .tabs .st.wait{background:var(--wait-solid)} .set > .tabs .st.block{background:var(--block)}
+.set > .tabs .grp{font:500 12px var(--font-mono);letter-spacing:.12em;color:var(--text-3);padding:10px 12px 4px}
+.pendbar{background:var(--wait-bg);color:var(--wait);border-radius:14px;padding:12px 16px;margin-bottom:16px}
+.pendbar[hidden]{display:none}
+.pendbar .phd{display:flex;align-items:center;gap:10px}
+.pendbar .phd b{font-size:16px}
+.pendbar ul{list-style:none;margin:8px 0 0;padding:0}
+.pendbar li{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr) auto auto;gap:14px;align-items:center;padding:8px 0;border-top:1px solid color-mix(in srgb,var(--wait-solid) 30%,transparent);font-size:15px;color:var(--text)}
+.pendbar li .meter{background:color-mix(in srgb,var(--wait-solid) 22%,transparent)}
+.pendbar li .when{font-size:14px;color:var(--wait);white-space:nowrap}
+.pendbar li.new{animation:flash 1.2s}
+@keyframes flash{from{background:color-mix(in srgb,var(--wait-solid) 30%,transparent)}to{background:transparent}}
+[data-pane=rate] .tbl td:first-child{min-width:120px}
+[data-pane=rate] .tbl td:nth-child(4){min-width:96px;font-size:13px}
+[data-pane=rate] .tbl td:nth-child(3){min-width:130px;font-size:14px;color:var(--text-2)}
+[data-pane=rate] .tbl td,[data-pane=rate] .tbl th{padding-left:8px;padding-right:8px}
+.tbl tr.miss td{background:var(--block-bg);color:var(--block)}
+.tbl tr.miss td b{color:var(--block)}
+.optcards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.opt{display:flex;gap:10px;align-items:flex-start;border:1px solid var(--border-strong);border-radius:12px;padding:10px 12px;cursor:pointer;font-size:15px;background:var(--surface)}
+.opt input{margin-top:4px;accent-color:var(--primary)}
+.opt:has(input:checked){border-color:transparent;background:var(--primary-bg);box-shadow:0 0 0 2px var(--primary)}
+.opt .s{display:block;font-size:14px;color:var(--text-3)}
+.shot{width:54px;height:36px;border-radius:6px;flex:none;display:grid;place-items:center;font-size:12px;color:var(--text-3);background:repeating-linear-gradient(135deg,var(--surface-3) 0 6px,var(--surface-2) 6px 12px);box-shadow:inset 0 0 0 1px var(--border)}
+.shop-item{display:flex;flex-direction:column;gap:6px}
+.shop-item .top{display:flex;align-items:center;gap:8px}
+.shop-item .top b{font-size:16px}
+.shop-item .top .badge{margin-left:auto}
+.dial{display:grid;grid-template-columns:minmax(0,1fr) 140px 84px 236px;gap:16px;align-items:center;padding:14px 20px;border-top:1px solid var(--border)}
+.dial:first-of-type{border-top:0}
+.dial .nm b{display:block;font-size:15px}
+.dial .nm span{font-size:14px;color:var(--text-3)}
+.dial .val{font-size:22px;font-weight:600;text-align:right;letter-spacing:-.01em}
+.dial .val small{font-size:14px;color:var(--text-3);font-weight:400}
+.dtrack{position:relative;height:8px;border-radius:4px;background:var(--surface-3)}
+.dtrack i{position:absolute;left:0;top:0;bottom:0;border-radius:4px;background:color-mix(in srgb,var(--primary) 35%,transparent)}
+.dtrack b{position:absolute;top:-5px;width:4px;height:18px;margin-left:-2px;border-radius:2px;background:var(--primary)}
+.dtrack .pend{background:var(--wait-solid);opacity:.9}
+.dends{display:flex;justify-content:space-between;font-size:13px;color:var(--text-3);margin-top:6px}
+.dial .btns{display:flex;gap:6px;justify-content:flex-end}
+.dial.fixed{background:var(--surface-2)}
+.agent{display:flex;flex-direction:column;gap:10px}
+.agent .hd{display:flex;align-items:center;gap:10px}
+.agent .avt{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;font:600 19px var(--font-mono);background:var(--info-bg);color:var(--info);flex:none}
+.agent .hd b{font-size:17px;display:block;line-height:1.2}
+.agent .hd span{font-size:14px;color:var(--text-3);white-space:nowrap}
+.agent .seg{width:100%}
+.agent .seg button{flex:1;padding:0 6px}
+.agent .nums{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;font-size:13px;color:var(--text-3)}
+.agent .nums b{display:block;font-size:17px;color:var(--text)}
+.agent.off .avt{background:var(--surface-3);color:var(--text-3)}
+.layer{display:grid;grid-template-columns:34px minmax(0,1fr) 60px;gap:10px;align-items:center;font-size:14px;margin-bottom:9px}
+.layer .bar{display:flex;gap:2px;height:12px}
+.layer .bar i{display:block;height:100%;border-radius:3px}
+.fresh{display:grid;grid-template-columns:150px minmax(0,1fr);gap:10px;align-items:center;padding:10px 14px;border-radius:12px;background:var(--surface-2)}
+.fresh .badge{justify-self:start}
+.fresh.cur{background:var(--ok-bg)}
+.fresh.ghost{opacity:.55}
+.roles{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.role{border-radius:14px;background:var(--surface-2);padding:16px}
+.role .ava{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;background:var(--primary);color:var(--on-primary);font-weight:600;font-size:19px}
+.checks{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.checks li{display:flex;gap:10px;font-size:15px;align-items:flex-start}
+.checks li i{width:18px;height:18px;border-radius:50%;background:var(--ok-bg);color:var(--ok);display:grid;place-items:center;font-style:normal;font-size:13px;font-weight:600;flex:none;margin-top:2px}
+/* —— 数据连接 —— */
+.set > .tabs .st.off{background:var(--text-3);opacity:.6}
+.how{display:inline-flex;align-items:center;height:22px;padding:0 8px;border-radius:6px;font-size:13px;font-weight:500;white-space:nowrap;background:var(--surface-3);color:var(--text-2)}
+.how.auto{background:var(--info-bg);color:var(--info)}
+.how.man{background:transparent;box-shadow:inset 0 0 0 1px var(--border-strong);color:var(--text-3)}
+.how + .sub{white-space:normal;margin-top:3px}
+.conns{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.conns .conn{padding:18px}
+.conn{display:flex;flex-direction:column;gap:10px}
+.conn .hd{display:flex;align-items:flex-start;gap:10px}
+.conn .ico{width:38px;height:38px;border-radius:11px;display:grid;place-items:center;background:var(--primary-bg);color:var(--primary-strong);flex:none}
+.conn .ico svg{width:20px;height:20px}
+.conn.off .ico{background:var(--surface-3);color:var(--text-3)}
+.conn .hd b{display:block;font-size:16px;line-height:1.3}
+.conn .src{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--text-3);margin-top:3px}
+.conn .src{align-items:flex-start;line-height:1.45}
+.conn .src .grade{width:20px;height:20px;font-size:12px;flex:none}
+.conn .hd .switch{margin-left:auto;margin-top:4px}
+.conn .mid{display:grid;grid-template-columns:1fr;gap:8px;justify-items:center}
+.conn .mid .kv{justify-self:stretch}
+.conn .mid .chart svg{display:block}
+.conn .mid .unk{width:128px}
+@media (max-width:1100px){.conns{grid-template-columns:1fr}}
+.conn .kv{font-size:14px;gap:3px 10px}
+.conn .fail{margin:0;font-size:13px;color:var(--text-2);background:var(--surface-2);border-radius:9px;padding:7px 10px}
+.conn .fail b{font-weight:600;color:var(--text)}
+.conn .unk{height:78px;display:grid;place-items:center;border-radius:12px;background:var(--surface-2);text-align:center;font-size:13px;color:var(--text-3)}
+.conn .unk b{display:block;font-size:20px;color:var(--text-2)}
+.conn .foot{display:flex;gap:6px;flex-wrap:wrap;margin-top:auto}
+.fxbig{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.fxbig .v{font-size:46px;font-weight:600;letter-spacing:-.03em;line-height:1.1}
+.fxbig .u{font-size:16px;color:var(--text-3)}
+.formula{font:400 13px/1.6 var(--font-mono);color:var(--text-3);background:var(--surface-2);border-radius:8px;padding:6px 10px;margin:8px 0 0}
+.tbl tr.hold td{background:var(--wait-bg)}
+.tbl tr.hold td .why{display:block;font-size:13px;color:var(--wait);margin-top:2px;white-space:normal}
+.tbl tr.hold td.acts{white-space:nowrap}
+[data-pane=fx] .tbl td:not([colspan]){white-space:nowrap}
+[data-pane=fx] .tbl td,[data-pane=fx] .tbl th{padding-left:9px;padding-right:9px}
+.ovr > summary{font-size:15px}
+.ovr .body .row{margin-top:4px}
+@media (max-width:1280px){.set{grid-template-columns:1fr}.set > .tabs{position:static;flex-direction:row;flex-wrap:wrap}.dial{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body data-page="settings" data-crumb="设置">
+<template id="main-tpl">
+  <div class="page-head">
+    <div>
+      <span class="eyebrow">Settings · JP-01</span>
+      <h1>设置</h1>
+      <p>往严立即生效；往松须申请，24 小时后生效。</p>
+    </div>
+    <div class="actions">
+      <button class="help" data-toast="操作手册：设置页（演示）" aria-label="帮助">?</button>
+      <button class="btn primary lg" data-toast="已保存当前分区的收紧项，立即生效（演示）">保存</button>
+    </div>
+  </div>
+
+  <div class="pendbar" id="pending">
+    <div class="phd"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2M9 2h6"/></svg><b>待生效项 <span id="pend-n">1</span></b><span class="small">放宽要等 24 小时；期间随时可撤回。到点前一切照旧。</span></div>
+    <ul id="pending-list">
+      <li><span>每日上架清单上限 10 → 12</span><span class="meter wait" data-tip="已等待 1 小时 35 分 / 24 小时"><i style="width:7%"></i></span><span class="when">2026-10-21 09:30 生效</span><button class="btn sm" data-withdraw data-toast="已撤回该申请（演示）">撤回</button></li>
+    </ul>
+  </div>
+
+  <div class="set" data-tabs>
+    <div class="tabs" role="tablist" aria-label="设置分区" aria-orientation="vertical">
+      <span class="grp">数据连接</span>
+      <button role="tab" data-tab="conn" aria-selected="true">连接器总览<span class="st wait" title="1 项待你确认"></span></button>
+      <button role="tab" data-tab="fx" aria-selected="false">汇率（自动）<span class="st wait" title="汇率突变待确认"></span></button>
+      <button role="tab" data-tab="tariff" aria-selected="false">关税率与节假日<span class="st"></span></button>
+      <button role="tab" data-tab="freight" aria-selected="false">国际运费报价<span class="st"></span></button>
+      <button role="tab" data-tab="rank" aria-selected="false">榜单与竞品<span class="st off" title="未配置"></span></button>
+      <button role="tab" data-tab="src" aria-selected="false">货源采集<span class="st"></span></button>
+      <button role="tab" data-tab="feewatch" aria-selected="false">费率页变更提醒<span class="st"></span></button>
+      <span class="grp">成本</span>
+      <button role="tab" data-tab="rate" aria-selected="false">费率卡<span class="st block" title="1 项缺失"></span></button>
+      <span class="grp">准入</span>
+      <button role="tab" data-tab="cat" aria-selected="false">品类白名单<span class="st"></span></button>
+      <button role="tab" data-tab="shop" aria-selected="false">店铺档案<span class="st wait" title="1 项未确认"></span></button>
+      <button role="tab" data-tab="rules" aria-selected="false">规则库<span class="st"></span></button>
+      <span class="grp">护栏</span>
+      <button role="tab" data-tab="belt" aria-selected="false">安全带<span class="st wait" title="1 项待生效"></span></button>
+      <button role="tab" data-tab="agent" aria-selected="false">Agent<span class="st"></span></button>
+      <button role="tab" data-tab="budget" aria-selected="false">模型与预算<span class="st"></span></button>
+      <button role="tab" data-tab="member" aria-selected="false">成员<span class="st wait" title="单人运行"></span></button>
+    </div>
+
+    <div style="min-width:0">
+      <!-- ============ 费率卡 ============ -->
+      <div data-pane="rate" hidden class="stack">
+        <div class="g2">
+          <div class="card">
+            <div class="card-head"><h2>费率卡 v12 完整度</h2><span class="meta">18 个值</span></div>
+            <div class="row" style="gap:18px">
+              <div class="chart" data-chart="ring" data-cfg='{"pct":94.4,"size":112,"stroke":11,"label":"17/18","sub":"已填","color":"wait","fs":20,"tip":"缺 1 项 BLOCKING：c3 国际运费 1–2kg 档"}'></div>
+              <div class="stack sm small">
+                <div class="row"><span class="badge ok">CONFIRMED 9</span></div>
+                <div class="row"><span class="badge wait">ESTIMATED 8</span></div>
+                <div class="row"><span class="badge block">MISSING 1</span><span class="faint">BLOCKING</span></div>
+              </div>
+            </div>
+            <p class="small faint" style="margin:12px 0 0">缺失项不会用默认值补；估算项可用于选品排序，但同意 2 前必须换成确认值。</p>
+          </div>
+          <div class="card">
+            <div class="card-head"><h2>成本结构 · 候选 #1</h2><span class="meta" lang="ja">折叠収納ボックス3個セット · ¥2,480</span></div>
+            <div class="chart" data-chart="donut" data-cfg='{"size":124,"stroke":18,"label":"31.7%","sub":"毛利","fs":18,"items":[{"label":"到岸成本 c1–c7","value":1303,"text":"¥1,303","color":"s1"},{"label":"佣金手续费 c8–c9","value":322,"text":"¥322","color":"s4"},{"label":"退货损耗 c10","value":70,"text":"¥70","color":"s2"},{"label":"利润","value":785,"text":"¥785","color":"s3"}]}'></div>
+            <p class="small faint" style="margin:10px 0 0">读法：到岸成本占售价一半以上，c3 国际运费是其中最大的变量。</p>
+          </div>
+        </div>
+
+        <div class="alert block"><span><b>1 项 BLOCKING 缺失：c3 国际运费 1–2kg 档未录入。</b>用到该档的 3 个候选已进“数据待补”，不显示毛利与分数。</span><button class="btn sm right" data-toast="定位到 c3 · 1–2kg 档并打开录入（演示）">去补</button></div>
+
+        <div class="card flush">
+          <div class="card-head"><h2>成本项 c1–c16</h2><span class="meta">示例值 = 候选 #1 的单件成本</span><div class="tools"><button class="btn sm" data-toast="录入 c3 · 1–2kg 档（演示）">录入缺失项</button></div></div>
+          <div class="tblwrap"><table class="tbl dense">
+            <thead><tr><th>项</th><th class="num">值</th><th>来源 · 取数日期</th><th>来源方式</th><th>状态</th><th>缺失级别</th></tr></thead>
+            <tbody>
+              <tr><td>c1 采购价</td><td class="num">¥666<span class="sub">32 CNY × 20.8</span></td><td>货源导出文件 × 汇率<span class="sub mono">10-18</span></td><td><span class="how">半自动</span><span class="sub">汇率 <span class="how auto">自动</span></span></td><td><span class="badge ok">CONFIRMED</span></td><td class="small">BLOCKING</td></tr>
+              <tr><td>c2 国内段运费</td><td class="num">¥62</td><td>供应商报价截图<span class="sub mono">10-18</span></td><td><span class="how man">手工</span></td><td><span class="badge ok">CONFIRMED</span></td><td class="small">BLOCKING</td></tr>
+              <tr><td>c3 国际运费 · 0–0.5kg</td><td class="num">¥380</td><td>国际物流报价表 v3<span class="sub mono">10-15</span></td><td><span class="how">半自动</span><span class="sub">报价表导入 · 有效期至 12-31</span></td><td><span class="badge ok">CONFIRMED</span></td><td class="small">BLOCKING</td></tr>
+              <tr><td>c3 国际运费 · 0.5–1kg</td><td class="num">¥520</td><td>国际物流报价表 v3<span class="sub mono">10-15</span></td><td><span class="how">半自动</span><span class="sub">报价表导入 · 有效期至 12-31</span></td><td><span class="badge ok">CONFIRMED</span></td><td class="small">BLOCKING</td></tr>
+              <tr class="miss"><td><b>c3 国际运费 · 1–2kg</b><span class="sub" style="color:var(--block)">影响 3 个候选</span></td><td class="num"><b>未录入</b></td><td>报价表 v3 未含此档<span class="sub mono">—</span></td><td><span class="how">半自动</span><span class="sub" style="color:var(--block)">报价表导入 · 缺此档</span></td><td><span class="badge block">MISSING</span></td><td><span class="badge block">BLOCKING</span></td></tr>
+              <tr><td>c4 关税</td><td class="num">¥0</td><td>由税口径决定（演示假设，需税理士确认）<span class="sub mono">10-12</span></td><td><span class="how">半自动</span><span class="sub">官方税率表 · 季度</span></td><td><span class="badge wait">ESTIMATED</span></td><td class="small">BLOCKING</td></tr>
+              <tr><td>c5 输入消费税</td><td class="num">¥0</td><td>由税口径决定（演示假设，需税理士确认）<span class="sub mono">10-12</span></td><td><span class="how man">手工</span><span class="sub">配置 · 带生效日</span></td><td><span class="badge wait">ESTIMATED</span></td><td class="small">BLOCKING</td></tr>
+              <tr><td>c6 通関费</td><td class="num">¥30</td><td>通关代理报价<span class="sub mono">10-15</span></td><td><span class="how man">手工</span></td><td><span class="badge ok">CONFIRMED</span></td><td class="small">BLOCKING</td></tr>
+              <tr><td>c7 包材</td><td class="num">¥25</td><td>包材采购单<span class="sub mono">10-14</span></td><td><span class="how man">手工</span></td><td><span class="badge ok">CONFIRMED</span></td><td class="small">BLOCKING</td></tr>
+              <tr><td>c8 平台佣金</td><td class="num">¥248<span class="sub">10%</span></td><td>平台费率页（原文待复核）<span class="sub mono">10-19</span></td><td><span class="how man">手工</span><span class="sub">变化提醒</span></td><td><span class="badge wait">ESTIMATED</span></td><td class="small">BLOCKING</td></tr>
+              <tr><td>c9 支付 / 跨境履约手续费</td><td class="num">¥74<span class="sub">3%</span></td><td>平台费率页（原文待复核）<span class="sub mono">10-19</span></td><td><span class="how man">手工</span><span class="sub">变化提醒</span></td><td><span class="badge wait">ESTIMATED</span></td><td class="small">BLOCKING</td></tr>
+              <tr><td>c10 退货损耗（期望值）</td><td class="num">¥70</td><td>退货率 2.6% · 退运费 ¥545（你填写）<span class="sub mono">10-12</span></td><td><span class="how man">手工</span></td><td><span class="badge wait">ESTIMATED</span></td><td class="small">BLOCKING</td></tr>
+              <tr><td>c11 达人佣金</td><td class="num">¥0</td><td>已确认为零<span class="sub mono">10-12</span></td><td><span class="how man">手工</span></td><td><span class="badge ok">CONFIRMED</span></td><td class="small faint">可为零</td></tr>
+              <tr><td>c12 广告摊销</td><td class="num">¥0</td><td>已确认为零<span class="sub mono">10-12</span></td><td><span class="how man">手工</span></td><td><span class="badge ok">CONFIRMED</span></td><td class="small faint">可为零</td></tr>
+              <tr><td>c13 活动 / 券分摊</td><td class="num">¥0</td><td>已确认为零<span class="sub mono">10-12</span></td><td><span class="how man">手工</span></td><td><span class="badge ok">CONFIRMED</span></td><td class="small faint">可为零</td></tr>
+              <tr><td>c14 结算换汇 / 提现手续费</td><td class="num">¥0</td><td>显式填 0 · 费率待核实<span class="sub mono">10-12</span></td><td><span class="how man">手工</span></td><td><span class="badge wait">ESTIMATED</span></td><td class="small">BLOCKING<span class="sub">可显式 0</span></td></tr>
+              <tr><td>c15 发出件损耗</td><td class="num">¥0</td><td>显式填 0 · 损耗率待实测<span class="sub mono">10-12</span></td><td><span class="how man">手工</span></td><td><span class="badge wait">ESTIMATED</span></td><td class="small">BLOCKING<span class="sub">可显式 0</span></td></tr>
+              <tr><td>c16 样品与拍摄摊销</td><td class="num">¥0</td><td>本品未走样品路径<span class="sub mono">10-18</span></td><td><span class="how man">手工</span></td><td><span class="badge ok">CONFIRMED</span></td><td class="small faint">可为零</td></tr>
+            </tbody>
+          </table></div>
+          <p class="small faint" style="margin:0;padding:10px 20px 16px">到岸小计 c1–c7 ¥1,303 · 总成本 ¥1,695 · 利润 ¥785 · 毛利 31.7%。佣金与退货损耗单列，不并入到岸成本。</p>
+        </div>
+
+        <div class="g2">
+          <div class="card">
+            <div class="card-head"><h2>税口径</h2><span class="badge wait">演示假设，需税理士确认</span></div>
+            <div class="optcards">
+              <label class="opt"><input type="radio" name="tax" checked data-toast="税口径：少額輸入免税适用（演示）"><span>少額輸入免税适用<span class="s">c4、c5 = 0；当前选择</span></span></label>
+              <label class="opt"><input type="radio" name="tax" data-toast="切换税口径将重算全部候选，依赖旧值的待批单作废（演示）"><span>卖家为输入者<span class="s">关税与输入消费税由你负担</span></span></label>
+              <label class="opt"><input type="radio" name="tax" data-toast="切换税口径将重算全部候选（演示）"><span>低价值货物由卖家负担消费税<span class="s">按每票课税价格判断门槛</span></span></label>
+              <label class="opt"><input type="radio" name="tax" data-toast="切换税口径将重算全部候选（演示）"><span>平台课税<span class="s">销项税由平台代收</span></span></label>
+              <label class="opt" style="grid-column:1 / -1"><input type="radio" name="tax" data-toast="未定：所有候选利润不可算，进数据待补（演示）"><span>未定<span class="s">利润不可算，候选全部进“数据待补”，不能进同意 1</span></span></label>
+            </div>
+            <p class="small faint" style="margin:10px 0 0">口径带有效期；到期或税制变化时，依赖它的待批单作废并重算。税务数据仅供测算，不作申报依据。</p>
+          </div>
+          <div class="card">
+            <div class="card-head"><h2>最坏情形假设</h2><span class="meta">外部答复未到时可用</span><div class="tools"><button class="switch" role="switch" aria-checked="false" aria-label="最坏情形假设" data-toast="开启最坏情形假设需写理由，并写入审计（演示）"></button></div></div>
+            <ul class="checks" style="margin-bottom:12px">
+              <li><i>✓</i>关税、输入消费税与销项税全部计入；退货率取上限；佣金取已知最高档</li>
+              <li><i>✓</i>只能更严，不能用来放宽；利润标“假设”</li>
+              <li><i>✓</i>用了这个假设的候选不得进入授权代批</li>
+            </ul>
+            <div class="field"><label class="req" for="worst-why">理由（开启时必填，写入审计）</label><textarea id="worst-why" class="textarea" rows="2" placeholder="例如：税理士答复预计 11 月初到，先按最坏情形测算"></textarea></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============ 数据连接 · 连接器总览 ============ -->
+      <div data-pane="conn" class="stack">
+        <div class="alert info"><span><b>只用三类合法来源：官方接口、已授权的数据服务、公开的官方数据文件。</b>不抓取任何平台、货源站或竞品页面，不模拟登录。连接器只读，没有写外部的能力；取到的数先过校验，才会被成本与审批使用。</span></div>
+        <div class="alert wait"><span><b>1 项待你确认：汇率备源 21.55，比上一值 20.80 高 3.6%，超过 3% 容忍。</b>已暂存，不会自动采信；确认前继续用 20.80。</span><button class="btn sm right" data-goto="fx" data-toast="打开汇率（自动）· 取数记录（演示）">去确认</button></div>
+
+        <div class="g-main">
+          <div class="card">
+            <div class="card-head"><h2>自动与手工的占比</h2><span class="meta">11 类外部数据</span></div>
+            <div class="chart" data-chart="stack" data-cfg='{"h":16,"items":[{"label":"自动","value":3,"text":"3","color":"s1","tip":"自动 3：汇率、节假日、模型花费"},{"label":"半自动","value":5,"text":"5","color":"s3","tip":"半自动 5：关税率、国际运费报价、货源、上架结果、结算报表（系统取文件解析，人确认一次）"},{"label":"手工","value":3,"text":"3","color":"s2","tip":"手工 3：榜单与竞品（未配置，用 CSV）、平台佣金与手续费、店铺体检"}]}'></div>
+            <p class="small faint" style="margin:10px 0 0">读法：汇率已不用人录；手工的 3 类里，榜单配置授权数据服务后可转自动，平台佣金没有官方接口，只做页面变化提醒。</p>
+          </div>
+          <div class="card">
+            <div class="card-head"><h2>7 个连接器</h2></div>
+            <div class="row wrap" style="gap:8px">
+              <span class="badge ok">运行中 6</span><span class="badge">未配置 1</span><span class="badge wait">待确认 1</span>
+            </div>
+            <p class="small faint" style="margin:10px 0 0">状态共 4 种：运行中 · 失败重试 · 已暂停 · 未配置。连续失败 3 次告警并收紧；过期一律显示“已过期”，不显示为正常。</p>
+          </div>
+        </div>
+
+        <div class="conns">
+          <div class="card conn" data-conn="汇率">
+            <div class="hd"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h13l-3-3M20 16H7l3 3"/></svg></span><div><b>汇率 CNY → JPY</b><span class="src"><span class="grade A">A</span>官方接口 · 欧洲央行参考汇率</span></div><button class="switch" role="switch" aria-checked="true" aria-label="汇率连接器" data-conn-sw data-toast="汇率连接器（演示）"></button></div>
+            <div class="row wrap" style="gap:6px"><span class="badge ok">运行中</span><span class="badge wait">1 条突变待确认</span></div>
+            <div class="mid">
+              <div class="chart" data-chart="gauge" data-cfg='{"pct":91,"label":"91%","sub":"余 21 小时","color":"ok","w":128,"h":78,"stroke":10,"tip":"距 max_age 24 小时：已过 2 小时 05 分"}'></div>
+              <dl class="kv"><dt>最近成功</dt><dd class="mono">今日 09:00</dd><dt>下次计划</dt><dd class="mono">今日 15:00 补取</dd><dt>频率</dt><dd>工作日 09:00 · 15:00</dd></dl>
+            </div>
+            <p class="fail">失败时：<b>超 24 小时 → 依赖它的审批挂起</b>；突变 &gt;3% 暂存等你确认</p>
+            <div class="foot"><button class="btn sm" data-goto="fx" data-toast="打开汇率（自动）（演示）">查看取数记录</button><button class="btn sm" data-toast="已立即取数一次：欧洲央行今日参考汇率尚未发布，保持 20.80（演示）">立即取数</button></div>
+          </div>
+
+          <div class="card conn" data-conn="日本关税率">
+            <div class="hd"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 3h8l4 4v14H7z"/><path d="M15 3v4h4M10 12h6M10 16h4"/></svg></span><div><b>日本关税率 / HS</b><span class="src"><span class="grade A">A</span>公开官方文件 · 日本海关税率表</span></div><button class="switch" role="switch" aria-checked="true" aria-label="关税率连接器" data-conn-sw data-toast="关税率连接器（演示）"></button></div>
+            <div class="row wrap" style="gap:6px"><span class="badge ok">运行中</span><span class="small faint">季度文件 · 2026 年 10 月版已导入</span></div>
+            <div class="mid">
+              <div class="chart" data-chart="gauge" data-cfg='{"pct":78,"label":"78%","sub":"余 72 天","color":"ok","w":128,"h":78,"stroke":10,"tip":"max_age 92 天（一个季度）：已过 20 天"}'></div>
+              <dl class="kv"><dt>最近成功</dt><dd class="mono">10-01 10:20</dd><dt>下次计划</dt><dd class="mono">2027-01-05</dd><dt>确认</dt><dd>你已确认（10-02）</dd></dl>
+            </div>
+            <p class="fail">失败时：<b>没有新文件不影响使用</b>，只提示你核对；税制变更公告会单独提醒</p>
+            <div class="foot"><button class="btn sm" data-goto="tariff" data-toast="打开关税率与节假日（演示）">查看</button></div>
+          </div>
+
+          <div class="card conn" data-conn="日本节假日">
+            <div class="hd"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M9 3v4M15 3v4"/></svg></span><div><b>日本节假日</b><span class="src"><span class="grade A">A</span>公开官方文件 · 内阁府 CSV</span></div><button class="switch" role="switch" aria-checked="true" aria-label="节假日连接器" data-conn-sw data-toast="节假日连接器（演示）"></button></div>
+            <div class="row wrap" style="gap:6px"><span class="badge ok">运行中</span><span class="small faint">年度 · 已导入至 2027-12-31</span></div>
+            <div class="mid">
+              <div class="chart" data-chart="gauge" data-cfg='{"pct":63,"label":"63%","sub":"覆盖至 27-12","color":"ok","w":128,"h":78,"stroke":10,"tip":"数据覆盖至 2027-12-31；到期前 30 天提醒"}'></div>
+              <dl class="kv"><dt>最近成功</dt><dd class="mono">02-03 09:00</dd><dt>下次计划</dt><dd class="mono">2027-02 年更</dd><dt>用于</dt><dd>発送日数推算</dd></dl>
+            </div>
+            <p class="fail">失败时：<b>保留上一版</b>，到期前 30 天提醒你</p>
+            <div class="foot"><button class="btn sm" data-goto="tariff" data-toast="打开关税率与节假日（演示）">查看</button></div>
+          </div>
+
+          <div class="card conn" data-conn="国际运费报价">
+            <div class="hd"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8l9-5 9 5v8l-9 5-9-5z"/><path d="M3 8l9 5 9-5M12 13v8"/></svg></span><div><b>国际运费报价</b><span class="src"><span class="grade B">B</span>授权第三方 · 货代报价表</span></div><button class="switch" role="switch" aria-checked="true" aria-label="国际运费报价连接器" data-conn-sw data-toast="国际运费报价连接器（演示）"></button></div>
+            <div class="row wrap" style="gap:6px"><span class="badge ok">运行中</span><span class="small faint">一次导入 · 有效期至 2026-12-31</span></div>
+            <div class="mid">
+              <div class="chart" data-chart="gauge" data-cfg='{"pct":94,"label":"94%","sub":"余 72 天","color":"ok","w":128,"h":78,"stroke":10,"tip":"报价 v3 有效期 10-15 至 12-31：已过 6 天"}'></div>
+              <dl class="kv"><dt>最近成功</dt><dd class="mono">10-15 14:30</dd><dt>下次计划</dt><dd>报价变更时导入</dd><dt>注意</dt><dd style="color:var(--block)">未含 1–2kg 档</dd></dl>
+            </div>
+            <p class="fail">失败时：<b>报价过期 → c3 缺失</b>，不沿用旧价</p>
+            <div class="foot"><button class="btn sm" data-goto="freight" data-toast="打开国际运费报价（演示）">查看</button></div>
+          </div>
+
+          <div class="card conn off" data-conn="榜单与竞品">
+            <div class="hd"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 20V11M11 20V5M17 20v-6"/></svg></span><div><b>榜单与竞品</b><span class="src"><span class="grade B">B</span>授权数据服务</span></div><button class="switch" role="switch" aria-checked="false" aria-label="榜单与竞品连接器" data-conn-sw data-unset data-toast="榜单与竞品连接器（演示）"></button></div>
+            <div class="row wrap" style="gap:6px"><span class="badge">未配置</span><span class="small faint">兜底：手工 CSV（今日 03:10 已导入 40 行）</span></div>
+            <div class="mid">
+              <div class="unk"><span><b>未知</b>未配置，无新鲜度</span></div>
+              <dl class="kv"><dt>最近成功</dt><dd class="faint">未接入</dd><dt>下次计划</dt><dd class="faint">—</dd><dt>需要</dt><dd>授权服务的 API 或定时导出</dd></dl>
+            </div>
+            <p class="fail">失败时：<b>当日无数据 → 候选标“数据降级”</b>，不静默</p>
+            <div class="foot"><button class="btn sm" data-goto="rank" data-toast="打开榜单与竞品（演示）">配置</button></div>
+          </div>
+
+          <div class="card conn" data-conn="货源采集">
+            <div class="hd"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16l-1.5 12a1 1 0 0 1-1 .9H6.5a1 1 0 0 1-1-.9z"/><path d="M9 7V5a3 3 0 0 1 6 0v2"/></svg></span><div><b>货源采集</b><span class="src"><span class="grade B">B</span>授权采集工具 · 导出文件</span></div><button class="switch" role="switch" aria-checked="true" aria-label="货源采集连接器" data-conn-sw data-toast="货源采集连接器（演示）"></button></div>
+            <div class="row wrap" style="gap:6px"><span class="badge ok">运行中</span><span class="small faint">已连接 · 导出文件自动入库</span></div>
+            <div class="mid">
+              <div class="chart" data-chart="gauge" data-cfg='{"pct":98,"label":"98%","sub":"余 6.9 天","color":"ok","w":128,"h":78,"stroke":10,"tip":"货源数据 max_age 7 天：最近一批 2 小时 25 分前"}'></div>
+              <dl class="kv"><dt>最近成功</dt><dd class="mono">今日 08:40</dd><dt>下次计划</dt><dd>选中即同步</dd><dt>本批</dt><dd>4 条 · 1 条缺重量</dd></dl>
+            </div>
+            <p class="fail">失败时：<b>缺字段 → 明说缺什么</b>，不补默认值</p>
+            <div class="foot"><button class="btn sm" data-goto="src" data-toast="打开货源采集（演示）">查看</button></div>
+          </div>
+
+          <div class="card conn" data-conn="平台费率页变更提醒">
+            <div class="hd"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9a6 6 0 0 1 12 0c0 6 2 7 2 7H4s2-1 2-7"/><path d="M10 20a2 2 0 0 0 4 0"/></svg></span><div><b>平台费率页变更提醒</b><span class="src"><span class="grade A">A</span>公开官方页面 · 只检测是否变化</span></div><button class="switch" role="switch" aria-checked="true" aria-label="平台费率页变更提醒" data-conn-sw data-toast="平台费率页变更提醒（演示）"></button></div>
+            <div class="row wrap" style="gap:6px"><span class="badge ok">运行中</span><span class="small faint">每日检测 · 近 7 日无变化</span></div>
+            <div class="mid">
+              <div class="chart" data-chart="gauge" data-cfg='{"pct":90,"label":"90%","sub":"余 43 小时","color":"ok","w":128,"h":78,"stroke":10,"tip":"max_age 48 小时：最近检测 5 小时前"}'></div>
+              <dl class="kv"><dt>最近成功</dt><dd class="mono">今日 06:05</dd><dt>下次计划</dt><dd class="mono">明日 06:00</dd><dt>监测</dt><dd>3 个页面</dd></dl>
+            </div>
+            <p class="fail">失败时：<b>超 48 小时 → c8 / c9 标“待复核”</b>；数值始终由你核对后更新</p>
+            <div class="foot"><button class="btn sm" data-goto="feewatch" data-toast="打开费率页变更提醒（演示）">查看</button></div>
+          </div>
+        </div>
+        <p class="small faint" style="margin:0">开关：关闭或降为“只出建议”立即生效；开启是放宽，须申请，24 小时后生效。令牌存密钥库，不写入数据库与日志。</p>
+      </div>
+
+      <!-- ============ 数据连接 · 汇率（自动） ============ -->
+      <div data-pane="fx" hidden class="stack">
+        <div class="g-main">
+          <div class="card">
+            <div class="card-head"><h2>当前汇率</h2><span class="badge ok">通过校验</span><span class="meta">自动取数，人不再录入</span></div>
+            <div class="fxbig"><span class="v">20.80</span><span class="u">JPY / CNY</span><span class="small muted">即 1 CNY = 20.80 JPY · 参考日 <span class="mono">2026-10-19</span></span></div>
+            <dl class="kv" style="margin-top:14px">
+              <dt>主源</dt><dd><span class="grade A">A</span> 欧洲央行每日参考汇率（公开接口）</dd>
+              <dt>备源</dt><dd><span class="grade A">A</span> 中国外汇交易中心 人民币汇率中间价文件（CNY/JPY）</dd>
+              <dt>取数</dt><dd class="mono">2026-10-20 09:00 · 下次 15:00 补取</dd>
+              <dt>被引用</dt><dd>3 张待批单的成本快照</dd>
+            </dl>
+            <p class="formula">JPY/CNY = (EUR→JPY) ÷ (EUR→CNY) = 162.24 ÷ 7.800 = 20.80　· 两个值取同一参考日</p>
+          </div>
+          <div class="card">
+            <div class="card-head"><h2>新鲜度</h2><span class="badge ok right">新鲜</span></div>
+            <div class="chart" style="display:flex;justify-content:center" data-chart="gauge" data-cfg='{"pct":91,"label":"91%","sub":"余 21 小时","color":"ok","w":200,"h":112,"tip":"max_age 24 小时；超过即为“已过期”，依赖它的审批挂起"}'></div>
+            <dl class="kv" style="margin-top:12px">
+              <dt>max_age</dt><dd>24 小时</dd>
+              <dt>超期</dt><dd>已过期 → 审批挂起</dd>
+              <dt>突变</dt><dd>&gt;3% 暂存待确认</dd>
+            </dl>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-head"><h2>CNY → JPY · 近 14 天</h2><span class="meta">虚线 = 审批快照 20.8 的 ±3% 容忍带</span></div>
+          <div class="chart" data-chart="line" data-cfg='{"w":640,"h":210,"dec":2,"ymin":20,"ymax":21.6,"labels":["10-07","10-08","10-09","10-10","10-11","10-12","10-13","10-14","10-15","10-16","10-17","10-18","10-19","10-20"],"series":[{"name":"CNY→JPY","color":"primary","values":[20.62,20.66,20.71,20.69,20.74,20.78,20.75,20.8,20.83,20.79,20.81,20.84,20.82,20.8]}],"hlines":[{"y":21.42,"label":"+3% 21.42","color":"wait"},{"y":20.18,"label":"−3% 20.18","color":"wait"}]}'></div>
+          <p class="small faint" style="margin:10px 0 0">读法：采信值 14 天内波动不到 1.1%，都在容忍带内。备源今日给出 21.55，越出上沿，未画入折线，等你确认。</p>
+        </div>
+
+        <div class="card flush">
+          <div class="card-head"><h2>取数记录</h2><span class="meta">只追加 · 校验由规则完成</span></div>
+          <div class="tblwrap"><table class="tbl dense">
+            <thead><tr><th>时间</th><th>来源</th><th>参考日</th><th class="num">汇率</th><th>校验结果</th><th>原始哈希</th></tr></thead>
+            <tbody>
+              <tr class="hold"><td class="mono">10-20 09:15</td><td>外汇交易中心<span class="why">备源 · 交叉核对</span></td><td class="mono">10-20</td><td class="num"><b>21.55</b></td><td><span class="badge wait">突变待确认</span></td><td class="mono">9c41e07a</td></tr>
+              <tr class="hold"><td colspan="6" style="padding-top:0"><div class="row wrap" style="gap:8px 12px"><span class="small" style="color:var(--wait)">比上一值 20.80 高 3.6%，超过 3%。<b>不会自动采信</b>，确认前继续用 20.80。</span><span class="row" style="gap:6px"><button class="btn sm" data-toast="已确认采用 21.55：依赖旧快照 20.8 的 3 张待批单作废并生成新单（演示）">确认采用</button><button class="btn sm" data-toast="已保持上一值 20.80，本条标为“未采信”并写入审计（演示）">保持上一值</button></span></div></td></tr>
+              <tr><td class="mono">10-20 09:00</td><td>欧洲央行</td><td class="mono">10-19</td><td class="num">20.80</td><td><span class="badge ok">通过</span></td><td class="mono">3f8a12cd</td></tr>
+              <tr><td class="mono">10-19 15:00</td><td>欧洲央行<span class="sub">补取</span></td><td class="mono">10-16</td><td class="num">20.82</td><td><span class="badge ok">通过</span></td><td class="mono">b72e5d90</td></tr>
+              <tr><td class="mono">10-19 09:00</td><td>欧洲央行</td><td class="mono">10-16</td><td class="num">20.82</td><td><span class="badge ok">通过</span></td><td class="mono">b72e5d90</td></tr>
+              <tr><td class="mono">10-16 09:00</td><td>欧洲央行</td><td class="mono">10-15</td><td class="num">20.79</td><td><span class="badge ok">通过</span></td><td class="mono">e05a7c41</td></tr>
+            </tbody>
+          </table></div>
+          <p class="small faint" style="margin:0;padding:10px 20px 16px">审批与成本快照引用的是某一条取数记录，不是“当前汇率”；周末与节假日无新参考日，沿用最近一个工作日的值。</p>
+        </div>
+
+        <div class="g2">
+          <div class="card">
+            <div class="card-head"><h2>容忍带</h2><span class="meta">只能收紧</span></div>
+            <dl class="kv" style="margin-bottom:12px"><dt>偏离容忍</dt><dd>3%</dd><dt>突变阈值</dt><dd>日变化 3%</dd></dl>
+            <div class="row wrap">
+              <button class="btn" data-toast="容忍带已收紧为 2%，立即生效（演示）">收紧容忍带</button>
+              <button class="btn" data-loosen="汇率偏离容忍 3% → 5%" data-toast="已提交放宽申请，24 小时后生效（演示）">申请放宽（24 小时后生效）</button>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-head"><h2>手动覆盖</h2><span class="badge">当前不可用</span></div>
+            <details class="ev ovr">
+              <summary>仅在主源与备源都失败时可用</summary>
+              <div class="body">
+                <p class="small muted" style="margin:0 0 10px">覆盖值的来源等级降为 <span class="grade C">C</span>，必须写原因并写入审计；主源恢复后自动回到自动取数。</p>
+                <div class="field"><label for="fx-ovr">汇率（JPY / CNY）</label><input id="fx-ovr" class="input" placeholder="例如 20.80" disabled></div>
+                <div class="field"><label class="req" for="fx-why">原因（必填）</label><textarea id="fx-why" class="textarea" rows="2" placeholder="例如：主源接口 10-21 起连续 3 次失败，备源文件未发布" disabled></textarea></div>
+                <div class="row"><button class="btn" disabled data-toast="主备源都失败时才可手动覆盖（演示）">覆盖（降为来源等级 C）</button><span class="small faint">主备源目前都可用。</span></div>
+              </div>
+            </details>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============ 数据连接 · 日本关税率与节假日 ============ -->
+      <div data-pane="tariff" hidden class="stack">
+        <div class="g2">
+          <div class="card">
+            <div class="card-head"><h2>日本关税率 / HS</h2><span class="how">半自动</span><span class="meta">季度</span></div>
+            <dl class="kv" style="margin-bottom:12px">
+              <dt>来源</dt><dd><span class="grade A">A</span> 日本海关 实行关税率表（公开文件）</dd>
+              <dt>版本</dt><dd>2026 年 10 月版 · 10-01 自动取文件并解析</dd>
+              <dt>确认</dt><dd>你已确认一次（10-02）</dd>
+              <dt>下次</dt><dd class="mono">2027-01-05 检查新季度文件</dd>
+              <dt>提醒</dt><dd>税制变更公告单独提醒</dd>
+            </dl>
+            <div class="row wrap"><button class="btn" data-toast="已检查：暂无新季度文件（演示）">立即检查</button><button class="btn" data-toast="打开 2026 年 10 月版原文件（演示）">查看原文件</button></div>
+          </div>
+          <div class="card">
+            <div class="card-head"><h2>节假日与消费税率</h2><span class="how auto">自动</span><span class="meta">年度</span></div>
+            <dl class="kv" style="margin-bottom:12px">
+              <dt>来源</dt><dd><span class="grade A">A</span> 内阁府 国民の祝日 CSV</dd>
+              <dt>覆盖</dt><dd>至 2027-12-31 · 到期前 30 天提醒</dd>
+              <dt>近期</dt><dd><span lang="ja">11-03 文化の日 · 11-23 勤労感謝の日</span></dd>
+              <dt>消费税率</dt><dd>带生效日的配置（手工），不自动改</dd>
+            </dl>
+            <p class="small faint" style="margin:0">用途：推算発送日数与平台审核等待时间；不改动你在店铺档案里填的“発送までの日数”。</p>
+          </div>
+        </div>
+        <div class="card flush">
+          <div class="card-head"><h2>本店用到的税目</h2><span class="badge wait">演示值，需税理士确认</span></div>
+          <div class="tblwrap"><table class="tbl dense">
+            <thead><tr><th>HS</th><th>说明</th><th>用于</th><th>税率</th><th>当前税口径下 c4</th></tr></thead>
+            <tbody>
+              <tr><td class="mono">3924.10</td><td>塑料制餐具及厨房用具</td><td>#2 #5</td><td>取自文件（演示）</td><td>¥0 · 少額輸入免税</td></tr>
+              <tr><td class="mono">3926.90</td><td>其他塑料制品</td><td>#1 #3 #7</td><td>取自文件（演示）</td><td>¥0 · 少額輸入免税</td></tr>
+              <tr><td class="mono">9603.29</td><td>刷类</td><td>#4</td><td>取自文件（演示）</td><td>¥0 · 少額輸入免税</td></tr>
+              <tr><td class="mono">7323.99</td><td>钢铁制家庭用品</td><td>#6</td><td class="faint">未知 · 文件中未匹配</td><td class="faint">不可算</td></tr>
+            </tbody>
+          </table></div>
+          <p class="small faint" style="margin:0;padding:10px 20px 16px">税率只用于测算，不作申报依据；未匹配到税目的品显示“未知”，不按 0 计。</p>
+        </div>
+      </div>
+
+      <!-- ============ 数据连接 · 国际运费报价 ============ -->
+      <div data-pane="freight" hidden class="stack">
+        <div class="g-main">
+          <div class="card flush">
+            <div class="card-head"><h2>报价表 v3 · 货代 A</h2><span class="how">半自动</span><span class="meta">有效期 2026-10-15 至 2026-12-31</span></div>
+            <div class="tblwrap"><table class="tbl dense">
+              <thead><tr><th>重量档</th><th class="num">单价</th><th>状态</th></tr></thead>
+              <tbody>
+                <tr><td>0–0.5kg</td><td class="num">¥380</td><td><span class="badge ok">已导入</span></td></tr>
+                <tr><td>0.5–1kg</td><td class="num">¥520</td><td><span class="badge ok">已导入</span></td></tr>
+                <tr class="miss"><td><b>1–2kg</b></td><td class="num"><b>未录入</b></td><td><span class="badge block">报价表未含此档</span></td></tr>
+              </tbody>
+            </table></div>
+            <p class="small faint" style="margin:0;padding:10px 20px 16px">按模板导入，带版本与有效期；过期后 c3 显示“已过期”并进“数据待补”，不沿用旧价。</p>
+          </div>
+          <div class="card">
+            <div class="card-head"><h2>新鲜度</h2><span class="badge ok right">有效</span></div>
+            <div class="chart" style="display:flex;justify-content:center" data-chart="gauge" data-cfg='{"pct":94,"label":"94%","sub":"余 72 天","color":"ok","w":200,"h":112}'></div>
+            <dl class="kv" style="margin:12px 0"><dt>来源</dt><dd><span class="grade B">B</span> 货代报价表（合同内）</dd><dt>导入</dt><dd class="mono">2026-10-15 14:30</dd></dl>
+            <div class="row wrap"><button class="btn" data-toast="选择新报价表文件，按模板校验列后导入（演示）">导入新报价表</button><button class="btn" data-toast="下载报价表模板（演示）">下载模板</button></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============ 数据连接 · 榜单与竞品 ============ -->
+      <div data-pane="rank" hidden class="stack">
+        <div class="alert wait"><span><b>未配置授权数据服务，新鲜度：未知。</b>目前用手工 CSV 兜底；当日没有数据时，候选标“数据降级”，不静默。</span></div>
+        <div class="g2">
+          <div class="card">
+            <div class="card-head"><h2>接入方式（二选一）</h2><span class="grade B">B</span></div>
+            <div class="optcards" style="grid-template-columns:1fr">
+              <label class="opt"><input type="radio" name="rank-mode" data-toast="选择：授权数据服务 API（演示）"><span>授权数据服务 API<span class="s">需已购买、带 API 的分析服务；令牌存密钥库；每日夜间拉取</span></span></label>
+              <label class="opt"><input type="radio" name="rank-mode" data-toast="选择：约定文件夹定时导出（演示）"><span>定时导出文件放进约定文件夹<span class="s">服务方定时导出，系统自动入库</span></span></label>
+            </div>
+            <p class="small faint" style="margin:10px 0">不抓取平台或竞品页面。可用的服务、条款与费用尚待采购确认。</p>
+            <div class="row wrap"><button class="btn" data-loosen="开启连接器：榜单与竞品" data-toast="已提交开启申请，24 小时后生效（演示）">申请开启（24 小时后生效）</button></div>
+          </div>
+          <div class="card">
+            <div class="card-head"><h2>手工 CSV 兜底</h2><span class="how man">手工</span></div>
+            <ul class="timeline">
+              <li><span class="pt ok"></span><div class="when">10-20 03:10</div><div class="what">导入 40 行 · 24 个候选入库</div></li>
+              <li><span class="pt ok"></span><div class="when">10-19 03:10</div><div class="what">导入 38 行</div></li>
+              <li><span class="pt ok"></span><div class="when">10-18 03:10</div><div class="what">导入 41 行</div></li>
+            </ul>
+            <div class="row"><button class="btn" data-toast="选择 CSV 文件导入（演示）">导入 CSV</button></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============ 数据连接 · 货源采集 ============ -->
+      <div data-pane="src" hidden class="stack">
+        <div class="card flush">
+          <div class="card-head"><h2>授权采集工具 · 最近导入</h2><span class="how">半自动</span><span class="meta">导出文件自动入库，解析为预采数据，你确认</span></div>
+          <div class="tblwrap"><table class="tbl dense">
+            <thead><tr><th>商品</th><th class="num">货源价</th><th class="num">重量</th><th class="num">起订</th><th>解析结果</th></tr></thead>
+            <tbody>
+              <tr><td><div class="prod"><span class="thumb sm" data-art="box"></span><span lang="ja">折叠収納ボックス3個セット</span></div></td><td class="num">32 CNY</td><td class="num">0.82kg</td><td class="num">50</td><td><span class="badge ok">字段齐全</span></td></tr>
+              <tr><td><div class="prod"><span class="thumb sm" data-art="spoons"></span><span lang="ja">シリコン調理スプーン5点セット</span></div></td><td class="num">24 CNY</td><td class="num">0.46kg</td><td class="num">100</td><td><span class="badge ok">字段齐全</span></td></tr>
+              <tr><td><div class="prod"><span class="thumb sm" data-art="cable"></span><span lang="ja">デスクケーブルオーガナイザー</span></div></td><td class="num">19 CNY</td><td class="num">0.38kg</td><td class="num">100</td><td><span class="badge ok">字段齐全</span></td></tr>
+              <tr class="miss"><td><div class="prod"><span class="thumb sm" data-art="whisk"></span><span lang="ja">シリコン泡立て器</span></div></td><td class="num">11 CNY</td><td class="num"><b>未填</b></td><td class="num">200</td><td><span class="badge block">缺重量 → c3 不可算</span></td></tr>
+            </tbody>
+          </table></div>
+          <p class="small faint" style="margin:0;padding:10px 20px 16px">今日 08:40 · 4 条。缺字段时写明缺什么，不补默认值。1688 官方开放接口需企业资质，暂未接入。</p>
+        </div>
+      </div>
+
+      <!-- ============ 数据连接 · 平台费率页变更提醒 ============ -->
+      <div data-pane="feewatch" hidden class="stack">
+        <div class="alert info"><span><b>只检测公开费率页是否变化，不读取、不解析、不入库页面内容。</b>平台没有费率接口，c8 / c9 的数值始终由你核对原文后更新（来源等级 C）。<span class="badge wait" style="margin-left:6px">需法务确认可接受</span></span></div>
+        <div class="card flush">
+          <div class="card-head"><h2>监测的页面</h2><span class="meta">每日 06:00 · 近 7 日无变化</span></div>
+          <div class="tblwrap"><table class="tbl dense">
+            <thead><tr><th>页面</th><th>影响</th><th>最近检测</th><th>近 7 日</th></tr></thead>
+            <tbody>
+              <tr><td>佣金费率说明（日本站）</td><td>c8</td><td class="mono">10-20 06:05</td><td><span class="badge ok">无变化</span></td></tr>
+              <tr><td>跨境履约与支付手续费说明</td><td>c9</td><td class="mono">10-20 06:05</td><td><span class="badge ok">无变化</span></td></tr>
+              <tr><td>禁售与限售商品规则</td><td>规则库 G0</td><td class="mono">10-20 06:05</td><td><span class="badge ok">无变化</span></td></tr>
+            </tbody>
+          </table></div>
+        </div>
+        <div class="stack sm">
+          <span class="small faint">示例：检测到变化时会这样提醒</span>
+          <div class="alert wait"><span><b>佣金费率说明页内容有变化（示例）。</b>请打开原文核对 c8 并更新费率卡；核对完成前，c8 标“待复核”，依赖它的同意 2 显示提醒。</span><button class="btn sm right" data-toast="打开平台原文（演示）">打开原文</button><button class="btn sm" data-goto="rate" data-toast="打开费率卡 · c8（演示）">去更新 c8</button></div>
+        </div>
+      </div>
+
+      <!-- ============ 品类白名单 ============ -->
+      <div data-pane="cat" hidden class="stack">
+        <div class="g3">
+          <div class="stat ok"><div class="k">ALLOW</div><div class="v">3 <small>个类目</small></div><div class="n">均附出处截图</div></div>
+          <div class="stat block"><div class="k">DENY</div><div class="v">3 <small>个类目</small></div><div class="n">未核实，默认拒绝</div></div>
+          <div class="stat"><div class="k">未登记的类目</div><div class="v">不可选</div><div class="n">白名单之外一律拦截</div></div>
+        </div>
+        <div class="card flush">
+          <div class="card-head"><h2>品类白名单</h2><span class="meta">没登记的类目不可选；出处必填</span></div>
+          <div class="tblwrap"><table class="tbl">
+            <thead><tr><th>类目路径</th><th>状态</th><th>出处</th><th>风险旗标放行条件</th><th>登记</th></tr></thead>
+            <tbody>
+              <tr><td lang="ja">ホーム・キッチン &gt; 収納用品</td><td><span class="badge ok">ALLOW</span></td><td><div class="row"><span class="shot">截图</span><span class="small muted">卖家中心类目规则</span></div></td><td class="small">无例外：任一风险旗标即拦</td><td class="small mono">10-12 · 林薇</td></tr>
+              <tr><td lang="ja">ホーム・キッチン &gt; キッチン用品 &gt; 調理小物</td><td><span class="badge ok">ALLOW</span></td><td><div class="row"><span class="shot">截图</span><span class="small muted">卖家中心类目规则</span></div></td><td class="small"><span class="badge wait">与食品接触</span><span class="sub">已附检测报告才放行</span></td><td class="small mono">10-12 · 林薇</td></tr>
+              <tr><td lang="ja">ペット用品 &gt; お手入れ用品</td><td><span class="badge ok">ALLOW</span></td><td><div class="row"><span class="shot">截图</span><span class="small muted">卖家中心类目规则</span></div></td><td class="small">无例外：任一风险旗标即拦</td><td class="small mono">10-13 · 林薇</td></tr>
+              <tr class="dim"><td lang="ja">化粧品・医薬部外品</td><td><span class="badge block">DENY</span></td><td class="small">未核实，默认拒绝</td><td class="small">—</td><td class="small mono">10-12 · 林薇</td></tr>
+              <tr class="dim"><td lang="ja">食品・サプリメント</td><td><span class="badge block">DENY</span></td><td class="small">未核实，默认拒绝</td><td class="small">—</td><td class="small mono">10-12 · 林薇</td></tr>
+              <tr class="dim"><td lang="ja">電池・無線機器</td><td><span class="badge block">DENY</span></td><td class="small">未核实，默认拒绝</td><td class="small">—</td><td class="small mono">10-12 · 林薇</td></tr>
+            </tbody>
+          </table></div>
+        </div>
+        <div class="card">
+          <div class="card-head"><h2>登记新类目</h2><span class="badge wait">新增 ALLOW = 放宽，24 小时后生效</span></div>
+          <div class="g2">
+            <div class="field"><label class="req" for="cat-path">类目路径</label><input id="cat-path" class="input" lang="ja" placeholder="例如：ホーム・キッチン > …"></div>
+            <div class="field"><label class="req" for="cat-src">出处（必填）</label><input id="cat-src" class="input" placeholder="卖家中心页面截图文件名"><span class="hint">出处为空时无法提交。</span></div>
+          </div>
+          <div class="row"><button class="btn" data-toast="已登记为 DENY，立即生效（演示）">登记为 DENY（即时）</button><button class="btn" data-loosen="品类白名单：新增 1 个 ALLOW 类目" data-toast="已提交放宽申请，24 小时后生效（演示）">申请放宽（24 小时后生效）</button></div>
+        </div>
+      </div>
+
+      <!-- ============ 店铺档案 ============ -->
+      <div data-pane="shop" hidden class="stack">
+        <div class="alert ok"><span>上架必备的 4 项已确认；改动已确认项后，依赖旧值的待批单会作废并生成新单。</span></div>
+        <div class="g2">
+          <div class="card shop-item"><div class="top"><b>特商法表示</b><span class="badge ok">已确认</span></div><p class="small muted" style="margin:0">事业者名称、所在地、联系方式、责任人</p><div class="row small faint">确认于 2026-10-12 · 林薇 <a class="right" href="#" data-toast="打开特商法表示全文（演示）">查看全文</a></div></div>
+          <div class="card shop-item"><div class="top"><b>运费模板</b><span class="badge ok">已确认</span></div><input class="input" lang="ja" value="跨境直邮標準・送料無料（売主負担）" aria-label="运费模板"><div class="small faint">确认于 2026-10-12 · 林薇</div></div>
+          <div class="card shop-item"><div class="top"><b class="req">発送までの日数</b><span class="badge ok">已确认</span></div><input class="input" lang="ja" value="3〜5営業日" aria-label="発送までの日数"><div class="small faint">必填；没有“跳过”。按卖家后台实际值填写，风险确认已由你本人签字（10-12）。</div></div>
+          <div class="card shop-item"><div class="top"><b>返品条件</b><span class="badge ok">已确认</span></div><input class="input" lang="ja" value="商品到着後7日以内・未使用に限り返品可" aria-label="返品条件"><div class="small faint">确认于 2026-10-12 · 林薇</div></div>
+          <div class="card shop-item"><div class="top"><b>保証・販売条件</b><span class="badge wait">未确认</span></div><input class="input" lang="ja" placeholder="未录入" aria-label="保証・販売条件"><div class="small faint">未录入；上架清单中此字段会标“数据待补”，不会替你填。</div></div>
+        </div>
+        <div class="row"><button class="btn" data-toast="店铺档案已保存；依赖旧值的待批单会作废并生成新单（演示）">保存店铺档案</button></div>
+      </div>
+
+      <!-- ============ 规则库 ============ -->
+      <div data-pane="rules" hidden class="stack">
+        <div class="g-main">
+          <div class="card">
+            <div class="card-head"><h2>规则库 2026.10.3</h2><span class="badge ok">FRESH</span><span class="meta">复核周期 7 天 · 下次复核 10-27</span></div>
+            <div class="stack sm">
+              <div class="fresh cur"><span class="badge ok">FRESH · 当前</span><span class="small">在复核周期内，正常使用。</span></div>
+              <div class="fresh ghost"><span class="badge wait">STALE</span><span class="small">过期：依赖规则库的动作全部挂起，你确认续用后才继续。</span></div>
+              <div class="fresh ghost"><span class="badge">NOT_INTEGRATED</span><span class="small">某类规则没有数据源：取保守默认，不写成新鲜。</span></div>
+            </div>
+            <div class="row" style="margin-top:14px"><button class="btn" disabled data-toast="当前 FRESH，无需确认续用（演示）">确认续用</button><span class="small faint">只在 STALE 时可用；一次性、留痕、你本人操作。</span></div>
+          </div>
+          <div class="card">
+            <div class="card-head"><h2>版本</h2></div>
+            <ul class="timeline">
+              <li><span class="pt ok"></span><div class="when">2026-10-20 · 当前</div><div class="what">2026.10.3 · G2 词库 +6 条（只更严）</div></li>
+              <li><span class="pt"></span><div class="when">2026-10-13</div><div class="what">2026.10.1 · 新增 G2-011 简体字形混入</div></li>
+              <li><span class="pt"></span><div class="when">2026-10-06</div><div class="what">2026.09.4 · G3-007 授权资源</div></li>
+              <li><span class="pt"></span><div class="when">2026-09-29</div><div class="what">2026.09.1 · 首个发布版本</div></li>
+            </ul>
+          </div>
+        </div>
+        <div class="g2">
+          <div class="card">
+            <div class="card-head"><h2>各层规则数</h2><span class="meta">共 31 条</span></div>
+            <div class="layer"><b>G0</b><div class="bar"><i style="width:27%;background:var(--block)" data-tip="G0 品类准入：BLOCK 3"></i></div><span class="small faint">3 · 0</span></div>
+            <div class="layer"><b>G1</b><div class="bar"><i style="width:55%;background:var(--block)" data-tip="G1 上架必备表示：BLOCK 6"></i></div><span class="small faint">6 · 0</span></div>
+            <div class="layer"><b>G2</b><div class="bar"><i style="width:91%;background:var(--block)" data-tip="G2 文案：BLOCK 10"></i><i style="width:9%;background:var(--wait-solid)" data-tip="G2 文案：WARN 1"></i></div><span class="small faint">10 · 1</span></div>
+            <div class="layer"><b>G3</b><div class="bar"><i style="width:45%;background:var(--block)" data-tip="G3 图片视频：BLOCK 5"></i><i style="width:18%;background:var(--wait-solid)" data-tip="G3 图片视频：WARN 2"></i></div><span class="small faint">5 · 2</span></div>
+            <div class="layer"><b>G4</b><div class="bar"><i style="width:36%;background:var(--block)" data-tip="G4 平台规格：BLOCK 4"></i></div><span class="small faint">4 · 0</span></div>
+            <div class="legend"><span><i style="background:var(--block)"></i>BLOCK 28</span><span><i style="background:var(--wait-solid)"></i>WARN 3</span></div>
+          </div>
+          <div class="card">
+            <div class="card-head"><h2>核实状态</h2></div>
+            <div class="chart" data-chart="donut" data-cfg='{"size":120,"stroke":16,"label":"13/31","sub":"已核实","fs":17,"items":[{"label":"VERIFIED","value":13,"text":"13","color":"ok"},{"label":"UNVERIFIED","value":18,"text":"18","color":"wait"}]}'></div>
+            <p class="small faint" style="margin:10px 0 0">未核实的规则只能更严（BLOCK 或 WARN），不能用来放行；放宽任何规则需你本人批准并附出处，24 小时后生效。</p>
+          </div>
+        </div>
+        <div class="card flush">
+          <div class="card-head"><h2>规则列表</h2><span class="meta">只读 · 显示 10 条代表规则，共 31 条</span></div>
+          <div class="tblwrap"><table class="tbl dense">
+            <thead><tr><th>编号</th><th>说明</th><th>级别</th><th>核实</th></tr></thead>
+            <tbody>
+              <tr><td class="mono">G0-001</td><td>类目不在白名单 → 不可售</td><td><span class="badge block">BLOCK</span></td><td><span class="badge ok">VERIFIED</span></td></tr>
+              <tr><td class="mono">G1-001</td><td>特商法表示已确认</td><td><span class="badge block">BLOCK</span></td><td><span class="badge ok">VERIFIED</span></td></tr>
+              <tr><td class="mono">G1-003</td><td>発送までの日数已填</td><td><span class="badge block">BLOCK</span></td><td><span class="badge ok">VERIFIED</span></td></tr>
+              <tr><td class="mono">G2-001</td><td>功效 / 医疗暗示词库</td><td><span class="badge block">BLOCK</span></td><td><span class="badge wait">UNVERIFIED</span></td></tr>
+              <tr><td class="mono">G2-003</td><td>一律不生成划线价</td><td><span class="badge block">BLOCK</span></td><td><span class="badge ok">VERIFIED</span></td></tr>
+              <tr><td class="mono">G2-008</td><td>机翻腔提示</td><td><span class="badge wait">WARN</span></td><td><span class="badge wait">UNVERIFIED</span></td></tr>
+              <tr><td class="mono">G2-009</td><td>原产国误认（“日本製”等）</td><td><span class="badge block">BLOCK</span></td><td><span class="badge wait">UNVERIFIED</span></td></tr>
+              <tr><td class="mono">G3-001</td><td>无授权图不得进入生成</td><td><span class="badge block">BLOCK</span></td><td><span class="badge ok">VERIFIED</span></td></tr>
+              <tr><td class="mono">G3-004</td><td>出现人脸，需确认肖像授权</td><td><span class="badge wait">WARN</span></td><td><span class="badge wait">UNVERIFIED</span></td></tr>
+              <tr><td class="mono">G4-001</td><td>图片张数 ≤9、尺寸与大小</td><td><span class="badge block">BLOCK</span></td><td><span class="badge wait">UNVERIFIED</span></td></tr>
+            </tbody>
+          </table></div>
+        </div>
+      </div>
+
+      <!-- ============ 安全带 ============ -->
+      <div data-pane="belt" hidden class="stack">
+        <div class="card flush">
+          <div class="card-head"><h2>安全带</h2><span class="meta">轨道左端最严；收紧立即生效，放宽须申请并等 24 小时</span></div>
+          <div class="dial"><div class="nm"><b>每日候选上限</b><span>夜间选品最多入库几个</span></div><div><div class="dtrack"><i style="width:50%"></i><b style="left:50%"></b></div><div class="dends"><span>严 0</span><span>松 60</span></div></div><div class="val">30 <small>个</small></div><div class="btns"><button class="btn sm" data-toast="已收紧，立即生效（演示）">收紧</button><button class="btn sm" data-loosen="每日候选上限 30 → 40" data-toast="已提交放宽申请，24 小时后生效（演示）">申请放宽（24 小时后生效）</button></div></div>
+          <div class="dial"><div class="nm"><b>同意 1 勾选上限</b><span>单批最多勾几个</span></div><div><div class="dtrack"><i style="width:50%"></i><b style="left:50%"></b></div><div class="dends"><span>严 0</span><span>松 20</span></div></div><div class="val">10 <small>个</small></div><div class="btns"><button class="btn sm" data-toast="已收紧，立即生效（演示）">收紧</button><button class="btn sm" data-loosen="同意 1 勾选上限 10 → 15" data-toast="已提交放宽申请，24 小时后生效（演示）">申请放宽（24 小时后生效）</button></div></div>
+          <div class="dial"><div class="nm"><b>每日上架清单上限</b><span>有 1 项待生效</span></div><div><div class="dtrack"><i style="width:50%"></i><b class="pend" style="left:60%" data-tip="待生效：12（2026-10-21 09:30）"></b><b style="left:50%"></b></div><div class="dends"><span>严 0</span><span>松 20</span></div></div><div class="val">10 <small>张</small></div><div class="btns"><button class="btn sm" data-toast="已收紧，立即生效（演示）">收紧</button><button class="btn sm" disabled data-toast="已有待生效的放宽申请（演示）">已申请 → 12</button></div></div>
+          <div class="dial"><div class="nm"><b>生成调用数</b><span>每日文案 / 图 / 视频调用</span></div><div><div class="dtrack"><i style="width:40%"></i><b style="left:40%"></b></div><div class="dends"><span>严 0</span><span>松 300</span></div></div><div class="val">120 <small>次/日</small></div><div class="btns"><button class="btn sm" data-toast="已收紧，立即生效（演示）">收紧</button><button class="btn sm" data-loosen="生成调用数 120 → 180 次/日" data-toast="已提交放宽申请，24 小时后生效（演示）">申请放宽（24 小时后生效）</button></div></div>
+          <div class="dial"><div class="nm"><b>汇率偏离容忍</b><span>超出即作废依赖快照的待批单</span></div><div><div class="dtrack"><i style="width:30%"></i><b style="left:30%"></b></div><div class="dends"><span>严 0%</span><span>松 10%</span></div></div><div class="val">3<small>%</small></div><div class="btns"><button class="btn sm" data-toast="已收紧，立即生效（演示）">收紧</button><button class="btn sm" data-loosen="汇率偏离容忍 3% → 5%" data-toast="已提交放宽申请，24 小时后生效（演示）">申请放宽（24 小时后生效）</button></div></div>
+          <div class="dial"><div class="nm"><b>货源价偏离</b><span>采购价相对快照的变动</span></div><div><div class="dtrack"><i style="width:33%"></i><b style="left:33%"></b></div><div class="dends"><span>严 0%</span><span>松 15%</span></div></div><div class="val">5<small>%</small></div><div class="btns"><button class="btn sm" data-toast="已收紧，立即生效（演示）">收紧</button><button class="btn sm" data-loosen="货源价偏离 5% → 8%" data-toast="已提交放宽申请，24 小时后生效（演示）">申请放宽（24 小时后生效）</button></div></div>
+          <div class="dial"><div class="nm"><b>合规结果抽样比例</b><span>自动通过的合规结果周抽检</span></div><div><div class="dtrack"><i style="width:90%"></i><b style="left:90%"></b></div><div class="dends"><span>严 100%</span><span>松 0%</span></div></div><div class="val">10<small>%</small></div><div class="btns"><button class="btn sm" data-toast="已提高抽检比例，立即生效（演示）">提高抽检</button><button class="btn sm" data-loosen="合规抽样 10% → 5%" data-toast="已提交放宽申请，24 小时后生效（演示）">申请放宽（24 小时后生效）</button></div></div>
+          <div class="dial"><div class="nm"><b>代批抽样比例</b><span>授权内代批的同意 1 周抽检</span></div><div><div class="dtrack"><i style="width:80%"></i><b style="left:80%"></b></div><div class="dends"><span>严 100%</span><span>松 0%</span></div></div><div class="val">20<small>%</small></div><div class="btns"><button class="btn sm" data-toast="已提高抽检比例，立即生效（演示）">提高抽检</button><button class="btn sm" data-loosen="代批抽样 20% → 10%" data-toast="已提交放宽申请，24 小时后生效（演示）">申请放宽（24 小时后生效）</button></div></div>
+          <div class="dial"><div class="nm"><b>连续失败熔断</b><span>同类自动动作连续失败 → 收紧一档</span></div><div><div class="dtrack"><i style="width:30%"></i><b style="left:30%"></b></div><div class="dends"><span>严 1</span><span>松 10</span></div></div><div class="val">3 <small>次</small></div><div class="btns"><button class="btn sm" data-toast="已收紧，立即生效（演示）">收紧</button><button class="btn sm" data-loosen="连续失败熔断 3 → 5 次" data-toast="已提交放宽申请，24 小时后生效（演示）">申请放宽（24 小时后生效）</button></div></div>
+          <div class="dial"><div class="nm"><b>速率熔断</b><span>动作暴增 → 暂停自动流水线转人看</span></div><div><div class="dtrack"><i style="width:50%"></i><b style="left:50%"></b></div><div class="dends"><span>严 0</span><span>松 120</span></div></div><div class="val">60 <small>次/分</small></div><div class="btns"><button class="btn sm" data-toast="已收紧，立即生效（演示）">收紧</button><button class="btn sm" data-loosen="速率熔断 60 → 90 次/分钟" data-toast="已提交放宽申请，24 小时后生效（演示）">申请放宽（24 小时后生效）</button></div></div>
+          <div class="dial fixed"><div class="nm"><b>售价低于地板价 / 毛利低于底线</b><span>引擎层固定拦截</span></div><div class="small faint">没有可调的范围</div><div class="val" style="font-size:16px;color:var(--block)">拦截</div><div class="btns"><span class="badge block">固定，不可调整</span></div></div>
+        </div>
+        <p class="small faint" style="margin:0">熔断或降级后，恢复到你曾批准过的基线是即时的；比已批准基线更松才需要 24 小时。</p>
+      </div>
+
+      <!-- ============ Agent ============ -->
+      <div data-pane="agent" hidden class="stack">
+        <div class="alert info"><span>任何时候都可以往严切（ACTIVE → 仅建议 → 关闭），立即生效；往松切须申请，24 小时后生效。Agent 默认无批准权，不能批自己提的单。</span></div>
+        <div class="g3">
+          <div class="card agent" data-agent>
+            <div class="hd"><span class="avt">P</span><div><b>Pilot</b><span>项目经理</span></div><span class="badge block right">没有批准权</span></div>
+            <p class="small muted" style="margin:0">编排流水线、打包审批单、汇总汇报。授权内代批由确定性规则执行，不经过它。</p>
+            <div class="seg" data-lv="2"><button data-l="2" aria-pressed="true" data-toast="Pilot：ACTIVE（演示）">ACTIVE</button><button data-l="1" aria-pressed="false" data-toast="Pilot：仅建议（演示）">仅建议</button><button data-l="0" aria-pressed="false" data-toast="Pilot：关闭（演示）">关闭</button></div>
+            <div class="row"><div class="nums" style="flex:1"><span><b>98</b>调用</span><span><b style="color:var(--block)">3</b>被拒</span><span><b style="color:var(--wait)">2</b>举手</span></div><div class="chart" data-chart="spark" data-cfg='{"values":[12,14,13,15,16,14,14],"color":"info","w":72}'></div></div>
+          </div>
+          <div class="card agent" data-agent>
+            <div class="hd"><span class="avt">S</span><div><b>Scout</b><span>选品员</span></div></div>
+            <p class="small muted" style="margin:0">解析导入数据、去重、触发成本测算与打分，写候选理由。不判定品类、不算钱。</p>
+            <div class="seg" data-lv="2"><button data-l="2" aria-pressed="true" data-toast="Scout：ACTIVE（演示）">ACTIVE</button><button data-l="1" aria-pressed="false" data-toast="Scout：仅建议（演示）">仅建议</button><button data-l="0" aria-pressed="false" data-toast="Scout：关闭（演示）">关闭</button></div>
+            <div class="row"><div class="nums" style="flex:1"><span><b>412</b>调用</span><span><b>0</b>被拒</span><span><b style="color:var(--wait)">5</b>举手</span></div><div class="chart" data-chart="spark" data-cfg='{"values":[56,61,58,60,57,62,58],"color":"info","w":72}'></div></div>
+          </div>
+          <div class="card agent" data-agent>
+            <div class="hd"><span class="avt">S</span><div><b>Sourcer</b><span>采集员</span></div></div>
+            <p class="small muted" style="margin:0">把你录入的货源整理成采集箱：去重、品牌初筛、列出缺字段。不补默认值。</p>
+            <div class="seg" data-lv="2"><button data-l="2" aria-pressed="true" data-toast="Sourcer：ACTIVE（演示）">ACTIVE</button><button data-l="1" aria-pressed="false" data-toast="Sourcer：仅建议（演示）">仅建议</button><button data-l="0" aria-pressed="false" data-toast="Sourcer：关闭（演示）">关闭</button></div>
+            <div class="row"><div class="nums" style="flex:1"><span><b>36</b>调用</span><span><b>0</b>被拒</span><span><b style="color:var(--wait)">3</b>举手</span></div><div class="chart" data-chart="spark" data-cfg='{"values":[4,6,3,7,5,6,5],"color":"info","w":72}'></div></div>
+          </div>
+          <div class="card agent" data-agent>
+            <div class="hd"><span class="avt">C</span><div><b>Creator</b><span>素材员</span></div></div>
+            <p class="small muted" style="margin:0">生成标题、卖点、介绍页、主图与视频，并回译成中文。不判定合规。</p>
+            <div class="seg" data-lv="2"><button data-l="2" aria-pressed="true" data-toast="Creator：ACTIVE（演示）">ACTIVE</button><button data-l="1" aria-pressed="false" data-toast="Creator：仅建议（演示）">仅建议</button><button data-l="0" aria-pressed="false" data-toast="Creator：关闭（演示）">关闭</button></div>
+            <div class="row"><div class="nums" style="flex:1"><span><b>284</b>调用</span><span><b style="color:var(--block)">4</b>被拒</span><span><b style="color:var(--wait)">1</b>举手</span></div><div class="chart" data-chart="spark" data-cfg='{"values":[30,42,38,46,40,52,36],"color":"info","w":72}'></div></div>
+          </div>
+          <div class="card agent" data-agent>
+            <div class="hd"><span class="avt">L</span><div><b>Lister</b><span>上架员</span></div><span class="badge wait right">仅建议</span></div>
+            <p class="small muted" style="margin:0">冻结载荷、生成执行清单与素材包、接收回填并触发读回比对。不能写平台。</p>
+            <div class="seg" data-lv="1"><button data-l="2" aria-pressed="false" data-toast="Lister：ACTIVE（演示）">ACTIVE</button><button data-l="1" aria-pressed="true" data-toast="Lister：仅建议（演示）">仅建议</button><button data-l="0" aria-pressed="false" data-toast="Lister：关闭（演示）">关闭</button></div>
+            <div class="row"><div class="nums" style="flex:1"><span><b>22</b>调用</span><span><b style="color:var(--block)">4</b>被拒</span><span><b>0</b>举手</span></div><div class="chart" data-chart="spark" data-cfg='{"values":[2,3,4,3,5,3,2],"color":"info","w":72}'></div></div>
+          </div>
+          <div class="card agent" data-agent>
+            <div class="hd"><span class="avt">C</span><div><b>Checker</b><span>质检员</span></div></div>
+            <p class="small muted" style="margin:0">从数据库重新加载，独立复算成本、重跑 G0–G4、核对读回。只出证据，不能放行。</p>
+            <div class="seg" data-lv="2"><button data-l="2" aria-pressed="true" data-toast="Checker：ACTIVE（演示）">ACTIVE</button><button data-l="1" aria-pressed="false" data-toast="Checker：仅建议（演示）">仅建议</button><button data-l="0" aria-pressed="false" data-toast="Checker：关闭（演示）">关闭</button></div>
+            <div class="row"><div class="nums" style="flex:1"><span><b>310</b>调用</span><span><b>0</b>被拒</span><span><b style="color:var(--wait)">1</b>举手</span></div><div class="chart" data-chart="spark" data-cfg='{"values":[40,46,42,48,44,50,40],"color":"info","w":72}'></div></div>
+          </div>
+        </div>
+        <p class="small faint" style="margin:0">数字为近 7 日；趋势线为每日调用数。同一 Agent 7 天内 3 次未说明原因的挂起，会被自动降为“仅建议”。</p>
+      </div>
+
+      <!-- ============ 模型与预算 ============ -->
+      <div data-pane="budget" hidden class="stack">
+        <div class="g-main-r">
+          <div class="card">
+            <div class="card-head"><h2>今日花费</h2></div>
+            <div class="chart" style="display:flex;justify-content:center" data-chart="gauge" data-cfg='{"pct":21,"label":"¥312","sub":"上限 ¥1,500 · 已用 21%","color":"primary","w":200,"h":112}'></div>
+            <div class="alert" style="margin-top:12px"><span>每日上限未设 = 0 = 不生成。超出上限自动停止，放行只能由你本人批准。</span></div>
+          </div>
+          <div class="card">
+            <div class="card-head"><h2>近 14 天花费</h2><span class="meta">虚线 = 每日上限</span></div>
+            <div class="chart" data-chart="line" data-cfg='{"w":520,"h":180,"ymax":1700,"unit":"","labels":["10-07","10-08","10-09","10-10","10-11","10-12","10-13","10-14","10-15","10-16","10-17","10-18","10-19","10-20"],"series":[{"name":"花费（¥）","color":"primary","values":[860,940,1020,1180,1260,720,810,1340,1290,1410,1380,1442,1210,312]}],"hlines":[{"y":1500,"label":"上限 ¥1,500","color":"wait"}]}'></div>
+            <p class="small faint" style="margin:8px 0 0">读法：10-18 接近上限，Creator 的 1 次视频生成因预算预留失败被拒；今日数据截至 11:05。</p>
+          </div>
+        </div>
+        <div class="g2">
+          <div class="card">
+            <div class="card-head"><h2>按岗位 · 近 7 天</h2><span class="meta">¥8,130</span></div>
+            <div class="chart" data-chart="stack" data-cfg='{"h":16,"items":[{"label":"Creator","value":6990,"text":"¥6,990","color":"s1"},{"label":"Scout","value":1140,"text":"¥1,140","color":"s2"}]}'></div>
+            <p class="small faint" style="margin:10px 0 0">Pilot、Sourcer、Lister、Checker 不调用模型，花费 ¥0。</p>
+          </div>
+          <div class="card">
+            <div class="card-head"><h2>模型与上限</h2></div>
+            <dl class="kv" style="margin-bottom:12px">
+              <dt>文案与回译</dt><dd>演示文本模型 A（回译用不同模型 B）</dd>
+              <dt>图片与视频</dt><dd>本地模板合成，不调用外部模型</dd>
+              <dt>单价</dt><dd>已配置；未配置则不调用</dd>
+            </dl>
+            <div class="row wrap">
+              <input class="input" style="width:110px" value="1500" aria-label="每日上限（日元）">
+              <button class="btn" data-toast="已调低上限，立即生效（演示）">调低上限</button>
+              <button class="btn" data-loosen="每日模型预算 ¥1,500 → ¥2,000" data-toast="已提交放宽申请，24 小时后生效（演示）">申请放宽（24 小时后生效）</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============ 成员 ============ -->
+      <div data-pane="member" hidden class="stack">
+        <div class="alert wait"><span><b>单人运行：没有第二位审批人，系统用延迟生效、抽检和查看门槛补偿。</b></span></div>
+        <div class="roles">
+          <div class="role"><div class="row" style="gap:12px"><span class="ava">林</span><div><b>林薇</b><div class="small faint">Owner · 老板</div></div><span class="badge ok right">在用</span></div><p class="small muted" style="margin:12px 0 0">给方向、定规则；批超预算放行、规则放宽、授权新建、风险确认。</p></div>
+          <div class="role"><div class="row" style="gap:12px"><span class="ava">林</span><div><b>林薇</b><div class="small faint">Operator · 运营</div></div><span class="badge ok right">在用</span></div><p class="small muted" style="margin:12px 0 0">唯一必备审批人：同意 1、同意 2；照执行清单在后台操作并回填。</p></div>
+        </div>
+        <div class="card">
+          <div class="card-head"><h2>补偿措施</h2><span class="badge ok">5 项均已启用</span></div>
+          <ul class="checks">
+            <li><i>✓</i><span>放宽类动作 24 小时后生效，并二次确认</span></li>
+            <li><i>✓</i><span>每周抽检卡：自动通过的合规结果、代批的同意 1、全部 WARN 确认</span></li>
+            <li><i>✓</i><span>必看证据未展开，“批准”不可用</span></li>
+            <li><i>✓</i><span>同一人批准并执行，标“自批自执”进审计高危视图</span></li>
+            <li><i>✓</i><span>积压批准占比超过阈值时提醒</span></li>
+          </ul>
+          <div class="row" style="margin-top:14px"><button class="btn" data-toast="邀请第二位成员（演示）">邀请第二位成员</button><span class="small faint">出现第二位成员后，改过素材的人不能批该素材的同意 2。</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<template id="detail-tpl">
+  <h3>设置的规矩</h3>
+  <p class="muted small" style="margin:0 0 12px">一个判据：这次变更会不会让更多对象通过。会 = 放宽。</p>
+  <div class="g2" style="gap:10px">
+    <div class="card tint" style="padding:12px"><div class="small faint">往严</div><b>立即生效</b><div class="small faint">事后通知</div></div>
+    <div class="card tint" style="padding:12px;background:var(--wait-bg)"><div class="small" style="color:var(--wait)">往松</div><b style="color:var(--wait)">24 小时后</b><div class="small" style="color:var(--wait)">期间可撤回</div></div>
+  </div>
+  <h3>开工前置 6 / 6</h3>
+  <ul class="feed">
+    <li><span class="dot ok"></span><div>方向卡 v7<div class="t">毛利底线 12% · 白名单类目 3</div></div></li>
+    <li><span class="dot ok"></span><div>费率卡 v12<div class="t">1–2kg 档缺失，只影响用到该档的 3 个候选</div></div></li>
+    <li><span class="dot ok"></span><div>品类白名单<div class="t">ALLOW 3 · 均附出处</div></div></li>
+    <li><span class="dot ok"></span><div>店铺档案<div class="t">特商法 · 运费模板 · 発送日数 已确认</div></div></li>
+    <li><span class="dot ok"></span><div>规则库 2026.10.3<div class="t">FRESH · 下次复核 10-27</div></div></li>
+    <li><span class="dot ok"></span><div>模型预算 ¥1,500 / 日<div class="t">今日已用 21%</div></div></li>
+  </ul>
+  <h3>数据连接 7</h3>
+  <ul class="feed">
+    <li><span class="dot wait"></span><div>汇率 09:00 已更新<div class="t">1 条突变待你确认（备源 21.55，+3.6%）</div></div></li>
+    <li><span class="dot ok"></span><div>关税率 · 节假日 · 运费 · 货源 · 费率页<div class="t">运行中，均在新鲜期内</div></div></li>
+    <li><span class="dot" style="background:var(--text-3)"></span><div>榜单与竞品<div class="t">未配置 · 手工 CSV 兜底</div></div></li>
+  </ul>
+  <h3>放宽审批</h3>
+  <p class="small muted" style="margin:0">这类动作必须由你本人批准，不能交给 Pilot。每次申请与撤回都写入审计。</p>
+  <p class="small" style="margin:8px 0 0"><a href="09-audit.html">查看设置相关审计 →</a></p>
+</template>
+
+<script src="assets/art.js"></script>
+<script src="assets/charts.js"></script>
+<script src="assets/cp2.js"></script>
+<script>
+(function(){
+  var list=document.getElementById('pending-list'), bar=document.getElementById('pending'), cnt=document.getElementById('pend-n');
+  // 支持 10-settings.html#belt 这类直达链接
+  var h=location.hash.slice(1); if(h){ var t=document.querySelector('.set [role=tab][data-tab="'+h+'"]'); if(t) t.click(); }
+  function count(){ var n=list.children.length; cnt.textContent=n; bar.hidden=n===0; }
+  function pad(n){ return (n<10?'0':'')+n; }
+  function addPending(text){
+    var now=new Date(), at='2026-10-21 '+pad(now.getHours())+':'+pad(now.getMinutes());
+    var li=document.createElement('li'); li.className='new';
+    var s=document.createElement('span'); s.textContent=text; li.appendChild(s);
+    li.insertAdjacentHTML('beforeend','<span class="meter wait" data-tip="刚刚申请 · 0 / 24 小时"><i style="width:2%"></i></span><span class="when">'+at+' 生效</span><button class="btn sm" data-withdraw data-toast="已撤回该申请（演示）">撤回</button>');
+    list.appendChild(li); count();
+    bar.scrollIntoView({block:'nearest',behavior:'smooth'});
+  }
+  document.addEventListener('click',function(e){
+    var b=e.target.closest('[data-loosen]');
+    if(b && !b.disabled){ addPending(b.dataset.loosen); b.disabled=true; b.textContent='已申请，待生效'; return; }
+    var w=e.target.closest('[data-withdraw]'); if(w){ w.closest('li').remove(); count(); return; }
+    // 数据连接：跳到对应分区
+    var go=e.target.closest('[data-goto]');
+    if(go){ var tb=document.querySelector('.set [role=tab][data-tab="'+go.dataset.goto+'"]'); if(tb){ tb.click(); document.getElementById('main').scrollTo({top:0}); window.scrollTo({top:0}); } return; }
+    // 连接器开关：关闭即时；开启 = 放宽，走 24 小时（cp2.js 已先切换 aria-checked）
+    var sw=e.target.closest('[data-conn-sw]');
+    if(sw){
+      var card=sw.closest('[data-conn]'), nm=card.dataset.conn, nowOn=sw.getAttribute('aria-checked')==='true';
+      if(sw.hasAttribute('data-unset')){ sw.setAttribute('aria-checked','false'); CP.toast(nm+'：未配置，先选择接入方式再申请开启（演示）'); return; }
+      if(nowOn){ sw.setAttribute('aria-checked','false');
+        if(sw.dataset.pending){ CP.toast(nm+'：已有开启申请待生效（演示）'); return; }
+        sw.dataset.pending='1'; addPending('开启连接器：'+nm); CP.toast('开启是放宽：'+nm+' 将于 24 小时后开启（演示）'); }
+      else { card.classList.add('off'); CP.toast(nm+' 已关闭，立即生效；依赖它的数据到期后显示“已过期”（演示）'); }
+      return;
+    }
+    // Agent 状态：往严即时，往松走 24 小时
+    var a=e.target.closest('[data-agent] .seg button');
+    if(a){
+      var seg=a.parentElement, cur=+seg.dataset.lv, l=+a.dataset.l, name=seg.closest('[data-agent]').querySelector('.hd b').textContent;
+      var label={2:'ACTIVE',1:'仅建议',0:'关闭'};
+      if(l===cur) return;
+      if(l<cur){ seg.dataset.lv=l; seg.querySelectorAll('button').forEach(function(x){ x.setAttribute('aria-pressed',x===a); }); seg.closest('[data-agent]').classList.toggle('off',l===0); CP.toast(name+' 已切为'+label[l]+'，立即生效（演示）'); }
+      else { addPending(name+'：'+label[cur]+' → '+label[l]); CP.toast('往松切须申请：'+name+' 将于 24 小时后切为'+label[l]+'（演示）'); }
+    }
+  });
+})();
+</script>
+</body>
+</html>

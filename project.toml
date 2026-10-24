@@ -1,0 +1,57 @@
+# 本项目的设置(由脚本、CI 和 Agent 读取)。不放密钥:GitHub 的登录名和 App 名不是密钥。
+# 双大括号的地方在初始化时填写(见引导手册)。
+
+[github]
+owner = "ouyouki"
+repo = "CrossPilot"
+approvers = ["ouyouki"]                           # 人。只有他们加的人专用标签、写的 [定版]、运行的发布才算数
+dev_bot = "crosspilot-dev[bot]"                   # 开发、集成 Agent 的身份
+pm_bot = "crosspilot-pm[bot]"                     # PM Agent 的身份
+review_bot = "crosspilot-review[bot]"             # 评审、测试 Agent 的身份(三个 App 必须各不相同)
+
+[cycle]                                           # 时间都按 utc_offset 的本地时间
+utc_offset = "+09:00"
+decide_from = "09:00"                             # 定版时间段的开始:自动定版的计时最早从这里算起
+decide_until = "21:00"                            # 这之后 D1 通过的方案,从第二天的 decide_from 算起
+auto_approve_minutes = 60                         # 人没定版时,等这么久后按推荐方案 V1 推进
+integrate_at = "17:30"                            # 集成 Agent 整理验收清单的时间
+weekly_days = 7                                   # /architecture(代码结构建议)、/retro(回顾)隔几天做一次(只在没有别的事时做)
+
+[models]                                          # gen_adapters.py 写进两种 harness 的 Agent 文件
+strong = "deepseek-v4-pro"                        # 评审、测试(以 DeepSeek 官方文档的模型名为准)
+fast = "deepseek-flash"                           # PM、开发、集成
+opencode_provider = "deepseek"                    # OpenCode 里的提供商 id(/connect 后 /models 里显示的名字)
+
+[checks]                                          # precheck.sh 和 CI 的 tests 依次运行,在仓库根目录执行
+commands = [                                      # 快的检查(提 PR 前的自查也跑)
+  "cd backend && python -m unittest discover -s tests -t .",
+]
+full = [                                          # 全量回归(CI 的 tests 和 full-test 跑;包括 E2E)
+  "cd backend && python -m unittest discover -s tests -t .",
+  "cd backend && python -m compileall -q crosspilot",
+]
+mutation = [                                      # 变异测试(每周,.github/workflows/mutation.yml;空 = 不做)。测试漏掉的变异多时要以非 0 结束:
+]                                                 # 例 "npx stryker run"(在 stryker 的设置里设 thresholds.break)、"mutmut run"(以各工具文档的退出码为准)
+
+[trace]                                           # CI 的 trace:在这些文件里找自动用例的用例 ID
+test_globs = ["backend/tests/**", "e2e/**"]
+
+[runner]                                          # scripts/agent/run.sh:无人看管时的上限(防止陷入循环、浪费 Token)
+harness = "claude"                                # claude(Claude Code)或 opencode
+interval_seconds = 120                            # 没有可做的事时,隔多久再看
+timeout_minutes = 30                              # 一次运行最长多久
+max_retries = 3                                   # 同一件事连续这么多次没有进展 → 加 阻塞,等人
+max_runs_per_day = { dev = 60, pm = 30, review = 60 }
+max_turns = { dev = 60, pm = 40, review = 40 }    # 一次运行最多的轮数(Claude Code --max-turns;OpenCode 写进 Agent 的 steps)
+# Token 的预算(等价 Token = 输入 + 输出 + 缓存写入 + 缓存命中 / 10)。到 80% 在日志里警告,到 100% 当天停止,第二天恢复。
+daily_tokens = { dev = 20_000_000, pm = 6_000_000, review = 12_000_000 }
+issue_tokens = 5_000_000                          # 一件事(Issue 和它的 PR)累计超过这个数 → 加 阻塞,等人判断
+unknown_run_tokens = 400_000                      # 读不到用量时,一次运行按这个数计入(偏保守)
+# Agent 能读的网站(skills/research)。只写域名;空 = 不能上网。Claude Code 按域名限制;命令监视拦下对别的域名的 curl / wget。
+# OpenCode 的网页读取不能按域名限制:这里非空时要在 opencode.jsonc 里把 webfetch 改成 allow(见引导手册)。
+web_domains = []                                  # 例 ["docs.python.org", "developer.mozilla.org"]
+
+[runner.commands]                                 # 无界面运行的命令。{name} 命令名,{args} 参数,{prompt} "/name args",{agent},{max_turns},
+                                                  # {webfetch} 展开成 web_domains 的每个域名的 WebFetch(domain:…)(空就去掉)
+claude = ["claude", "-p", "{prompt}", "--output-format", "json", "--max-turns", "{max_turns}", "--permission-mode", "acceptEdits", "--allowedTools", "Bash", "{webfetch}"]
+opencode = ["opencode", "run", "--agent", "{agent}", "--command", "{name}", "--format", "json", "{args}"]

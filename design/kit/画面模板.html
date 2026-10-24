@@ -1,0 +1,48 @@
+<!doctype html>
+<!-- 画面方案的模板(design/kit/)。PM Agent 用 new_proposal.py 复制成 V1〜V3.html 后改写 <main> 里面。
+     规则:只用样例数据;不加载外部文件(字体、脚本、图片都内联);浅色 / 深色都能看;手机宽度(400px)不出现横向滚动。 -->
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>#__编号__ __方案__</title>
+<style>
+  :root { --bg: #f7f7f8; --card: #fff; --text: #1d1d1f; --sub: #6e6e73; --line: #e3e3e6; --accent: #2563eb; --warn: #b45309; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #151517; --card: #1f1f22; --text: #f2f2f4; --sub: #a1a1a8; --line: #2e2e33; --accent: #60a5fa; --warn: #fbbf24; }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.6 system-ui, -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif; }
+  header { padding: 12px 16px; border-bottom: 1px solid var(--line); background: var(--card); display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+  header b { font-size: 16px; }
+  .tag { font-size: 12px; padding: 2px 8px; border-radius: 999px; background: var(--accent); color: #fff; }
+  main { max-width: 1100px; margin: 0 auto; padding: 16px; display: grid; gap: 16px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 16px; overflow-x: auto; }
+  .note { color: var(--sub); font-size: 13px; }
+  table { border-collapse: collapse; width: 100%; min-width: 0; }
+  th, td { text-align: left; padding: 8px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+  button { font: inherit; padding: 8px 14px; border-radius: 8px; border: 1px solid var(--accent); background: var(--accent); color: #fff; cursor: pointer; }
+  button.sub { background: transparent; color: var(--accent); }
+  .change { outline: 2px dashed var(--warn); outline-offset: 4px; }
+</style>
+</head>
+<body>
+<header><b>样例系统</b><span class="tag">__方案__</span><span class="note">#__编号__ · 样例数据 · 虚线框 = 这次改动的地方</span></header>
+<main>
+  <section class="card change">
+    <h2>(画面的名字)</h2>
+    <p class="note">这一套的要点:…</p>
+    <table>
+      <thead><tr><th>客户</th><th>月份</th><th>金额</th></tr></thead>
+      <tbody>
+        <tr><td>样例商事</td><td>2026-09</td><td>12,000</td></tr>
+        <tr><td>样例物产</td><td>2026-09</td><td>8,500</td></tr>
+      </tbody>
+    </table>
+  </section>
+  <section class="card">
+    <button>保存</button> <button class="sub">取消</button>
+  </section>
+</main>
+</body>
+</html>

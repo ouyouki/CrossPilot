@@ -1,0 +1,38 @@
+name: 需求
+description: 新功能或改进(随时提交;PM Agent 拾取后出三套方案,人有空时定版)
+title: "[需求] "
+labels: ["类型:需求", "状态:待处理"]
+body:
+  - type: textarea
+    id: purpose
+    attributes:
+      label: 目的
+      description: 为了谁、解决什么问题。不写客户名和人名(用角色)。
+      placeholder: 例:让营业负责人能在画面上直接确认每月的销售额
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: 范围
+      description: 要做的和不做的。
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: 验收条件
+      description: 怎样算完成(验收时人会按这个确认)。
+    validations:
+      required: true
+  - type: dropdown
+    id: priority
+    attributes:
+      label: 优先级
+      options: ["高", "中", "低"]
+    validations:
+      required: true
+  - type: textarea
+    id: deadline
+    attributes:
+      label: 期限(可选)

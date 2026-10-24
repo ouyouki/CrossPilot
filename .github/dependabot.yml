@@ -1,0 +1,23 @@
+# 依赖的版本更新(docs/运营规则.md 4.2)。Dependabot 每周提 PR,PR 不属于任何 Issue,Agent 不处理:
+# 必过检查里 tests / secrets / security 通过后,由人看更新说明,用管理员的绕过合并(scope / trace / gate 对它不适用)。
+# 按项目实际用的包管理器把下面的注释打开(目录是清单文件所在的位置)。
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    labels: ["依赖更新"]
+    open-pull-requests-limit: 3
+  # - package-ecosystem: pip
+  #   directory: /
+  #   schedule:
+  #     interval: weekly
+  #   labels: ["依赖更新"]
+  #   open-pull-requests-limit: 3
+  # - package-ecosystem: npm
+  #   directory: /
+  #   schedule:
+  #     interval: weekly
+  #   labels: ["依赖更新"]
+  #   open-pull-requests-limit: 3

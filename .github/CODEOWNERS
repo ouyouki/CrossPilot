@@ -1,0 +1,27 @@
+# 框架文件(判断规则、检查脚本、Agent 的定义)的改动要人批准(docs/运营规则.md 4.1 章)。
+# 规则集要求代码负责人批准;不碰这些文件的 PR 不需要人批准。把 @ouyouki 换成 project.toml 的 approvers。
+/.github/                @ouyouki
+/scripts/                @ouyouki
+/project.toml            @ouyouki
+/agents/                 @ouyouki
+/commands/               @ouyouki
+/AGENTS.md               @ouyouki
+/CLAUDE.md               @ouyouki
+/docs/运营规则.md        @ouyouki
+/.claude/                @ouyouki
+/.opencode/              @ouyouki
+/opencode.jsonc          @ouyouki
+/skills/                 @ouyouki
+/.gitleaks.toml          @ouyouki
+/.gitleaksignore         @ouyouki
+/.semgrepignore          @ouyouki
+# 测试的设置(改了它就能让测试"通过");按项目实际用的增减
+/package.json            @ouyouki
+/pyproject.toml          @ouyouki
+/setup.cfg               @ouyouki
+/pytest.ini              @ouyouki
+/tox.ini                 @ouyouki
+/conftest.py             @ouyouki
+/playwright.config.*     @ouyouki
+/jest.config.*           @ouyouki
+/vitest.config.*         @ouyouki

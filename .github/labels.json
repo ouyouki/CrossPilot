@@ -1,0 +1,82 @@
+[
+ {
+  "name": "类型:需求",
+  "color": "1d76db",
+  "description": "新功能或改进"
+ },
+ {
+  "name": "类型:缺陷",
+  "color": "d73a4a",
+  "description": "不按预期工作"
+ },
+ {
+  "name": "类型:改进",
+  "color": "5319e7",
+  "description": "结构或框架的改进(架构建议、回顾);只能由人定版"
+ },
+ {
+  "name": "状态:待处理",
+  "color": "ededed",
+  "description": "还没拾取"
+ },
+ {
+  "name": "状态:方案中",
+  "color": "c5def5",
+  "description": "PM Agent 在出三套方案"
+ },
+ {
+  "name": "状态:待定版",
+  "color": "fef2c0",
+  "description": "方案评审通过,等人定版(或到时自动按 V1)"
+ },
+ {
+  "name": "状态:开发中",
+  "color": "bfd4f2",
+  "description": "在做范围、测试用例、实现、检查"
+ },
+ {
+  "name": "状态:待验收",
+  "color": "d4c5f9",
+  "description": "已合并,等人在预发布环境验收"
+ },
+ {
+  "name": "设计已批准",
+  "color": "0e8a16",
+  "description": "人专用:定版"
+ },
+ {
+  "name": "已验收",
+  "color": "0e8a16",
+  "description": "人专用:验收通过(加在 PR 上)"
+ },
+ {
+  "name": "免验收",
+  "color": "0e8a16",
+  "description": "人专用:决定不验收(加在 PR 上)"
+ },
+ {
+  "name": "需人定版",
+  "color": "b60205",
+  "description": "不自动定版(数据、对外发送、费用、权限或安全);只由人去掉"
+ },
+ {
+  "name": "待回答",
+  "color": "fbca04",
+  "description": "有未回答的 [提问]"
+ },
+ {
+  "name": "待人决定",
+  "color": "b60205",
+  "description": "需要人判断,见 [回答] 或「每日计划」"
+ },
+ {
+  "name": "阻塞",
+  "color": "b60205",
+  "description": "卡住了或到了上限,见 [阻塞] 评论;人处理后去掉"
+ },
+ {
+  "name": "依赖更新",
+  "color": "0366d6",
+  "description": "Dependabot 提的依赖更新 PR;Agent 不处理,由人看过后合并"
+ }
+]

@@ -1,0 +1,114 @@
+# PR 的必过检查 tests / secrets / security / scope / trace(docs/运营规则.md 4.1、9 章)。作业名就是规则集里的检查名,改名时两边一起改。
+# 判断用的脚本、测试命令和扫描设置都取自 main(PR 改不了判断);框架文件的改动另外要人批准(CODEOWNERS)。
+# 外部工具固定版本:升级时改下面的 env,并在 PR 里写明(这个文件的改动要人批准)。
+name: CI
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened, edited]      # edited:撤回 PR 改了正文时 scope 重新核对
+permissions:
+  contents: read
+env:
+  GITLEAKS_VERSION: "8.21.2"
+  SEMGREP_VERSION: "1.95.0"
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: 两种 harness 的文件和定义一致
+        run: python scripts/dev/gen_adapters.py --check
+      - name: 全量回归(main 上 project.toml 的 [checks] commands 和 full,在 PR 的代码上运行)
+        env:
+          BASE_REF: ${{ github.base_ref }}
+        run: |
+          git show "origin/$BASE_REF:project.toml" > "$RUNNER_TEMP/project.toml"
+          python - <<'PY'
+          import os, subprocess, sys, tomllib
+          checks = tomllib.load(open(os.path.join(os.environ["RUNNER_TEMP"], "project.toml"), "rb"))["checks"]
+          for c in checks["commands"] + checks.get("full", []):
+              print("==", c, flush=True)
+              if subprocess.run(["bash", "-c", c]).returncode:
+                  sys.exit(1)
+          PY
+  secrets:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: PR 的提交里没有密钥(gitleaks;设置和忽略清单只用 main 上的,gitleaks:allow 注释不算数)
+        env:
+          BASE_REF: ${{ github.base_ref }}
+        run: |
+          cd "$RUNNER_TEMP"
+          f="gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
+          curl -sSfLO "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/$f"
+          curl -sSfL "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_checksums.txt" | grep " $f\$" | sha256sum -c -
+          tar -xzf "$f" gitleaks
+          cd "$GITHUB_WORKSPACE"
+          # 不传 --config 时 gitleaks 会读 PR 里的 .gitleaks.toml:总是显式指定(main 上没有就用默认规则)
+          git show "origin/$BASE_REF:.gitleaks.toml" > "$RUNNER_TEMP/gitleaks.toml" 2>/dev/null \
+            || printf '[extend]\nuseDefault = true\n' > "$RUNNER_TEMP/gitleaks.toml"
+          rm -f .gitleaksignore                                        # 忽略清单也只用 main 上的
+          git show "origin/$BASE_REF:.gitleaksignore" > .gitleaksignore 2>/dev/null || rm -f .gitleaksignore
+          "$RUNNER_TEMP/gitleaks" git --no-banner --redact --exit-code 1 --ignore-gitleaks-allow \
+            --config "$RUNNER_TEMP/gitleaks.toml" --log-opts="origin/$BASE_REF..HEAD" .
+  security:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: 新增代码的安全扫描(Semgrep 社区版;只报这个 PR 新增的问题;不发送使用统计)
+        env:
+          BASE_REF: ${{ github.base_ref }}
+        run: |
+          pip install --quiet "semgrep==${SEMGREP_VERSION}"
+          # nosemgrep 注释不算数(--disable-nosem);误报由人改 .semgrepignore(它的改动要人批准,CODEOWNERS)
+          semgrep scan --config p/default --metrics=off --disable-nosem --error --severity ERROR \
+            --baseline-commit "$(git merge-base "origin/$BASE_REF" HEAD)"
+  scope:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: 改动的文件都在 范围.txt 里(用 main 上的检验脚本)
+        env:
+          BASE_REF: ${{ github.base_ref }}
+          HEAD_REF: ${{ github.head_ref }}
+          PR_BODY: ${{ github.event.pull_request.body }}
+        run: |
+          git show "origin/$BASE_REF:scripts/ci/verify.py" > "$RUNNER_TEMP/verify.py"
+          python "$RUNNER_TEMP/verify.py" scope --base "origin/$BASE_REF" --branch "$HEAD_REF"
+  trace:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: 需求 → 用例 → 自动测试或 OK 的证据(用 main 上的检验脚本)
+        env:
+          BASE_REF: ${{ github.base_ref }}
+          HEAD_REF: ${{ github.head_ref }}
+        run: |
+          git show "origin/$BASE_REF:scripts/ci/verify.py" > "$RUNNER_TEMP/verify.py"
+          python "$RUNNER_TEMP/verify.py" trace --base "origin/$BASE_REF" --branch "$HEAD_REF"

@@ -1,0 +1,562 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>审计 · CrossPilot</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="assets/cp2.css">
+<style>
+/* —— 审计页专用 —— */
+.filters{display:flex;flex-wrap:wrap;gap:10px 12px;align-items:flex-end}
+.filters .field{margin:0;min-width:120px}
+.filters .select{height:32px}
+.actor{display:inline-flex;align-items:center;gap:8px;white-space:nowrap}
+.av{width:24px;height:24px;border-radius:50%;display:inline-grid;place-items:center;font:600 13px var(--font-mono);flex:none}
+.av.h{background:var(--primary);color:var(--on-primary)}
+.av.a{background:var(--info-bg);color:var(--info)}
+.av.s{background:var(--surface-3);color:var(--text-2)}
+.av.c{background:var(--surface-3);color:var(--text-2);font-size:12px}
+.who .k{font-size:13px;color:var(--text-3);display:block;line-height:1.2}
+.tbl tr.rej td:first-child{box-shadow:inset 3px 0 0 transparent}
+.tbl tr.rej{background:color-mix(in srgb,var(--block) 4%,transparent)}
+.tbl tr.rej:hover{background:color-mix(in srgb,var(--block) 8%,transparent)}
+.tbl tr.rej.sel{background:var(--primary-bg)}
+.chain-mini{display:flex;align-items:center;gap:0;margin:14px 0 12px}
+.chain-mini i{width:26px;height:26px;border-radius:7px;background:var(--ok-bg);display:block;position:relative}
+.chain-mini i::after{content:"";position:absolute;inset:8px;border-radius:3px;background:var(--ok)}
+.chain-mini b{width:14px;height:2px;background:var(--ok);display:block;opacity:.6}
+.chain-mini i.anchor{background:var(--primary-bg)} .chain-mini i.anchor::after{background:var(--primary)}
+.chain{display:flex;flex-direction:column;align-items:stretch;gap:0}
+.blk{border-radius:12px;background:var(--surface-2);padding:10px 12px;font-size:14px;border:1px solid var(--border)}
+.blk.cur{background:var(--primary-bg);border-color:transparent}
+.blk .t{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
+.blk .t b{font:600 14px var(--font-mono)}
+.blk .h{font:400 13px/1.55 var(--font-mono);color:var(--text-2);word-break:break-all}
+.blk .h em{font-style:normal;color:var(--text-3)}
+.link{height:22px;display:flex;align-items:center;padding-left:20px;font:500 12px var(--font-mono);color:var(--text-3);position:relative}
+.link::before{content:"";position:absolute;left:12px;top:0;bottom:0;width:2px;background:var(--ok)}
+.code{font:400 14px/1.6 var(--font-mono);background:var(--surface-2);border-radius:10px;padding:10px 12px;margin:0;white-space:pre-wrap;word-break:break-all;color:var(--text-2)}
+.diff{border-radius:10px;overflow:hidden;font:400 14px/1.6 var(--font-mono);border:1px solid var(--border)}
+.diff div{padding:5px 10px;display:flex;gap:8px}
+.diff .o{background:var(--surface-2);color:var(--text-3)} .diff .o span:last-child{text-decoration:line-through}
+.diff .n{background:var(--primary-bg);color:var(--primary-strong)}
+.diff .same{background:var(--surface-2);color:var(--text-2)}
+.evs{display:flex;flex-wrap:wrap;gap:6px}
+.evs .tag{font-size:13px}
+.readonly{display:flex;gap:8px;align-items:center;margin-top:18px;padding:10px 12px;border-radius:10px;background:var(--surface-3);font-size:14px;color:var(--text-2)}
+.readonly svg{width:15px;height:15px;flex:none}
+.heatwrap{overflow-x:auto}
+#audit-tbl td.mono{white-space:nowrap}
+.hstats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:14px}
+.hstats div{background:var(--surface-2);border-radius:10px;padding:8px 12px}
+.hstats b{display:block;font-size:18px}
+</style>
+</head>
+<body data-page="audit" data-crumb="治理 / 审计">
+<template id="main-tpl">
+  <div class="page-head">
+    <div>
+      <span class="eyebrow">Audit · 只读</span>
+      <h1>审计</h1>
+      <p>系统的每个决定与人的每次回填都可查；平台侧实际写入以卖家后台为准。</p>
+    </div>
+    <div class="actions">
+      <button class="help" data-toast="操作手册：审计页（演示）" aria-label="帮助">?</button>
+      <button class="btn primary lg" data-toast="已导出脱敏文件，并写入一条审计记录（演示）">导出（脱敏，导出动作会写入审计）</button>
+    </div>
+  </div>
+
+  <div class="g-main" style="margin-bottom:16px">
+    <div class="card">
+      <div class="card-head"><h2>活动热力图</h2><span class="meta">近 7 天 × 24 小时 · 每格 = 审计行数（含被拒绝）</span></div>
+      <div class="heatwrap"><div class="chart" id="heat"></div></div>
+      <p class="small faint" style="margin:10px 0 0">读法：03 时是夜间选品；10–12 时是素材生成；08–09 时与 18–20 时的浅格多是你本人的决定与回填。</p>
+      <div class="hstats">
+        <div><span class="small faint">最忙时段</span><b>03:00 · 夜间选品</b></div>
+        <div><span class="small faint">人的决定与回填</span><b>34 次 / 7 天</b></div>
+        <div><span class="small faint">夜间被拒绝</span><b style="color:var(--block)">1 次</b></div>
+      </div>
+    </div>
+    <div class="stack">
+      <div class="card">
+        <div class="card-head"><h2>哈希链完整性</h2><span class="badge ok right">链完整</span></div>
+        <div class="chain-mini" data-tip="每一行都带上一行的哈希；每日末锚定到库外">
+          <i class="anchor"></i><b></b><i></i><b></b><i></i><b></b><i></i><b></b><i></i><b></b><i></i>
+        </div>
+        <dl class="kv">
+          <dt>最近检查</dt><dd>10:45 · 逐行复算 18,442 → 18,531</dd>
+          <dt>今日锚定点</dt><dd class="mono">seq 18,442</dd>
+          <dt>锚定位置</dt><dd>库外只读副本（每日末）</dd>
+          <dt>写入权限</dt><dd>应用只能追加，不能改删</dd>
+        </dl>
+      </div>
+      <div class="card tint" style="padding:14px 18px">
+        <div class="row between"><span class="small muted">近 7 天审计行</span><b style="font-size:22px">1,306</b></div>
+        <div class="row between"><span class="small muted">其中被拒绝 / 被阻断</span><b style="color:var(--block)">12 / 6</b></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="g2" style="margin-bottom:16px">
+    <div class="card">
+      <div class="card-head"><h2>决定分布</h2><span class="meta">近 7 天</span></div>
+      <div class="chart" id="donut" data-chart="donut" data-cfg='{"size":140,"stroke":18,"label":"1,306","sub":"条决定","items":[{"label":"允许","value":1267,"text":"1,267","color":"ok"},{"label":"挂起","value":21,"text":"21","color":"wait"},{"label":"拒绝","value":12,"text":"12","color":"block"},{"label":"阻断","value":6,"text":"6","color":"block","tip":"阻断：6（命中规则，不进审批）"}]}'></div>
+      <p class="small faint" style="margin:12px 0 0">读法：拒绝 = 越权或未登记的调用；阻断 = 命中规则，只能改后重来。两者都写审计，并且不随业务回滚。</p>
+    </div>
+    <div class="card">
+      <div class="card-head"><h2>被拒绝与被阻断的原因</h2><span class="meta">近 7 天 · 共 18 次</span></div>
+      <div class="chart" data-chart="hbars" data-cfg='{"lw":150,"color":"block","items":[{"label":"调用未登记的动作","value":4,"text":"4","tip":"未登记 = 拒绝并审计，不生成审批单"},{"label":"Agent 调用批准","value":3,"text":"3","tip":"Agent 没有批准权"},{"label":"Agent 调用人发起的动作","value":3,"text":"3","tip":"只有人能发起，返回 403"},{"label":"无授权图进入生成","value":3,"text":"3","tip":"G3-001"},{"label":"上架前品类复检","value":3,"text":"3","tip":"G0 再跑命中"},{"label":"生成预算超限","value":1,"text":"1","tip":"预算预留失败，转人放行"},{"label":"连接器访问未登记域名","value":1,"text":"1","tip":"出站域名白名单之外，拒绝并审计"}]}'></div>
+      <p class="small faint" style="margin:12px 0 0">读法：前三项都是 Agent 越过自己权限的尝试，系统已拦下；可在下表用“被拒绝的尝试”单独看。</p>
+    </div>
+  </div>
+
+  <div class="card" style="margin-bottom:16px;padding:14px 18px">
+    <div class="filters" id="filters">
+      <div class="field"><label for="f-obj">对象</label><select class="select" id="f-obj"><option value="">全部</option><option value="prod">商品 / 素材集</option><option value="grant">授权</option><option value="rule">规则库 / 设置</option><option value="list">上架清单</option><option value="audit">审计</option><option value="data">数据连接</option></select></div>
+      <div class="field"><label for="f-actor">人 / Agent</label><select class="select" id="f-actor"><option value="">全部</option><option value="h">人</option><option value="a">Agent</option><option value="s">系统</option><option value="c">系统·连接器</option></select></div>
+      <div class="field"><label for="f-act">动作</label><select class="select" id="f-act"><option value="">全部</option><option value="approve">批准 / 代批</option><option value="gen">生成</option><option value="check">复核 / 检查</option><option value="fill">回填</option><option value="grant">授权相关</option><option value="fetch">自动取数</option><option value="other">其他</option></select></div>
+      <div class="field"><label for="f-dec">结果</label><select class="select" id="f-dec"><option value="">全部</option><option value="allow">允许</option><option value="deny">拒绝</option><option value="hold">挂起</option><option value="block">阻断</option></select></div>
+      <div class="field"><label for="f-time">时间</label><select class="select" id="f-time"><option value="7">近 7 天</option><option value="0">今天</option><option value="1">今天与昨天</option></select></div>
+      <button class="chip" aria-pressed="false" id="f-rej" data-toast="筛选：被拒绝的尝试（演示）">被拒绝的尝试 <b style="color:var(--block)">8</b></button>
+      <span class="faint small right" id="f-count">显示 21 / 21 条</span>
+    </div>
+  </div>
+
+  <div class="card flush">
+    <div class="card-head"><h2>审计记录</h2><span class="meta">点一行看详情 · 只读，无编辑与删除</span></div>
+    <div class="tblwrap"><table class="tbl" id="audit-tbl">
+      <thead><tr><th scope="col">时间</th><th scope="col">行为人</th><th scope="col">动作</th><th scope="col">对象</th><th scope="col">决定</th><th scope="col">规则版本</th></tr></thead>
+      <tbody>
+<tr data-detail="a-1" data-obj="audit" data-actor="h" data-act="other" data-dec="allow" data-day="0"><td class="mono">10-20 11:05<span class="sub">#18,531</span></td><td><span class="actor"><span class="av h">林</span><span class="who"><span class="k">人</span>林薇</span></span></td><td>导出审计（脱敏）</td><td>审计 · 10-13 至 10-20</td><td><span class="badge ok">允许</span></td><td class="mono faint">—</td></tr>
+<tr data-detail="a-2" data-obj="prod" data-actor="a" data-act="approve" data-dec="deny" data-day="0" class="rej"><td class="mono">10-20 10:58<span class="sub">#18,529</span></td><td><span class="actor"><span class="av a">P</span><span class="who"><span class="k">Agent</span>Pilot</span></span></td><td>批准同意 2</td><td><div class="prod"><span class="thumb sm" data-art="spoons"></span><span lang="ja">シリコン調理スプーン5点セット</span></div></td><td><span class="badge block">拒绝</span></td><td class="mono">2026.10.3</td></tr>
+<tr data-detail="a-3" data-obj="prod" data-actor="a" data-act="check" data-dec="allow" data-day="0"><td class="mono">10-20 10:42<span class="sub">#18,526</span></td><td><span class="actor"><span class="av a">C</span><span class="who"><span class="k">Agent</span>Checker</span></span></td><td>合规与成本复核</td><td><div class="prod"><span class="thumb sm" data-art="cable"></span><span>3 套素材（勺 / 理线器 / 宠物刷）</span></div></td><td><span class="badge ok">允许</span></td><td class="mono">2026.10.3</td></tr>
+<tr data-detail="a-4" data-obj="prod" data-actor="a" data-act="gen" data-dec="block" data-day="0" class="rej"><td class="mono">10-20 10:31<span class="sub">#18,524</span></td><td><span class="actor"><span class="av a">C</span><span class="who"><span class="k">Agent</span>Creator</span></span></td><td>使用素材图</td><td><div class="prod"><span class="thumb sm" data-art="spoons"></span><span>图 3 · 授权类型：无授权</span></div></td><td><span class="badge block">阻断</span></td><td class="mono">G3-001</td></tr>
+<tr data-detail="a-5" data-obj="prod" data-actor="a" data-act="gen" data-dec="allow" data-day="0"><td class="mono">10-20 10:12<span class="sub">#18,521</span></td><td><span class="actor"><span class="av a">C</span><span class="who"><span class="k">Agent</span>Creator</span></span></td><td>生成标题 / 卖点 / 图 / 视频</td><td><div class="prod"><span class="thumb sm" data-art="spoons"></span><span lang="ja">シリコン調理スプーン5点セット</span></div></td><td><span class="badge ok">允许</span></td><td class="mono">2026.10.3</td></tr>
+<tr data-detail="a-6" data-obj="rule" data-actor="a" data-act="other" data-dec="deny" data-day="0" class="rej"><td class="mono">10-20 09:50<span class="sub">#18,520</span></td><td><span class="actor"><span class="av a">P</span><span class="who"><span class="k">Agent</span>Pilot</span></span></td><td>规则库确认续用</td><td>规则库 2026.10.3</td><td><span class="badge block">拒绝 · 403</span></td><td class="mono faint">—</td></tr>
+<tr data-detail="c-2" data-obj="data" data-actor="c" data-act="fetch" data-dec="hold" data-day="0"><td class="mono">10-20 09:15<span class="sub">#18,517</span></td><td><span class="actor"><span class="av c">连</span><span class="who"><span class="k">系统·连接器</span>汇率</span></span></td><td>暂存待确认：汇率日变化 3.6%</td><td>汇率 · 备源 21.55</td><td><span class="badge wait">挂起</span></td><td class="mono faint">—</td></tr>
+<tr data-detail="c-1" data-obj="data" data-actor="c" data-act="fetch" data-dec="allow" data-day="0"><td class="mono">10-20 09:00<span class="sub">#18,516</span></td><td><span class="actor"><span class="av c">连</span><span class="who"><span class="k">系统·连接器</span>汇率</span></span></td><td>自动取数：汇率</td><td>汇率 · 欧洲央行 20.80</td><td><span class="badge ok">允许</span></td><td class="mono faint">—</td></tr>
+<tr data-detail="a-7" data-obj="rule" data-actor="s" data-act="check" data-dec="allow" data-day="0"><td class="mono">10-20 09:47<span class="sub">#18,519</span></td><td><span class="actor"><span class="av s">S</span><span class="who"><span class="k">系统</span>规则库监控</span></span></td><td>新鲜度检查</td><td>规则库 2026.10.3</td><td><span class="badge ok">允许</span></td><td class="mono">2026.10.3</td></tr>
+<tr data-detail="a-8" data-obj="prod" data-actor="a" data-act="approve" data-dec="hold" data-day="0"><td class="mono">10-20 08:30<span class="sub">#18,514</span></td><td><span class="actor"><span class="av a">P</span><span class="who"><span class="k">Agent</span>Pilot</span></span></td><td>打包同意 1</td><td><div class="prod"><span class="thumb sm" style="background:var(--surface-3);display:grid;place-items:center;font-size:13px;font-weight:600;color:var(--text-2)">×5</span><span>5 个候选</span></div></td><td><span class="badge wait">挂起</span></td><td class="mono">2026.10.3</td></tr>
+<tr data-detail="a-9" data-obj="list" data-actor="a" data-act="other" data-dec="deny" data-day="0" class="rej"><td class="mono">10-20 08:12<span class="sub">#18,510</span></td><td><span class="actor"><span class="av a">L</span><span class="who"><span class="k">Agent</span>Lister</span></span></td><td>后台批量改价</td><td class="faint">（动作未登记）</td><td><span class="badge block">拒绝</span></td><td class="mono faint">—</td></tr>
+<tr data-detail="c-4" data-obj="data" data-actor="c" data-act="fetch" data-dec="allow" data-day="0"><td class="mono">10-20 06:05<span class="sub">#18,506</span></td><td><span class="actor"><span class="av c">连</span><span class="who"><span class="k">系统·连接器</span>费率页提醒</span></span></td><td>自动检测：平台费率页</td><td>3 个公开页面 · 无变化</td><td><span class="badge ok">允许</span></td><td class="mono faint">—</td></tr>
+<tr data-detail="c-3" data-obj="data" data-actor="c" data-act="fetch" data-dec="deny" data-day="0" class="rej"><td class="mono">10-20 06:00<span class="sub">#18,505</span></td><td><span class="actor"><span class="av c">连</span><span class="who"><span class="k">系统·连接器</span>费率页提醒</span></span></td><td>被拒绝：连接器尝试访问不在白名单的域名</td><td class="faint">（未登记域名）</td><td><span class="badge block">拒绝</span></td><td class="mono faint">—</td></tr>
+<tr data-detail="a-10" data-obj="prod" data-actor="h" data-act="fill" data-dec="hold" data-day="1"><td class="mono">10-19 19:02<span class="sub">#18,436</span></td><td><span class="actor"><span class="av h">林</span><span class="who"><span class="k">人</span>林薇</span></span></td><td>回填读回值</td><td><div class="prod"><span class="thumb sm" data-art="box"></span><span lang="ja">折叠収納ボックス3個セット</span></div></td><td><span class="badge wait">挂起</span></td><td class="mono">2026.10.3</td></tr>
+<tr data-detail="a-11" data-obj="prod" data-actor="h" data-act="approve" data-dec="allow" data-day="1"><td class="mono">10-19 18:40<span class="sub">#18,430</span></td><td><span class="actor"><span class="av h">林</span><span class="who"><span class="k">人</span>林薇</span></span></td><td>批准同意 2</td><td><div class="prod"><span class="thumb sm" data-art="box"></span><span lang="ja">折叠収納ボックス3個セット</span></div></td><td><span class="badge ok">允许</span></td><td class="mono">2026.10.3</td></tr>
+<tr data-detail="a-12" data-obj="grant" data-actor="h" data-act="grant" data-dec="allow" data-day="1"><td class="mono">10-19 17:05<span class="sub">#18,411</span></td><td><span class="actor"><span class="av h">林</span><span class="who"><span class="k">人</span>林薇</span></span></td><td>收窄授权</td><td>授权 · 家居收纳 / 厨房小工具</td><td><span class="badge ok">允许</span></td><td class="mono faint">—</td></tr>
+<tr data-detail="a-13" data-obj="grant" data-actor="a" data-act="grant" data-dec="deny" data-day="1" class="rej"><td class="mono">10-19 15:02<span class="sub">#18,404</span></td><td><span class="actor"><span class="av a">P</span><span class="who"><span class="k">Agent</span>Pilot</span></span></td><td>新建授权</td><td>授权 · 全品类 毛利 ≥20%</td><td><span class="badge block">拒绝 · 403</span></td><td class="mono faint">—</td></tr>
+<tr data-detail="a-14" data-obj="list" data-actor="s" data-act="check" data-dec="block" data-day="1" class="rej"><td class="mono">10-19 11:30<span class="sub">#18,382</span></td><td><span class="actor"><span class="av s">S</span><span class="who"><span class="k">系统</span>闸门</span></span></td><td>上架清单品类复检</td><td>上架清单 L-03（3 个 SKU）</td><td><span class="badge block">阻断</span></td><td class="mono">G0</td></tr>
+<tr data-detail="a-15" data-obj="grant" data-actor="s" data-act="grant" data-dec="allow" data-day="1"><td class="mono">10-19 10:20<span class="sub">#18,377</span></td><td><span class="actor"><span class="av s">S</span><span class="who"><span class="k">系统</span>授权引擎</span></span></td><td>暂停授权（抽检有问题）</td><td>授权 · 宠物用品</td><td><span class="badge ok">允许</span></td><td class="mono faint">—</td></tr>
+<tr data-detail="a-16" data-obj="prod" data-actor="s" data-act="approve" data-dec="allow" data-day="1"><td class="mono">10-19 08:31<span class="sub">#18,361</span></td><td><span class="actor"><span class="av s">S</span><span class="who"><span class="k">系统</span>授权引擎</span></span></td><td>代批同意 1（授权内）</td><td><div class="prod"><span class="thumb sm" data-art="spoons"></span><span lang="ja">シリコン調理スプーン5点セット</span></div></td><td><span class="badge ok">允许</span></td><td class="mono">2026.10.3</td></tr>
+<tr data-detail="a-17" data-obj="prod" data-actor="a" data-act="gen" data-dec="deny" data-day="2" class="rej"><td class="mono">10-18 22:14<span class="sub">#18,140</span></td><td><span class="actor"><span class="av a">C</span><span class="who"><span class="k">Agent</span>Creator</span></span></td><td>生成视频</td><td><div class="prod"><span class="thumb sm" data-art="brush"></span><span lang="ja">ペット用ブラシ 抜け毛クリーナー</span></div></td><td><span class="badge block">拒绝</span></td><td class="mono">2026.10.3</td></tr>
+      </tbody>
+    </table></div>
+    <p class="faint small" style="margin:0;padding:12px 20px 16px">只读。被拒绝与被阻断的尝试同样写审计，用独立事务提交，不随业务回滚。</p>
+  </div>
+</template>
+
+<template id="detail-tpl">
+  <h3>记录详情</h3>
+  <p class="empty">选中一行，查看参数摘要、前后值、证据引用、行为人与会话，以及这一行在哈希链中的位置。</p>
+</template>
+
+<template id="a-1">
+  <h3>导出审计（脱敏）</h3>
+  <div class="row wrap"><span class="badge ok">允许</span><span class="mono faint">2026-10-20 11:05:12 JST</span></div>
+  <h3>行为人与会话</h3>
+  <div class="row"><span class="av h">林</span><div class="small"><b>林薇</b> · 人 · Owner + Operator<div class="faint">网页会话 · Chrome · 登录于 08:02</div></div></div>
+  <h3>参数摘要</h3>
+  <pre class="code">范围: 2026-10-13 至 2026-10-20
+脱敏: 开（默认）
+行数: 1,306</pre>
+  <h3>前后值</h3>
+  <div class="diff"><div class="same"><span>=</span><span>无业务数据变化，仅新增本条记录</span></div></div>
+  <h3>证据引用</h3>
+  <div class="evs"><span class="tag">导出文件摘要</span><span class="tag">脱敏字段清单</span></div>
+  <h3>规则版本</h3><p class="small muted" style="margin:0">不依赖规则库</p>
+  <h3>哈希链</h3><div data-chain="18531"></div>
+  <div class="readonly"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>只读记录，不可编辑或删除。导出动作本身就是这一条。</div>
+</template>
+<template id="a-2">
+  <h3>批准同意 2</h3>
+  <div class="row wrap"><span class="badge block">拒绝</span><span class="mono faint">2026-10-20 10:58:40 JST</span></div>
+  <div class="alert block" style="margin-top:10px"><span>Agent 没有批准权；同意 2 只能由你本人批准，不能交给 Pilot。已通知你。</span></div>
+  <h3>行为人与会话</h3>
+  <div class="row"><span class="av a">P</span><div class="small"><b>Pilot</b> · Agent · 项目经理<div class="faint">日间运行 run-1020-02 · 第 14 次派活</div></div></div>
+  <h3>参数摘要</h3>
+  <pre class="code">请求: 批准同意 2
+对象: シリコン調理スプーン5点セット
+售价: ¥1,980 · 毛利 34.2%</pre>
+  <h3>前后值</h3>
+  <div class="diff"><div class="same"><span>=</span><span>状态 待批 → 待批（未改变）</span></div></div>
+  <h3>证据引用</h3>
+  <div class="evs"><span class="tag">工具白名单：Pilot 无批准</span><span class="tag">审批单 A-1020-03</span></div>
+  <h3>规则版本</h3><p class="mono" style="margin:0">2026.10.3</p>
+  <h3>哈希链</h3><div data-chain="18529"></div>
+  <div class="readonly">只读记录，不可编辑或删除。</div>
+</template>
+<template id="a-3">
+  <h3>合规与成本复核</h3>
+  <div class="row wrap"><span class="badge ok">允许</span><span class="mono faint">2026-10-20 10:42:03 JST</span></div>
+  <h3>行为人与会话</h3>
+  <div class="row"><span class="av a">C</span><div class="small"><b>Checker</b> · Agent · 质检员<div class="faint">从数据库重新加载，独立复算</div></div></div>
+  <h3>参数摘要</h3>
+  <pre class="code">复核: 3 套素材
+复算: 成本分项 + G0–G4
+汇率快照: 20.8</pre>
+  <h3>前后值</h3>
+  <div class="diff"><div class="o"><span>−</span><span>状态 已检查（待复核）</span></div><div class="n"><span>+</span><span>状态 已复核 · 复算差异 0</span></div></div>
+  <h3>证据引用</h3>
+  <div class="evs"><span class="tag">合规报告 ×3</span><span class="tag">成本快照 ×3</span><span class="tag">汇率 20.8</span></div>
+  <h3>规则版本</h3><p class="mono" style="margin:0">2026.10.3</p>
+  <h3>哈希链</h3><div data-chain="18526"></div>
+  <div class="readonly">只读记录，不可编辑或删除。</div>
+</template>
+<template id="a-4">
+  <h3>使用素材图</h3>
+  <div class="row wrap"><span class="badge block">阻断</span><span class="mono faint">2026-10-20 10:31:27 JST</span></div>
+  <div class="alert block" style="margin-top:10px"><span>命中 G3-001：无授权图只能用于内部比对，不会进入素材生成。已改用供应商授权图。</span></div>
+  <h3>行为人与会话</h3>
+  <div class="row"><span class="av a">C</span><div class="small"><b>Creator</b> · Agent · 素材员<div class="faint">素材任务 シリコン調理スプーン v2</div></div></div>
+  <h3>参数摘要</h3>
+  <div class="row" style="gap:12px;margin-bottom:8px"><span class="thumb lg" data-art="spoons" style="filter:grayscale(1);opacity:.7"></span><pre class="code" style="flex:1">图: 3 / 9
+授权类型: 无授权
+用途: 主图套版</pre></div>
+  <h3>前后值</h3>
+  <div class="diff"><div class="same"><span>=</span><span>未进入生成管线</span></div></div>
+  <h3>证据引用</h3>
+  <div class="evs"><span class="tag">货源图授权记录：无</span></div>
+  <h3>规则版本</h3><p class="mono" style="margin:0">G3-001 · 2026.10.3</p>
+  <h3>哈希链</h3><div data-chain="18524"></div>
+  <div class="readonly">只读记录，不可编辑或删除。</div>
+</template>
+<template id="a-5">
+  <h3>生成标题 / 卖点 / 图 / 视频</h3>
+  <div class="row wrap"><span class="badge ok">允许</span><span class="mono faint">2026-10-20 10:12:55 JST</span></div>
+  <h3>行为人与会话</h3>
+  <div class="row"><span class="av a">C</span><div class="small"><b>Creator</b> · Agent · 素材员<div class="faint">素材任务 シリコン調理スプーン v2</div></div></div>
+  <h3>参数摘要</h3>
+  <pre class="code">生成: 标题 1 · 卖点 5 · 图 9 · 视频 1
+本次花费: ¥86</pre>
+  <h3>前后值</h3>
+  <div class="diff"><div class="o"><span>−</span><span>素材版本 v1 · 今日预算 ¥226</span></div><div class="n"><span>+</span><span>素材版本 v2 · 今日预算 ¥312 / ¥1,500</span></div></div>
+  <h3>证据引用</h3>
+  <div class="evs"><span class="tag">底图：自有实拍</span><span class="tag">模板库</span><span class="tag">花费台账</span></div>
+  <h3>规则版本</h3><p class="mono" style="margin:0">2026.10.3</p>
+  <h3>哈希链</h3><div data-chain="18521"></div>
+  <div class="readonly">只读记录，不可编辑或删除。</div>
+</template>
+<template id="a-6">
+  <h3>规则库确认续用</h3>
+  <div class="row wrap"><span class="badge block">拒绝 · 403</span><span class="mono faint">2026-10-20 09:50:11 JST</span></div>
+  <div class="alert block" style="margin-top:10px"><span>这是只有人能发起的动作，Agent 调用被拒绝。规则库当前 FRESH，也不需要续用。</span></div>
+  <h3>行为人与会话</h3>
+  <div class="row"><span class="av a">P</span><div class="small"><b>Pilot</b> · Agent · 项目经理<div class="faint">日间运行 run-1020-02</div></div></div>
+  <h3>参数摘要</h3>
+  <pre class="code">请求: 确认续用规则库
+对象: 2026.10.3</pre>
+  <h3>前后值</h3>
+  <div class="diff"><div class="same"><span>=</span><span>未执行</span></div></div>
+  <h3>证据引用</h3>
+  <div class="evs"><span class="tag">调用方类型：Agent</span><span class="tag">要求：人 · Owner</span></div>
+  <h3>规则版本</h3><p class="small muted" style="margin:0">不依赖规则库</p>
+  <h3>哈希链</h3><div data-chain="18520"></div>
+  <div class="readonly">只读记录，不可编辑或删除。</div>
+</template>
+<template id="a-7">
+  <h3>新鲜度检查</h3>
+  <div class="row wrap"><span class="badge ok">允许</span><span class="mono faint">2026-10-20 09:47:00 JST</span></div>
+  <h3>行为人与会话</h3>
+  <div class="row"><span class="av s">S</span><div class="small"><b>规则库监控</b> · 系统<div class="faint">定时任务 · 每小时</div></div></div>
+  <h3>参数摘要</h3>
+  <pre class="code">复核周期: 7 天
+发布: 2026-10-20</pre>
+  <h3>前后值</h3>
+  <div class="diff"><div class="same"><span>=</span><span>新鲜度 FRESH → FRESH</span></div></div>
+  <h3>证据引用</h3>
+  <div class="evs"><span class="tag">规则库发布记录</span></div>
+  <h3>规则版本</h3><p class="mono" style="margin:0">2026.10.3</p>
+  <h3>哈希链</h3><div data-chain="18519"></div>
+  <div class="readonly">只读记录，不可编辑或删除。</div>
+</template>
+<template id="a-8">
+  <h3>打包同意 1</h3>
+  <div class="row wrap"><span class="badge wait">挂起</span><span class="mono faint">2026-10-20 08:30:16 JST</span></div>
+  <h3>行为人与会话</h3>
+  <div class="row"><span class="av a">P</span><div class="small"><b>Pilot</b> · Agent · 项目经理<div class="faint">夜间运行 run-1020-01</div></div></div>
+  <h3>参数摘要</h3>
+  <pre class="code">打包: 5 个候选
+其中: 1 行“数据不全”须逐行展开
+毛利: 28.4% – 34.2%</pre>
+  <h3>前后值</h3>
+  <div class="diff"><div class="o"><span>−</span><span>无审批单</span></div><div class="n"><span>+</span><span>审批单 A-1020-01 · 待批 · 已挂起</span></div></div>
+  <h3>证据引用</h3>
+  <div class="evs"><span class="tag">成本分项 ×5</span><span class="tag">方向卡 v7</span><span class="tag">打分分解</span></div>
+  <h3>规则版本</h3><p class="mono" style="margin:0">2026.10.3</p>
+  <h3>哈希链</h3><div data-chain="18514"></div>
+  <div class="readonly">只读记录，不可编辑或删除。等你批，不会自动放行或放弃。</div>
+</template>
+<template id="a-9">
+  <h3>后台批量改价</h3>
+  <div class="row wrap"><span class="badge block">拒绝</span><span class="mono faint">2026-10-20 08:12:44 JST</span></div>
+  <div class="alert block" style="margin-top:10px"><span>动作未登记：按最严处理，拒绝且不生成审批单。改价请去卖家后台。</span></div>
+  <h3>行为人与会话</h3>
+  <div class="row"><span class="av a">L</span><div class="small"><b>Lister</b> · Agent · 上架员<div class="faint">状态：仅建议</div></div></div>
+  <h3>参数摘要</h3>
+  <pre class="code">请求: 后台批量改价
+对象: 2 个已上架商品</pre>
+  <h3>前后值</h3>
+  <div class="diff"><div class="same"><span>=</span><span>未执行</span></div></div>
+  <h3>证据引用</h3>
+  <div class="evs"><span class="tag">动作注册表：无此动作</span></div>
+  <h3>规则版本</h3><p class="small muted" style="margin:0">未进入规则判定</p>
+  <h3>哈希链</h3><div data-chain="18510"></div>
+  <div class="readonly">只读记录，不可编辑或删除。</div>
+</template>
+<template id="a-10">
+  <h3>回填读回值</h3>
+  <div class="row wrap"><span class="badge wait">挂起</span><span class="mono faint">2026-10-19 19:02:37 JST</span></div>
+  <h3>行为人与会话</h3>
+  <div class="row"><span class="av h">林</span><div class="small"><b>林薇</b> · 人 · Operator<div class="faint">网页会话 · Chrome</div></div></div>
+  <h3>参数摘要</h3>
+  <pre class="code">商品 ID: 已回填
+价格: ¥2,680 · 附后台截图</pre>
+  <h3>前后值</h3>
+  <div class="diff"><div class="o"><span>−</span><span>批准价 ¥2,480</span></div><div class="n" style="background:var(--block-bg);color:var(--block)"><span>≠</span><span>后台价 ¥2,680 · 读回不一致</span></div></div>
+  <h3>证据引用</h3>
+  <div class="evs"><span class="tag">后台截图</span><span class="tag">批准内容 A-1019-07</span></div>
+  <h3>规则版本</h3><p class="mono" style="margin:0">2026.10.3</p>
+  <h3>哈希链</h3><div data-chain="18436"></div>
+  <div class="readonly">只读记录。关键字段不一致，只能去后台改后重填或下架。</div>
+</template>
+<template id="a-11">
+  <h3>批准同意 2</h3>
+  <div class="row wrap"><span class="badge ok">允许</span><span class="mono faint">2026-10-19 18:40:09 JST</span></div>
+  <h3>行为人与会话</h3>
+  <div class="row"><span class="av h">林</span><div class="small"><b>林薇</b> · 人 · Operator<div class="faint">决定用时 2 分 10 秒 · 必看证据 4/4 已查看</div></div></div>
+  <h3>参数摘要</h3>
+  <pre class="code">售价: ¥2,480
+毛利: 31.7%
+WARN 确认: 1 条</pre>
+  <h3>前后值</h3>
+  <div class="diff"><div class="o"><span>−</span><span>待批</span></div><div class="n"><span>+</span><span>已批准 · 载荷已冻结</span></div></div>
+  <h3>证据引用</h3>
+  <div class="evs"><span class="tag">素材并排依据图</span><span class="tag">合规报告</span><span class="tag">价格分项</span></div>
+  <h3>规则版本</h3><p class="mono" style="margin:0">2026.10.3</p>
+  <h3>哈希链</h3><div data-chain="18430"></div>
+  <div class="readonly">只读记录。同一人批准并执行，已标“自批自执”进高危视图。</div>
+</template>
+<template id="a-12">
+  <h3>收窄授权</h3>
+  <div class="row wrap"><span class="badge ok">允许</span><span class="mono faint">2026-10-19 17:05:30 JST</span></div>
+  <h3>行为人与会话</h3>
+  <div class="row"><span class="av h">林</span><div class="small"><b>林薇</b> · 人 · Owner<div class="faint">网页会话 · Chrome</div></div></div>
+  <h3>参数摘要</h3>
+  <pre class="code">授权: 选品同意 · 家居收纳 / 厨房小工具
+字段: 每日上限</pre>
+  <h3>前后值</h3>
+  <div class="diff"><div class="o"><span>−</span><span>每日上限 4</span></div><div class="n"><span>+</span><span>每日上限 3（立即生效）</span></div></div>
+  <h3>证据引用</h3>
+  <div class="evs"><span class="tag">授权清单历史</span></div>
+  <h3>规则版本</h3><p class="small muted" style="margin:0">不依赖规则库</p>
+  <h3>哈希链</h3><div data-chain="18411"></div>
+  <div class="readonly">只读记录，不可编辑或删除。</div>
+</template>
+<template id="a-13">
+  <h3>新建授权</h3>
+  <div class="row wrap"><span class="badge block">拒绝 · 403</span><span class="mono faint">2026-10-19 15:02:58 JST</span></div>
+  <div class="alert block" style="margin-top:10px"><span>Agent 不能新建授权。新建授权只能由你在同意 1 的决定区勾选产生，24 小时后生效。</span></div>
+  <h3>行为人与会话</h3>
+  <div class="row"><span class="av a">P</span><div class="small"><b>Pilot</b> · Agent · 项目经理<div class="faint">日间运行 run-1019-02</div></div></div>
+  <h3>参数摘要</h3>
+  <pre class="code">请求: 新建授权
+范围: 全品类 · 毛利 ≥20%</pre>
+  <h3>前后值</h3>
+  <div class="diff"><div class="same"><span>=</span><span>无变化</span></div></div>
+  <h3>证据引用</h3>
+  <div class="evs"><span class="tag">调用方类型：Agent</span><span class="tag">要求：人 · Owner</span></div>
+  <h3>规则版本</h3><p class="small muted" style="margin:0">不依赖规则库</p>
+  <h3>哈希链</h3><div data-chain="18404"></div>
+  <div class="readonly">只读记录，不可编辑或删除。</div>
+</template>
+<template id="a-14">
+  <h3>上架清单品类复检</h3>
+  <div class="row wrap"><span class="badge block">阻断</span><span class="mono faint">2026-10-19 11:30:02 JST</span></div>
+  <div class="alert block" style="margin-top:10px"><span>任一 SKU 命中，整张清单不可执行（不是单行置灰）。其余 SKU 已拆成新卡重批。</span></div>
+  <h3>行为人与会话</h3>
+  <div class="row"><span class="av s">S</span><div class="small"><b>闸门</b> · 系统<div class="faint">清单生成时自动复检</div></div></div>
+  <h3>参数摘要</h3>
+  <pre class="code">清单: L-03 · 3 个 SKU
+命中: JP01-LED-01 · 含电池</pre>
+  <h3>前后值</h3>
+  <div class="diff"><div class="o"><span>−</span><span>清单 已生成</span></div><div class="n" style="background:var(--block-bg);color:var(--block)"><span>+</span><span>清单 不可执行</span></div></div>
+  <h3>证据引用</h3>
+  <div class="evs"><span class="tag">属性旗标：有电池</span><span class="tag">品类白名单</span></div>
+  <h3>规则版本</h3><p class="mono" style="margin:0">G0 · 2026.10.3</p>
+  <h3>哈希链</h3><div data-chain="18382"></div>
+  <div class="readonly">只读记录，不可编辑或删除。</div>
+</template>
+<template id="a-15">
+  <h3>暂停授权（抽检有问题）</h3>
+  <div class="row wrap"><span class="badge ok">允许</span><span class="mono faint">2026-10-19 10:20:41 JST</span></div>
+  <h3>行为人与会话</h3>
+  <div class="row"><span class="av s">S</span><div class="small"><b>授权引擎</b> · 系统<div class="faint">由抽检卡判定触发</div></div></div>
+  <h3>参数摘要</h3>
+  <pre class="code">授权: 选品同意 · 宠物用品
+触发: 1 起“应拒绝却被代批”</pre>
+  <h3>前后值</h3>
+  <div class="diff"><div class="o"><span>−</span><span>生效中</span></div><div class="n" style="background:var(--block-bg);color:var(--block)"><span>+</span><span>已暂停 · 同类回到人工</span></div></div>
+  <h3>证据引用</h3>
+  <div class="evs"><span class="tag">抽检卡 10-19</span><span class="tag">审批单 A-1017-01</span></div>
+  <h3>规则版本</h3><p class="small muted" style="margin:0">不依赖规则库</p>
+  <h3>哈希链</h3><div data-chain="18377"></div>
+  <div class="readonly">只读记录。恢复须你本人复核，不会自动恢复。</div>
+</template>
+<template id="a-16">
+  <h3>代批同意 1（授权内）</h3>
+  <div class="row wrap"><span class="badge ok">允许</span><span class="mono faint">2026-10-19 08:31:05 JST</span></div>
+  <h3>行为人与会话</h3>
+  <div class="row"><span class="av s">S</span><div class="small"><b>授权引擎</b> · 系统<div class="faint">按授权包络确定性判断，不经 Agent</div></div></div>
+  <h3>参数摘要</h3>
+  <pre class="code">授权: 家居收纳 / 厨房小工具 · 毛利 ≥28%
+本品: ¥1,980 · 毛利 34.2%</pre>
+  <h3>前后值</h3>
+  <div class="diff"><div class="o"><span>−</span><span>已用 1 / 10</span></div><div class="n"><span>+</span><span>已用 2 / 10 · 已抽中</span></div></div>
+  <h3>证据引用</h3>
+  <div class="evs"><span class="tag">授权包络</span><span class="tag">成本分项</span><span class="tag">审批单 A-1019-02</span></div>
+  <h3>规则版本</h3><p class="mono" style="margin:0">2026.10.3</p>
+  <h3>哈希链</h3><div data-chain="18361"></div>
+  <div class="readonly">只读记录，不可编辑或删除。</div>
+</template>
+<template id="a-17">
+  <h3>生成视频</h3>
+  <div class="row wrap"><span class="badge block">拒绝</span><span class="mono faint">2026-10-18 22:14:19 JST</span></div>
+  <div class="alert block" style="margin-top:10px"><span>预算预留失败：当日模型花费已到上限。超预算放行只能由你本人批准。</span></div>
+  <h3>行为人与会话</h3>
+  <div class="row"><span class="av a">C</span><div class="small"><b>Creator</b> · Agent · 素材员<div class="faint">素材任务 ペット用ブラシ v1</div></div></div>
+  <h3>参数摘要</h3>
+  <pre class="code">预留: ¥120
+当日已用: ¥1,442 / ¥1,500</pre>
+  <h3>前后值</h3>
+  <div class="diff"><div class="same"><span>=</span><span>未生成 · 任务挂起等你放行</span></div></div>
+  <h3>证据引用</h3>
+  <div class="evs"><span class="tag">花费台账 10-18</span></div>
+  <h3>规则版本</h3><p class="mono" style="margin:0">2026.10.3</p>
+  <h3>哈希链</h3><div data-chain="18140"></div>
+  <div class="readonly">只读记录，不可编辑或删除。</div>
+</template>
+<template id="c-1">
+  <h3>自动取数：汇率</h3>
+  <div class="row wrap"><span class="badge ok">允许</span><span class="mono faint">2026-10-20 09:00:04 JST</span></div>
+  <h3>行为人与会话</h3>
+  <div class="row"><span class="av c">连</span><div class="small"><b>汇率连接器</b> · 系统·连接器<div class="faint">定时任务 · 工作日 09:00 · 外部只读</div></div></div>
+  <h3>参数摘要</h3>
+  <pre class="code">来源: 欧洲央行每日参考汇率（公开接口，等级 A）
+参考日: 2026-10-19
+EUR→JPY 162.24 ÷ EUR→CNY 7.800 = 20.80
+原始响应哈希: 3f8a12cd…
+校验: 格式 / 范围 / 突变 均通过</pre>
+  <h3>前后值</h3>
+  <div class="diff"><div class="o"><span>−</span><span>汇率 20.82（参考日 10-16）</span></div><div class="n"><span>+</span><span>汇率 20.80（参考日 10-19）</span></div></div>
+  <h3>证据引用</h3>
+  <div class="evs"><span class="tag">出站白名单：已登记</span><span class="tag">取数记录 10-20 09:00</span></div>
+  <h3>规则版本</h3><p class="small muted" style="margin:0">不依赖规则库</p>
+  <h3>哈希链</h3><div data-chain="18516"></div>
+  <div class="readonly">只读记录，不可编辑或删除。连接器没有写外部的能力。</div>
+</template>
+<template id="c-2">
+  <h3>暂存待确认：汇率日变化 3.6%</h3>
+  <div class="row wrap"><span class="badge wait">挂起</span><span class="mono faint">2026-10-20 09:15:22 JST</span></div>
+  <div class="alert wait" style="margin-top:10px"><span>备源给出 21.55，比上一值 20.80 高 3.6%，超过 3%。已暂存，不会自动采信；确认前继续用 20.80。</span></div>
+  <h3>行为人与会话</h3>
+  <div class="row"><span class="av c">连</span><div class="small"><b>汇率连接器</b> · 系统·连接器<div class="faint">交叉核对 · 外部只读</div></div></div>
+  <h3>参数摘要</h3>
+  <pre class="code">来源: 中国外汇交易中心 人民币汇率中间价文件（备源，等级 A）
+参考日: 2026-10-20
+汇率: 21.55（+3.6%）
+原始响应哈希: 9c41e07a…</pre>
+  <h3>前后值</h3>
+  <div class="diff"><div class="same"><span>=</span><span>采信值 20.80 不变 · 新增 1 条待确认</span></div></div>
+  <h3>证据引用</h3>
+  <div class="evs"><span class="tag">突变阈值 3%</span><span class="tag">取数记录 10-20 09:15</span></div>
+  <h3>规则版本</h3><p class="small muted" style="margin:0">不依赖规则库</p>
+  <h3>哈希链</h3><div data-chain="18517"></div>
+  <div class="readonly">只读记录。等你在设置 · 汇率（自动）里确认采用或保持上一值。</div>
+</template>
+<template id="c-3">
+  <h3>被拒绝：连接器尝试访问不在白名单的域名</h3>
+  <div class="row wrap"><span class="badge block">拒绝</span><span class="mono faint">2026-10-20 06:00:03 JST</span></div>
+  <div class="alert block" style="margin-top:10px"><span>费率页被重定向到一个未登记的域名，出站请求被拦下，没有发出。06:05 按已登记的地址重新检测成功。</span></div>
+  <h3>行为人与会话</h3>
+  <div class="row"><span class="av c">连</span><div class="small"><b>平台费率页变更提醒</b> · 系统·连接器<div class="faint">定时任务 · 每日 06:00 · 外部只读</div></div></div>
+  <h3>参数摘要</h3>
+  <pre class="code">请求: 外部只读
+目标: 未登记域名（重定向）
+出站白名单: 不包含</pre>
+  <h3>前后值</h3>
+  <div class="diff"><div class="same"><span>=</span><span>未执行 · 连续失败计数 1 / 3</span></div></div>
+  <h3>证据引用</h3>
+  <div class="evs"><span class="tag">出站域名白名单</span></div>
+  <h3>规则版本</h3><p class="small muted" style="margin:0">未进入规则判定</p>
+  <h3>哈希链</h3><div data-chain="18505"></div>
+  <div class="readonly">只读记录，不可编辑或删除。</div>
+</template>
+<template id="c-4">
+  <h3>自动检测：平台费率页</h3>
+  <div class="row wrap"><span class="badge ok">允许</span><span class="mono faint">2026-10-20 06:05:11 JST</span></div>
+  <h3>行为人与会话</h3>
+  <div class="row"><span class="av c">连</span><div class="small"><b>平台费率页变更提醒</b> · 系统·连接器<div class="faint">重新检测 · 外部只读</div></div></div>
+  <h3>参数摘要</h3>
+  <pre class="code">页面: 3 个公开页面（佣金 / 手续费 / 禁售规则）
+方式: 只比对内容是否变化，不解析、不入库
+结果: 无变化</pre>
+  <h3>前后值</h3>
+  <div class="diff"><div class="same"><span>=</span><span>c8 / c9 不变 · 连续失败计数 1 → 0</span></div></div>
+  <h3>证据引用</h3>
+  <div class="evs"><span class="tag">出站白名单：已登记</span></div>
+  <h3>规则版本</h3><p class="small muted" style="margin:0">不依赖规则库</p>
+  <h3>哈希链</h3><div data-chain="18506"></div>
+  <div class="readonly">只读记录，不可编辑或删除。</div>
+</template>
+
+<script src="assets/art.js"></script>
+<script src="assets/charts.js"></script>
+<script src="assets/cp2.js"></script>
+<script>
+(function(){
+  // 热力图（近 7 天 × 24 小时）
+  var days=['10-14','10-15','10-16','10-17','10-18','10-19','10-20'], hrs=[], m=[];
+  for(var h=0;h<24;h++) hrs.push((h<10?'0':'')+h);
+  function base(h){ return h===3?38:h===2||h===4?12:(h>=10&&h<=12)?16:(h===8||h===9)?7:(h>=18&&h<=20)?5:(h>=13&&h<=17)?4:(h>=0&&h<=6)?1:2; }
+  days.forEach(function(d,i){ var row=[]; for(var h=0;h<24;h++){ var v=base(h)+((i*7+h*3)%5)-2; if(i===6&&h>11) v=0; row.push(Math.max(0,v)); } m.push(row); });
+  document.getElementById('heat').innerHTML=CP.chart.heat({rows:days,cols:hrs,matrix:m,cw:18,ch:18,lw:44,color:'primary',tip:function(r,c,v){return r+' '+c+':00–'+c+':59 · '+v+' 条';}});
+
+  // 环形图：拒绝与阻断同为红色语义，阻断用浅一档区分
+  var dn=document.querySelector('#donut svg'); if(dn){ var cs=dn.querySelectorAll('circle'); if(cs[4]) cs[4].setAttribute('stroke-opacity','.5'); var lg=document.querySelectorAll('#donut .legend i'); if(lg[3]) lg[3].style.opacity='.5'; }
+
+  // 哈希链（演示用伪哈希）
+  function hx(n){ var s='', x=(n*2654435761)>>>0; for(var i=0;i<16;i++){ x=(x*1103515245+12345)>>>0; s+=('0000'+(x>>>16).toString(16)).slice(-4); } return s; }
+  function sh(n){ var s=hx(n); return s.slice(0,8)+'…'+s.slice(-6); }
+  function fmt(n){ return n.toLocaleString('ja-JP'); }
+  function blk(n,cur){ return '<div class="blk'+(cur?' cur':'')+'"><div class="t"><b>seq '+fmt(n)+'</b>'+(cur?'<span class="badge primary">本条</span>':'<span class="faint">'+(n===18442?'今日锚定点':'相邻行')+'</span>')+'</div><div class="h"><em>prev</em> '+sh(n-1)+'<br><em>hash</em> '+sh(n)+'</div></div>'; }
+  function lnk(){ return '<div class="link">hash 写入下一行 prev · 一致 ✓</div>'; }
+  function chain(root){ root.querySelectorAll('[data-chain]').forEach(function(el){ var n=+el.dataset.chain; el.innerHTML='<div class="chain">'+blk(n-1)+lnk()+blk(n,true)+lnk()+blk(n+1)+'</div><p class="small faint" style="margin:8px 0 0">复算 sha256(上一行 hash ‖ 本行内容) 与存储值一致；'+(n>18442?'今日锚定点之后。':'已包含在锚定点 seq 18,442 之前，已锚定到库外。')+'</p>'; }); }
+  document.addEventListener('click',function(e){ if(e.target.closest('[data-detail]')) chain(document.getElementById('detail')); });
+
+  // 筛选
+  var tb=document.querySelectorAll('#audit-tbl tbody tr');
+  function apply(){
+    var g=function(id){ return document.getElementById(id).value; };
+    var obj=g('f-obj'), actor=g('f-actor'), act=g('f-act'), dec=g('f-dec'), t=+g('f-time'), rej=document.getElementById('f-rej').getAttribute('aria-pressed')==='true', n=0;
+    tb.forEach(function(r){ var d=r.dataset, ok=(!obj||d.obj===obj)&&(!actor||d.actor===actor)&&(!act||d.act===act)&&(!dec||d.dec===dec)&&(+d.day<=t)&&(!rej||d.dec==='deny'||d.dec==='block'); r.hidden=!ok; if(ok) n++; });
+    document.getElementById('f-count').textContent='显示 '+n+' / '+tb.length+' 条';
+  }
+  document.getElementById('filters').addEventListener('change',apply);
+  document.getElementById('f-rej').addEventListener('click',function(){ setTimeout(apply,0); });
+
+  // 默认选中第一条被拒绝的尝试
+  var first=document.querySelector('tr[data-detail="a-2"]'); if(first) first.click();
+})();
+</script>
+</body>
+</html>

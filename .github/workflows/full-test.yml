@@ -1,0 +1,35 @@
+# main 的全体测试(docs/运营规则.md 6 章):每次合并后、每天傍晚、手动。作业名 full-test 是发布闸门检查的名字。
+# 成功后部署到预发布环境(scripts/deploy_staging.sh,按项目写;没有就跳过)。
+name: Full test
+on:
+  push:
+    branches: [main]
+  schedule:
+    - cron: "0 10 * * *"        # 每天 19:00 JST
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: full-test
+  cancel-in-progress: false
+jobs:
+  full-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: 全量回归(project.toml 的 [checks] commands 和 full)
+        run: |
+          python - <<'PY'
+          import subprocess, sys, tomllib
+          checks = tomllib.load(open("project.toml", "rb"))["checks"]
+          for c in checks["commands"] + checks.get("full", []):
+              print("==", c, flush=True)
+              if subprocess.run(["bash", "-c", c]).returncode:
+                  sys.exit(1)
+          PY
+      - name: 部署到预发布环境
+        run: |
+          if [ -x scripts/deploy_staging.sh ]; then bash scripts/deploy_staging.sh; else echo "还没有 scripts/deploy_staging.sh:请按项目写预发布环境的部署命令"; fi

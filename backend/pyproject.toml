@@ -1,0 +1,17 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "crosspilot"
+version = "0.1.0"
+description = "CrossPilot deterministic core: action registry, gatekeeper, approvals, grants, audit, tool gate"
+readme = "README.md"
+requires-python = ">=3.12"
+# Deliberate: the decision path must stay free of LLM, network and ORM imports
+# (INV-8). Framework and database dependencies arrive with the API/persistence
+# slices, never here.
+dependencies = []
+
+[tool.setuptools.packages.find]
+include = ["crosspilot*"]

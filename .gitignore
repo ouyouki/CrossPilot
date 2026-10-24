@@ -1,0 +1,28 @@
+# 只在人的环境里用的东西(docs/运营规则.md 10 章)
+.claude/settings.local.json
+.env
+.env.*
+*.env
+!env.example
+tmp/
+__pycache__/
+*.pyc
+*.py[co]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.DS_Store
+# 框架的分发副本(不属于产品仓库;template 的内容已经铺到根目录)
+framework/
+# 凭证和密钥文件
+*.pem
+*.key
+*.p12
+*.pfx
+id_rsa*
+id_ed25519*
+*credentials*.json
+.npmrc
