@@ -2,7 +2,9 @@
 # 结果作为提交状态 "gate" 写到 PR 的最新提交上(规则集要求它)。
 # 安全:用 pull_request_target / issue_comment / issues 触发,工作流和 gates.py 都来自默认分支,不检出 PR 的代码,
 # 所以 PR 改不了这里的判断。评审、测试、PM 写完结论后在 PR 上写一条 [进度] 评论,由 issue_comment 触发重新判断;
-# Issue 上的评论(D1、D2、[定版])和标签的变化,重新判断这个 Issue 的分支上开着的 PR。另外每 15 分钟全部重新判断一次。
+# Issue 上的评论(D1、D2、[定版])和标签的变化,重新判断这个 Issue 的分支上开着的 PR。另外在工作时间每小时全部重新判断一次。
+# 为什么不是每 15 分钟:私有仓库的 Actions 按作业向上取整到分钟计费,15 分钟一次一天 96 次(约 2,880 分钟/月)会吃光免费额度;
+# 自动定版本就允许延迟,每小时一次足够。
 name: Gate
 on:
   pull_request_target:
@@ -13,7 +15,7 @@ on:
   issues:
     types: [labeled, unlabeled]
   schedule:
-    - cron: "*/15 * * * *"        # 自动定版的时间到了、评审后又退回等没有事件的变化,也定期重新判断
+    - cron: "0 0-13 * * *"        # 工作时间(JST 09:00-22:00)每小时一次;自动定版的时间到了、评审后又退回等没有事件的变化,也定期重新判断
 permissions:
   contents: read
   issues: read
