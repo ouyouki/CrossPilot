@@ -1,0 +1,6 @@
+# 这次要改的文件和文件夹(一行一个 glob)
+.claude/settings.json
+scripts/dev/guard_bash.py
+scripts/github/bot.py
+scripts/github/bot.sh
+docs/运营规则.md

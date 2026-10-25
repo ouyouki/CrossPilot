@@ -6,6 +6,11 @@
     restore(--staged 以外)、branch -D / -d -f、tag -d;跳过检查: --no-verify、commit -n、core.hooksPath;
   * 读密钥: cat / type / less / more / head / tail / grep / findstr / sed / awk / Get-Content 等读 .env、*.pem、*.key、id_rsa* 等;
     显示环境变量(printenv、env、set、Get-ChildItem env:)或引用 ANTHROPIC_AUTH_TOKEN、DEEPSEEK_API_KEY、GH_TOKEN 等;
+  * 系统能力(一次就回不来,所以不是问人,是做不到): 改账户或密码(net user / net localgroup / Set-LocalUser 等)、写注册表、
+    装或改系统服务、建或改计划任务、改文件权限或所有者(icacls / takeown)、动磁盘和启动项、改执行策略、
+    动防火墙和防御设置、动凭据库、提权(runas / sudo)、看不出会执行什么的启动器(rundll32 / wmic / mshta 等)、动 SSH 密钥。
+    为什么单独成一层:Agent 和人在同一个系统用户下运行时,它改得动人的登录密码(2026-10 发生过,人登不进去);
+    根上的解法是分开身份(docs/运营规则.md 9 章),这一层负责不给它这个机会;
   * GitHub: 不经 scripts/github/bot.sh 的 gh 写操作和 git push(Agent 不用人的身份);无论经不经 bot.sh 都不许的:
     触发工作流、操作 Release、写标签或 refs、加或去掉人专用标签、去掉 需人定版;
     合并 PR 只许 bot.sh dev 的 gh pr merge --squash;批准或要求修改只许 bot.sh review 的 gh pr review(PM 只写 --comment)。
@@ -38,6 +43,30 @@ BOT = "scripts/github/bot.sh"
 NET = {"curl", "wget", "invoke-webrequest", "iwr", "invoke-restmethod", "irm", "curl.exe", "wget.exe"}
 HOST = re.compile(r"^(?:https?://)?(?:[^/@\s]*@)?(localhost|[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)+)(?::\d+)?(?:[/?#]|$)")
 LOCAL = ("localhost", "127.0.0.1")                     # 测试时访问本机起的应用
+
+# 系统能力要用的名字。这一类的共同点是一次就回不来,所以拦,而不只是提醒(理由见文件开头的说明)。
+ACCOUNT_SUB = {"user", "localgroup", "group", "accounts"}
+ACCOUNT_HEADS = {"chntpw", "passwd", "chpasswd", "usermod", "useradd", "userdel", "adduser", "deluser",
+                 "addgroup", "delgroup", "dsmod", "dsadd", "dsrm", "net1"}
+ACCOUNT_PS = {"new-localuser", "set-localuser", "remove-localuser", "rename-localuser", "add-localgroupmember",
+              "remove-localgroupmember", "new-localgroup", "remove-localgroup", "set-localgroup"}
+REG_WRITE = {"add", "delete", "import", "load", "unload", "copy", "restore", "save"}
+REG_PS = {"new-itemproperty", "set-itemproperty", "remove-itemproperty", "rename-itemproperty",
+          "new-item", "set-item", "remove-item"}
+REG_PATH = re.compile(r"(?i)hk(lm|cu|cr|ey|u|cc):|hkey_|\\\\registry\\\\")
+SERVICE_SUB = {"create", "delete", "config", "description", "failure", "sdset", "triggerinfo"}
+SERVICE_HEADS = {"new-service", "set-service", "remove-service"}
+TASK_SUB = {"/create", "/delete", "/change", "/run", "/end"}
+TASK_HEADS = {"register-scheduledtask", "unregister-scheduledtask", "set-scheduledtask", "new-scheduledtask",
+              "disable-scheduledtask", "enable-scheduledtask"}
+ACL_FLAG = ("/grant", "/deny", "/remove", "/setowner", "/reset", "/inheritance", "/g", "/p", "/r", "/d", "/e")
+DISK_HEADS = {"diskpart", "format", "bcdedit", "bootrec", "fdisk", "mkfs", "clear-disk", "initialize-disk",
+              "format-volume", "remove-partition", "set-partition", "new-partition"}
+FIREWALL_HEADS = {"set-mppreference", "add-mppreference", "remove-mppreference", "set-netfirewallprofile",
+                  "new-netfirewallrule", "remove-netfirewallrule", "set-netfirewallrule", "disable-netfirewallprofile"}
+VAULT_HEADS = {"cmdkey", "vaultcmd", "get-storedcredential"}
+# 看不出会执行什么的启动器:用来绕开别的检查最常见的载体,PM Agent 没有正当用途
+OPAQUE_HEADS = {"rundll32", "regsvr32", "mshta", "wscript", "cscript", "certutil", "bitsadmin", "wmic", "regedit"}
 
 
 def web_domains() -> list[str]:
@@ -114,6 +143,47 @@ def _secret(token: str) -> bool:
         return False
     return bool(name == ".env" or name.startswith(".env.") or re.search(r"\.(pem|key|p12|pfx)$", name)
                 or name.startswith(("id_rsa", "id_ed25519")) or "credentials" in name)
+
+
+def _exe(token: str) -> str:
+    """命令的名字:去掉路径和 .exe,这样 C:\\Windows\\System32\\net.exe 也认得出来。"""
+    return re.split(r"[\\/]", token)[-1].lower().removesuffix(".exe")
+
+
+def _os_reason(tokens: list[str]) -> str:
+    """系统能力。拦的理由不是"危险",是"一次就回不来":改密码、改权限、动磁盘都不能撤销。"""
+    head = _exe(tokens[0])
+    rest = [t.lower() for t in tokens[1:]]
+    sub = rest[0] if rest else ""
+    if (head == "net" and sub in ACCOUNT_SUB) or head in ACCOUNT_HEADS or head in ACCOUNT_PS:
+        return "改账户或密码(net user / net localgroup / Set-LocalUser 这一类)"
+    if (head == "reg" and sub in REG_WRITE) or head == "regedit":
+        return "写注册表"
+    if head in REG_PS and any(REG_PATH.search(t) for t in tokens[1:]):
+        return "写注册表"
+    if (head == "sc" and sub in SERVICE_SUB) or head in SERVICE_HEADS:
+        return "装或改系统服务"
+    if (head == "schtasks" and sub in TASK_SUB) or head in TASK_HEADS:
+        return "建或改计划任务"
+    if head == "set-executionpolicy" or any(t.startswith("-executionpolicy") for t in rest):
+        return "改执行策略(会放开脚本)"
+    if head == "takeown" or (head in ("icacls", "cacls") and any(t.startswith(ACL_FLAG) for t in rest)):
+        return "改文件或目录的权限、所有者"
+    if head in DISK_HEADS:
+        return "动磁盘或启动项"
+    if head in ("vssadmin", "wbadmin") and "delete" in rest:
+        return "删卷影副本或备份"
+    if (head == "netsh" and sub in ("advfirewall", "winsock", "winhttp", "firewall")) or head in FIREWALL_HEADS:
+        return "改防火墙或防御设置"
+    if head in VAULT_HEADS:
+        return "动凭据库"
+    if head in OPAQUE_HEADS:
+        return "看不出会执行什么(rundll32 / wmic / mshta 这一类)"
+    if head in ("runas", "sudo") or (head == "start-process" and "runas" in rest):
+        return "提权执行"
+    if head in ("ssh-keygen", "ssh-add", "ssh-agent") or any("authorized_keys" in t for t in rest):
+        return "动 SSH 密钥"
+    return ""
 
 
 def _git_reason(tokens: list[str], via_bot: bool) -> str:
@@ -274,6 +344,9 @@ def reason(command: str, depth: int = 0) -> str:
                     if r:
                         return r
                     break
+        r = _os_reason(tokens)
+        if r:
+            return r
         bot_role = ""
         for k, t in enumerate(tokens[:2]):
             if t.replace("\\", "/").endswith(BOT) and len(tokens) > k + 2:
