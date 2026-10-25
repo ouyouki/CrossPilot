@@ -1,4 +1,5 @@
 import { useEffect, useState, type ReactNode } from "react";
+import { hydrate } from "./hydrate";
 
 /**
  * 画面外壳:结构照 design/screens/assets/cp2.js 注入的那一份(顶栏 + 左侧导航 + 主区 + 右栏 + toast),
@@ -125,6 +126,19 @@ export function Shell({
       if (copy) {
         void navigator.clipboard?.writeText(copy.dataset.copy ?? "");
         show("已复制");
+      }
+      // 行 → 右栏详情(照 cp2.js:去掉别的 .sel,填模板内容,重新挂载插画/图表)
+      const row = target.closest("[data-detail]") as HTMLElement | null;
+      if (row && !target.closest("input,button,a,select,textarea")) {
+        document.querySelectorAll(".sel").forEach((element) => element.classList.remove("sel"));
+        row.classList.add("sel");
+        const template = document.getElementById(row.dataset.detail ?? "");
+        const detail = document.getElementById("detail");
+        if (template && detail) {
+          detail.innerHTML = (template as HTMLTemplateElement).innerHTML;
+          hydrate(detail);
+          detail.scrollTop = 0;
+        }
       }
     };
     const onKey = (event: KeyboardEvent) => {
@@ -262,7 +276,13 @@ export function Shell({
         <main className="main" id="main">
           {children}
         </main>
-        <aside className="detail" id="detail" aria-label="详情" dangerouslySetInnerHTML={{ __html: detailHtml }} />
+        <aside
+          key={page}
+          className="detail"
+          id="detail"
+          aria-label="详情"
+          dangerouslySetInnerHTML={{ __html: detailHtml }}
+        />
       </div>
       <div className={toast ? "toast on" : "toast"} id="toast" role="status">
         {toast}
