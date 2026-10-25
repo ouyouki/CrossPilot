@@ -34,7 +34,7 @@ function Icon({ name }: { name: string }) {
   );
 }
 
-type PageKey = "today" | "candidates";
+type PageKey = "today" | "candidates" | "approvals";
 
 type NavItem = [string, string, PageKey | null, number?];
 
@@ -53,7 +53,7 @@ const NAV: [string, NavItem[]][] = [
   [
     "治理",
     [
-      ["approvals", "待批", null, 5],
+      ["approvals", "待批", "approvals", 5],
       ["grants", "授权清单", null],
       ["audit", "审计", null],
     ],

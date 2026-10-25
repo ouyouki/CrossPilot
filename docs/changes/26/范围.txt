@@ -1,0 +1,5 @@
+# 这次要改的文件和文件夹(一行一个 glob)
+frontend/src/pages/approvals*
+frontend/src/pages/Approvals.tsx
+frontend/src/shell/Shell.tsx
+frontend/src/App.tsx
