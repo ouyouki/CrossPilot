@@ -1,0 +1,7 @@
+# 这次要改的文件和文件夹(一行一个 glob)
+backend/app/**
+backend/data/sample/**
+backend/tests/test_s8_*.py
+backend/pyproject.toml
+frontend/**
+README.md
