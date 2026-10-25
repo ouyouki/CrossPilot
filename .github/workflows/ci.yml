@@ -75,6 +75,7 @@ jobs:
         env:
           BASE_REF: ${{ github.base_ref }}
         run: |
+          pip install --quiet --upgrade "setuptools<81"
           pip install --quiet "semgrep==${SEMGREP_VERSION}"
           # nosemgrep 注释不算数(--disable-nosem);误报由人改 .semgrepignore(它的改动要人批准,CODEOWNERS)
           semgrep scan --config p/default --metrics=off --disable-nosem --error --severity ERROR \
