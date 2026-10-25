@@ -183,6 +183,8 @@ def _os_reason(tokens: list[str]) -> str:
         return "看不出会执行什么(rundll32 / wmic / mshta 这一类)"
     if head in ("runas", "sudo") or (head == "start-process" and "runas" in rest):
         return "提权执行"
+    if head in ("ssh", "scp", "sftp") or any("git@github.com" in t or "ssh://" in t for t in tokens):
+        return "用 SSH 出去:那是人的身份,不是 App 的身份(Agent 只经 bot.py 走 https)"
     if head in ("ssh-keygen", "ssh-add", "ssh-agent") or any("authorized_keys" in t for t in rest):
         return "动 SSH 密钥"
     return ""

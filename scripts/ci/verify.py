@@ -182,10 +182,82 @@ def tc_ids(text: str) -> set[str]:
     return {f"TC-{a}-{b}" for a, b in TC.findall(text)}
 
 
+CODEOWNERS = ".github/CODEOWNERS"
+
+
+def _glob_re(pat: str) -> re.Pattern:
+    """CODEOWNERS 的模式 → 正则:* 不跨 /,** 跨。"""
+    out, i = [], 0
+    while i < len(pat):
+        if pat.startswith("**", i):
+            out.append(".*")
+            i += 2
+        elif pat[i] == "*":
+            out.append("[^/]*")
+            i += 1
+        elif pat[i] == "?":
+            out.append("[^/]")
+            i += 1
+        else:
+            out.append(re.escape(pat[i]))
+            i += 1
+    return re.compile("".join(out))
+
+
+def codeowners() -> list[str]:
+    try:
+        with open(CODEOWNERS, encoding="utf-8") as fh:
+            text = fh.read()
+    except OSError:
+        return []
+    pats = []
+    for line in text.splitlines():
+        line = line.split("#", 1)[0].strip()
+        if line:
+            pats.append(line.split()[0])
+    return pats
+
+
+def framework_only(files: list[str]) -> bool:
+    """改动全在代码负责人的文件里 = 框架 PR(docs/运营规则.md 4 章)。
+
+    依据只有 .github/CODEOWNERS,不另立清单(两份会漂)。docs/changes/ 和共用文档不算 —— 每个 PR 都会加。
+    这一段和 scripts/github/gates.py 里的同名函数一致:CI 把本文件拷到临时目录再跑,不能 import 兄弟文件。
+    """
+    files = [f for f in files if not f.startswith("docs/changes/")
+             and f not in ("docs/回归清单.md", "docs/术语表.md")]
+    pats = codeowners()
+    if not files or not pats:
+        return False
+    for f in files:
+        hit = False
+        for pat in pats:
+            anchored, p = pat.startswith("/"), pat.lstrip("/")
+            dir_only = p.endswith("/")
+            p = p.rstrip("/")
+            if dir_only:
+                hit = f.startswith(p + "/")
+            elif anchored:
+                hit = bool(_glob_re(p).fullmatch(f))
+            else:
+                hit = bool(_glob_re(p).fullmatch(f.rsplit("/", 1)[-1]))
+            if hit:
+                break
+        if not hit:
+            return False
+    return True
+
+
 def check_trace(base: str, branch: str) -> tuple[list[str], list[str]]:
     n, revert = issue_of(branch)
     if revert:
         return ["撤回 PR:不查需求追溯(由 scope 确认只撤回)"], []
+    files = changed(base)
+    if framework_only(files):
+        # 框架改动没有 REQ 可追溯。这里只跳过"需求 → 用例"的追溯;
+        # "已有自动用例不能消失、断言变少要提示"那部分也一并跳过 —— 框架 PR 的改动全在 CODEOWNERS 覆盖范围内,
+        # 碰不到 test_globs 里的测试文件,那几条对它恒为空。
+        return [f"框架 PR(只改代码负责人的文件),不查需求追溯:改动 {len(files)} 个文件"], []
     d = f"docs/changes/{n}/"
     docs = {k: show("HEAD", d + k) for k in ("01-需求.md", "03-测试用例.md", "04-证据.md")}
     if docs["01-需求.md"] is None or docs["03-测试用例.md"] is None:
