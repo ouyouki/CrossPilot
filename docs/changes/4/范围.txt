@@ -1,0 +1,4 @@
+# 这次要改的文件和文件夹(一行一个 glob)
+backend/crosspilot/costing/**
+backend/tests/test_costing_*.py
+backend/tests/test_inv_10_*.py
