@@ -10,6 +10,8 @@ on:
   pull_request_target:
     branches: [main]
     types: [opened, synchronize, reopened, edited]
+  pull_request_review:
+    types: [submitted]            # 人点批准(#14:框架 PR 的 gate 就靠这个)。review 事件里有 pull_request.number,作业逻辑不用改
   issue_comment:
     types: [created]
   issues:
