@@ -13,5 +13,9 @@ requires-python = ">=3.12"
 # slices, never here.
 dependencies = []
 
+[project.optional-dependencies]
+# 只给应用层用;内核(crosspilot/)仍然零依赖(INV-8)
+app = ["fastapi>=0.115", "uvicorn>=0.30"]
+
 [tool.setuptools.packages.find]
 include = ["crosspilot*"]

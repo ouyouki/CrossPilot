@@ -1,0 +1,73 @@
+{
+  "items": [
+    {
+      "id": "cand-1",
+      "title": "折りたたみ収納ボックス 3個セット",
+      "category": "home",
+      "price_jpy": 3980,
+      "tax": "DE_MINIMIS_EXEMPT",
+      "fx": { "rate": "20.5", "ref_date": "2026-10-24", "source_id": "fx-sample-1" },
+      "listing": { "price_jpy": 3980, "buyer_shipping_fee_jpy": 0, "weight_g": 800, "sample_cost_jpy": 1200, "expected_sales": 30 },
+      "assumptions": { "return_rate": "0.05", "refund_commission_return": "0", "unsellable_ratio": "0.5", "return_shipping_jpy": 0, "return_mode": "DISPOSE_JP", "order_units": 1 },
+      "rate_card": {
+        "c1_goods": { "value": "48", "unit": "CNY", "source": "サンプル仕入先", "status": "ESTIMATED" },
+        "c2_domestic_ship": { "value": "6", "unit": "CNY", "source": "サンプル仕入先" },
+        "c3_intl_ship": { "value": 1180, "source": "サンプル貨代" },
+        "c4_customs_duty_rate": { "value": "0.10", "unit": "rate", "source": "サンプル税関" },
+        "c5_consumption_tax_rate": { "value": "0.10", "unit": "rate", "source": "サンプル" },
+        "c6_customs_fee": { "value": 300, "source": "サンプル通関" },
+        "c7_packaging": { "value": 120, "source": "サンプル包材" },
+        "c8_commission_rate": { "value": "0.10", "unit": "rate", "source": "サンプル平台費率" },
+        "c9_payment_fee_rate": { "value": "0.02", "unit": "rate", "source": "サンプル" },
+        "c14_settlement_rate": { "value": "0.01", "unit": "rate", "source": "サンプル" },
+        "c15_loss_rate": { "value": "0.01", "unit": "rate", "source": "サンプル" }
+      }
+    },
+    {
+      "id": "cand-2",
+      "title": "シリコン折りたたみ水筒 500ml",
+      "category": "outdoor",
+      "price_jpy": 2480,
+      "tax": "SELLER_IOR_DDP",
+      "fx": { "rate": "20.5", "ref_date": "2026-10-24", "source_id": "fx-sample-1" },
+      "listing": { "price_jpy": 2480, "buyer_shipping_fee_jpy": 350, "weight_g": 350, "sample_cost_jpy": 0, "expected_sales": 40 },
+      "assumptions": { "return_rate": "0.08", "refund_commission_return": "0", "unsellable_ratio": "0.6", "return_shipping_jpy": 900, "return_mode": "RETURN_TO_CN", "order_units": 1 },
+      "rate_card": {
+        "c1_goods": { "value": "32", "unit": "CNY", "source": "サンプル仕入先" },
+        "c2_domestic_ship": { "value": "4", "unit": "CNY", "source": "サンプル仕入先" },
+        "c3_intl_ship": { "value": 760, "source": "サンプル貨代" },
+        "c4_customs_duty_rate": { "value": "0.08", "unit": "rate", "source": "サンプル税関" },
+        "c5_consumption_tax_rate": { "value": "0.10", "unit": "rate", "source": "サンプル" },
+        "c6_customs_fee": { "value": 300, "source": "サンプル通関" },
+        "c7_packaging": { "value": 90, "source": "サンプル包材" },
+        "c8_commission_rate": { "value": "0.10", "unit": "rate", "source": "サンプル平台費率" },
+        "c9_payment_fee_rate": { "value": "0.02", "unit": "rate", "source": "サンプル" },
+        "c14_settlement_rate": { "value": "0.01", "unit": "rate", "source": "サンプル" },
+        "c15_loss_rate": { "value": "0.01", "unit": "rate", "source": "サンプル" }
+      }
+    },
+    {
+      "id": "cand-3",
+      "title": "LED デスクライト 調光式",
+      "category": "electronics",
+      "price_jpy": 4980,
+      "tax": "UNKNOWN",
+      "fx": { "rate": "20.5", "ref_date": "2026-10-24", "source_id": "fx-sample-1" },
+      "listing": { "price_jpy": 4980, "buyer_shipping_fee_jpy": 0, "weight_g": 600, "sample_cost_jpy": 0, "expected_sales": 20 },
+      "assumptions": { "return_rate": "0.05", "refund_commission_return": "0", "unsellable_ratio": "0.5", "return_shipping_jpy": 0, "return_mode": "DISPOSE_JP", "order_units": 1 },
+      "rate_card": {
+        "c1_goods": { "value": "60", "unit": "CNY", "source": "サンプル仕入先" },
+        "c2_domestic_ship": { "value": "6", "unit": "CNY", "source": "サンプル仕入先" },
+        "c3_intl_ship": { "value": 980, "source": "サンプル貨代" },
+        "c4_customs_duty_rate": { "value": "0.10", "unit": "rate", "source": "サンプル税関" },
+        "c5_consumption_tax_rate": { "value": "0.10", "unit": "rate", "source": "サンプル" },
+        "c6_customs_fee": { "value": 300, "source": "サンプル通関" },
+        "c7_packaging": { "value": 110, "source": "サンプル包材" },
+        "c8_commission_rate": { "value": "0.10", "unit": "rate", "source": "サンプル平台費率" },
+        "c9_payment_fee_rate": { "value": "0.02", "unit": "rate", "source": "サンプル" },
+        "c14_settlement_rate": { "value": "0.01", "unit": "rate", "source": "サンプル" },
+        "c15_loss_rate": { "value": "0.01", "unit": "rate", "source": "サンプル" }
+      }
+    }
+  ]
+}

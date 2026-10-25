@@ -1,0 +1,20 @@
+{
+  "pending_approvals": 2,
+  "readiness": {
+    "items": [
+      { "key": "direction", "label": "方向卡", "ok": false, "fix": "/settings/direction" },
+      { "key": "rate_card", "label": "费率卡", "ok": false, "fix": "/settings/rate-card" },
+      { "key": "category", "label": "品类白名单", "ok": false, "fix": "/settings/categories" },
+      { "key": "shop_profile", "label": "店铺档案", "ok": false, "fix": "/settings/shop" },
+      { "key": "ruleset", "label": "合规规则库", "ok": true, "fix": "/settings/rules" },
+      { "key": "budget", "label": "模型预算", "ok": false, "fix": "/settings/budget" }
+    ],
+    "missing": ["方向卡", "费率卡", "品类白名单", "店铺档案", "模型预算"]
+  },
+  "reminders": [
+    {
+      "text": "本期未自动检查履约指标：违规分、迟发率、取消率需要每周手工录入。",
+      "url": "/weekly-health"
+    }
+  ]
+}
