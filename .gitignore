@@ -26,3 +26,5 @@ id_rsa*
 id_ed25519*
 *credentials*.json
 .npmrc
+node_modules/
+frontend/dist/

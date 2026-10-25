@@ -5,3 +5,4 @@ backend/tests/test_s8_*.py
 backend/pyproject.toml
 frontend/**
 README.md
+.gitignore
