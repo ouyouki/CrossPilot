@@ -1,0 +1,5 @@
+# 这次要改的文件和文件夹(一行一个 glob)
+scripts/ci/verify.py
+scripts/github/gates.py
+scripts/dev/guard_bash.py
+docs/运营规则.md

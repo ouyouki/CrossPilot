@@ -279,6 +279,9 @@ class GitHub:
         return {"number": n, "author": d["user"]["login"], "head_sha": d["head"]["sha"], "head_ref": d["head"]["ref"],
                 "body": d.get("body") or ""}
 
+    def files(self, n):
+        return [f["filename"] for f in self._api(f"{self.base}/pulls/{n}/files")]
+
     def reviews(self, n):
         return [{"author": (r.get("user") or {}).get("login", ""), "state": r["state"], "commit_id": r.get("commit_id") or "",
                  "submitted_at": r.get("submitted_at") or "", "body": r.get("body") or ""}
@@ -356,6 +359,71 @@ def needs_human(cfg: Config, src, n: int, labels: list[str]) -> bool:
     return bool(evs) and not (removed and cfg.is_human(removed[-1]["actor"]))
 
 
+CODEOWNERS = ".github/CODEOWNERS"
+
+
+def _glob_re(pat: str) -> re.Pattern:
+    """CODEOWNERS 的模式 → 正则:* 不跨 /,** 跨。"""
+    out, i = [], 0
+    while i < len(pat):
+        if pat.startswith("**", i):
+            out.append(".*")
+            i += 2
+        elif pat[i] == "*":
+            out.append("[^/]*")
+            i += 1
+        elif pat[i] == "?":
+            out.append("[^/]")
+            i += 1
+        else:
+            out.append(re.escape(pat[i]))
+            i += 1
+    return re.compile("".join(out))
+
+
+def codeowners() -> list[str]:
+    try:
+        with open(CODEOWNERS, encoding="utf-8") as fh:
+            text = fh.read()
+    except OSError:
+        return []
+    pats = []
+    for line in text.splitlines():
+        line = line.split("#", 1)[0].strip()
+        if line:
+            pats.append(line.split()[0])
+    return pats
+
+
+def framework_only(files: list[str]) -> bool:
+    """改动全在代码负责人的文件里 = 框架 PR(docs/运营规则.md 4 章)。
+
+    依据只有 .github/CODEOWNERS,不另立清单(两份会漂)。docs/changes/ 和共用文档不算 —— 每个 PR 都会加。
+    """
+    files = [f for f in files if not f.startswith("docs/changes/")
+             and f not in ("docs/回归清单.md", "docs/术语表.md")]
+    pats = codeowners()
+    if not files or not pats:
+        return False
+    for f in files:
+        hit = False
+        for pat in pats:
+            anchored, p = pat.startswith("/"), pat.lstrip("/")
+            dir_only = p.endswith("/")
+            p = p.rstrip("/")
+            if dir_only:
+                hit = f.startswith(p + "/")
+            elif anchored:
+                hit = bool(_glob_re(p).fullmatch(f))
+            else:
+                hit = bool(_glob_re(p).fullmatch(f.rsplit("/", 1)[-1]))
+            if hit:
+                break
+        if not hit:
+            return False
+    return True
+
+
 def check_pr(cfg: Config, src, n: int, now: datetime | None = None, expect_head: str = "") -> tuple[list[str], list[str]]:
     ok, ng = [], []
     pr = src.pr(n)
@@ -363,6 +431,21 @@ def check_pr(cfg: Config, src, n: int, now: datetime | None = None, expect_head:
     if expect_head and head != expect_head:
         raise UsageError(f"PR #{n} 的最新提交已经不是 {expect_head[:12]}(有新的推送,交给下一次判断)")
     now = now or src.now()
+    # 框架 PR(只改代码负责人的文件):没有 REQ 可追溯,也不会有定版、D2、测试、PM 验收 —— 那几道闸是给需求的。
+    # 它的关卡是人批准(4 章),所以这里只要求"作者合规 + 代码负责人批准了当前提交",其余跳过。
+    # 这样框架 PR 不用再 --admin 硬绕;改到需求代码的 PR 照旧走完整流程。
+    files = getattr(src, "files", None)
+    if files and framework_only(files(n)):
+        ok = []
+        if pr["author"] == cfg.dev_bot or cfg.is_human(pr["author"]):
+            ok.append(f"作者 {pr['author']}")
+        else:
+            ng.append(f"作者 {pr['author']} 既不是开发 App 也不是批准人")
+        if any(cfg.is_human(r["author"]) and r["state"] == "APPROVED" and r["commit_id"] == head for r in src.reviews(n)):
+            ok.append(f"框架 PR:代码负责人批准了当前提交 {head[:12]}")
+        else:
+            ng.append(f"框架 PR:还没有代码负责人对当前提交 {head[:12]} 的批准(框架文件要人批准)")
+        return ok, ng
     if pr["author"] == cfg.dev_bot or cfg.is_human(pr["author"]):
         ok.append(f"作者 {pr['author']}")
     else:
