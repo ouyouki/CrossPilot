@@ -5,6 +5,8 @@
 *.env
 !env.example
 tmp/
+# Issue 的工作树(默认建在仓库里,沙箱才覆盖得到;docs/运营规则.md 4 章)
+.worktrees/
 __pycache__/
 *.pyc
 *.py[co]

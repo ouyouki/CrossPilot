@@ -6,7 +6,7 @@
 #   1. git fetch origin(没有凭据时经 bot.sh,用这个环境的 App 身份 BOT_ROLE)
 #   2. 远端已有这个 Issue 的分支(PM Agent 建的)→ 从它建工作树;没有 → 从 origin/main 建 feat/<编号>-<短名>(--fix 时 fix/…)
 #      (--no-track:不让新分支的 upstream 指向 main,避免误推)
-# 默认文件夹: <本仓库的上一级>/<仓库名>-<编号>。--dry-run 只检查参数并列出步骤。不推送。
+# 默认文件夹: <本仓库>/.worktrees/<编号>(建在仓库里,沙箱才覆盖得到;要放别处用 --dir)。--dry-run 只检查参数并列出步骤。不推送。
 set -eu
 export PYTHONIOENCODING=utf-8
 
@@ -28,7 +28,7 @@ done
 here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 top="$(git -C "$here" rev-parse --show-toplevel)"
 branch="$kind/$num-$slug"
-[ -z "$dir" ] && dir="$(dirname "$top")/$(basename "$top")-$num"
+[ -z "$dir" ] && dir="$top/.worktrees/$num"
 case "$dir" in /*|[A-Za-z]:*) ;; *) dir="$(pwd)/$dir" ;; esac
 
 echo "new_issue: #$num → $branch"
