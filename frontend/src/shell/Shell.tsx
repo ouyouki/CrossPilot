@@ -98,6 +98,21 @@ export function Shell({
   const [skin, setSkin] = useState<string>(readSkin);
   const [skinOpen, setSkinOpen] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
+  const [pending, setPending] = useState<number | null>(null);
+
+  useEffect(() => {
+    const load = () => {
+      void fetch("/api/v1/approvals")
+        .then((response) => (response.ok ? response.json() : null))
+        .then((body: { count?: number } | null) => {
+          if (body && typeof body.count === "number") setPending(body.count);
+        })
+        .catch(() => undefined);
+    };
+    load();
+    document.addEventListener("cp:approvals-changed", load);
+    return () => document.removeEventListener("cp:approvals-changed", load);
+  }, []);
 
   useEffect(() => {
     document.documentElement.setAttribute("data-skin", skin);
@@ -150,9 +165,12 @@ export function Shell({
     };
     document.addEventListener("click", onClick);
     document.addEventListener("keydown", onKey);
+    const onToast = (event: Event) => show(String((event as CustomEvent).detail ?? ""));
+    document.addEventListener("cp:toast", onToast);
     return () => {
       document.removeEventListener("click", onClick);
       document.removeEventListener("keydown", onKey);
+      document.removeEventListener("cp:toast", onToast);
       window.clearTimeout(timer);
     };
   }, []);
@@ -256,7 +274,11 @@ export function Shell({
                 >
                   <Icon name={icon} />
                   <span>{label}</span>
-                  {count ? <span className="cnt">{count}</span> : null}
+                  {icon === "approvals" ? (
+                    pending ? <span className="cnt">{pending}</span> : null
+                  ) : count ? (
+                    <span className="cnt">{count}</span>
+                  ) : null}
                 </a>
               ))}
             </span>

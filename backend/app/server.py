@@ -1,8 +1,6 @@
-"""标准库适配层(02-设计 §1):三个只读接口 + 前端静态文件。
+"""标准库适配层(02-设计 §1):只读接口 + 同意 1 的提交 + 前端静态文件。
 
-    python -m app.server        # 打开 http://127.0.0.1:8000
-
-装了 fastapi 时也可以用 `uvicorn app.main:app`(接口相同;静态文件由这个模块提供)。
+    python -m app.server        # http://127.0.0.1:8000
 """
 
 from __future__ import annotations
@@ -11,12 +9,13 @@ import json
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
-from . import handlers
+from . import handlers, selection
 
 ROUTES = {
     "/healthz": handlers.health,
     "/api/v1/today": handlers.today,
     "/api/v1/candidates": handlers.candidates,
+    "/api/v1/approvals": selection.approvals,
 }
 
 DIST = Path(__file__).resolve().parents[2] / "frontend" / "dist"
@@ -29,6 +28,7 @@ _TYPES = {
     ".svg": "image/svg+xml",
     ".png": "image/png",
     ".ico": "image/x-icon",
+    ".woff2": "font/woff2",
 }
 
 
@@ -40,28 +40,38 @@ class Handler(BaseHTTPRequestHandler):
             self._json(200, route())
             return
         if path.startswith("/api/") or path == "/healthz":
-            self._json(404, {"type": "about:blank", "title": "NOT_FOUND", "status": 404, "code": "NOT_FOUND", "detail": path})
+            self._problem(404, "NOT_FOUND", path)
             return
         self._static(path)
 
+    def do_POST(self) -> None:  # noqa: N802 - stdlib naming
+        path = self.path.split("?", 1)[0].rstrip("/")
+        if path != "/api/v1/approvals/selection":
+            self._problem(404, "NOT_FOUND", path)
+            return
+        try:
+            length = int(self.headers.get("Content-Length", "0") or 0)
+            body = json.loads(self.rfile.read(length) or b"{}")
+            if not isinstance(body, dict):
+                raise selection.SelectionError("BAD_BODY", "请求体要是 JSON 对象")
+            result = selection.create_selection(body.get("subject_refs") or [])
+        except selection.SelectionError as error:
+            self._problem(422, error.code, error.detail)
+            return
+        except (json.JSONDecodeError, ValueError) as error:
+            self._problem(400, "BAD_JSON", str(error))
+            return
+        self._json(201 if not result.get("duplicate") else 200, result)
+
     def _static(self, path: str) -> None:
         if not DIST.is_dir():
-            self._json(
-                503,
-                {
-                    "type": "about:blank",
-                    "title": "FRONTEND_NOT_BUILT",
-                    "status": 503,
-                    "code": "FRONTEND_NOT_BUILT",
-                    "detail": "先运行 cd frontend && npm install && npm run build",
-                },
-            )
+            self._problem(503, "FRONTEND_NOT_BUILT", "先运行 cd frontend && npm install && npm run build")
             return
         target = (DIST / path.lstrip("/")).resolve()
         if not str(target).startswith(str(DIST.resolve())) or not target.is_file():
             target = DIST / "index.html"  # SPA 回退
         if not target.is_file():
-            self._json(404, {"type": "about:blank", "title": "NOT_FOUND", "status": 404, "code": "NOT_FOUND", "detail": path})
+            self._problem(404, "NOT_FOUND", path)
             return
         data = target.read_bytes()
         self.send_response(200)
@@ -77,6 +87,12 @@ class Handler(BaseHTTPRequestHandler):
         self.send_header("Content-Length", str(len(data)))
         self.end_headers()
         self.wfile.write(data)
+
+    def _problem(self, code: int, title: str, detail: str) -> None:
+        self._json(
+            code,
+            {"type": "about:blank", "title": title, "status": code, "code": title, "detail": detail},
+        )
 
     def log_message(self, *args: object) -> None:  # 不打印访问日志
         return

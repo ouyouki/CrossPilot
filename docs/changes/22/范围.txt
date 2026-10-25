@@ -1,0 +1,6 @@
+# 这次要改的文件和文件夹(一行一个 glob)
+backend/app/**
+backend/tests/test_s22_*.py
+frontend/src/pages/Candidates.tsx
+frontend/src/pages/selection.ts
+frontend/src/shell/Shell.tsx
