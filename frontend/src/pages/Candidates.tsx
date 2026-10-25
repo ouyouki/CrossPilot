@@ -3,21 +3,36 @@ import { candidatesHtml } from "./candidatesHtml";
 import { candidatesDetailHtml } from "./candidatesDetailHtml";
 import { candidatesTemplatesHtml } from "./candidatesTemplatesHtml";
 import { hydrate } from "../shell/hydrate";
+import { mountCandidates } from "./selection";
 import "./candidates.css";
 
 /**
- * 候选页:主区与行详情模板都原样来自原型(见各自 .ts 的说明)。
- * 点行切换右栏的行为照 cp2.js:见 shell/Shell.tsx 的 [data-detail] 分支。
+ * 候选页:主区与行详情模板原样来自原型;表格行、勾选、提交同意 1 由 selection.ts 接上。
  */
 export function Candidates() {
   useEffect(() => {
-    hydrate(document);
+    let cleanup: (() => void) | undefined;
+    let cancelled = false;
+
+    void (async () => {
+      try {
+        cleanup = await mountCandidates();
+        if (cancelled) cleanup?.();
+        else hydrate(document);
+      } catch {
+        // 接口不可用时保留原型里的演示行,页面不至于空掉
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+      cleanup?.();
+    };
   }, []);
 
   return (
     <>
       <div dangerouslySetInnerHTML={{ __html: candidatesHtml }} />
-      {/* 行详情模板:原样输出,平时不可见,点行时按 id 取内容 */}
       <div hidden dangerouslySetInnerHTML={{ __html: candidatesTemplatesHtml }} />
     </>
   );
