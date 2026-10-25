@@ -30,9 +30,16 @@ def approvals() -> dict[str, Any]:
             "title": approval.title,
             "created_at": approval.created_at.isoformat() if approval.created_at else None,
         }
-        for approval in store.open_approvals()
+        for approval in _pending_only(store.open_approvals())
     ]
     return {"items": items, "count": len(items), "persistence": "memory"}
+
+
+def _pending_only(approvals: list) -> list:
+    """待批 = PENDING。APPROVED 还没执行,但它已经不是"等你批"了。"""
+    from crosspilot.approvals.state_machine import ApprovalStatus
+
+    return [a for a in approvals if a.status is ApprovalStatus.PENDING]
 
 
 def create_selection(subject_refs: list[str]) -> dict[str, Any]:
