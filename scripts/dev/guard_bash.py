@@ -6,6 +6,8 @@
     restore(--staged 以外)、branch -D / -d -f、tag -d;跳过检查: --no-verify、commit -n、core.hooksPath;
   * 读密钥: cat / type / less / more / head / tail / grep / findstr / sed / awk / Get-Content 等读 .env、*.pem、*.key、id_rsa* 等;
     显示环境变量(printenv、env、set、Get-ChildItem env:)或引用 ANTHROPIC_AUTH_TOKEN、DEEPSEEK_API_KEY、GH_TOKEN 等;
+  * 看不见命令的写法: eval,以及 bash -c / sh -c / powershell -Command 的参数是变量($…)。
+    这种写法会让下面所有检查同时失效,等于没有闸门(2026-10 #8 的 Agent 用 bash -c 'eval "$S"' 就是这么绕过去的);
   * 系统能力(一次就回不来,所以不是问人,是做不到): 改账户或密码(net user / net localgroup / Set-LocalUser 等)、写注册表、
     装或改系统服务、建或改计划任务、改文件权限或所有者(icacls / takeown)、动磁盘和启动项、改执行策略、
     动防火墙和防御设置、动凭据库、提权(runas / sudo)、看不出会执行什么的启动器(rundll32 / wmic / mshta 等)、动 SSH 密钥。
@@ -342,10 +344,14 @@ def reason(command: str, depth: int = 0) -> str:
         if head in SHELLS and depth < 3:
             for k, t in enumerate(tokens[1:], start=1):
                 if (t.lower() in ("-command", "/c") or re.fullmatch(r"-[a-z]*c", t)) and k + 1 < len(tokens):
+                    if tokens[k + 1].startswith("$"):
+                        return "命令放在变量里(bash -c \"$…\"),看不见"
                     r = reason(" ".join(tokens[k + 1:]), depth + 1)
                     if r:
                         return r
                     break
+        if head == "eval":
+            return "eval(命令被拼在字符串或变量里,看不见)"
         r = _os_reason(tokens)
         if r:
             return r
