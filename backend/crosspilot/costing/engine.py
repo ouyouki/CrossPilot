@@ -26,22 +26,22 @@ from .types import (
 )
 
 # 结果里的 16 个成本项(02-设计 §3)。
-KEY_C1 = "c1_goods"
-KEY_C2 = "c2_domestic_ship"
-KEY_C3 = "c3_intl_ship"
-KEY_C4 = "c4_customs_duty"
-KEY_C5 = "c5_import_consumption_tax"
-KEY_C6 = "c6_customs_fee"
-KEY_C7 = "c7_packaging"
-KEY_C8 = "c8_commission"
-KEY_C9 = "c9_payment_fee"
-KEY_C10 = "c10_return_loss"
-KEY_C11 = "c11_affiliate"
-KEY_C12 = "c12_ad"
-KEY_C13 = "c13_promo"
-KEY_C14 = "c14_settlement_fx"
-KEY_C15 = "c15_lost_damage"
-KEY_C16 = "c16_sample_amortization"
+ITEM_C1 = "c1_goods"
+ITEM_C2 = "c2_domestic_ship"
+ITEM_C3 = "c3_intl_ship"
+ITEM_C4 = "c4_customs_duty"
+ITEM_C5 = "c5_import_consumption_tax"
+ITEM_C6 = "c6_customs_fee"
+ITEM_C7 = "c7_packaging"
+ITEM_C8 = "c8_commission"
+ITEM_C9 = "c9_payment_fee"
+ITEM_C10 = "c10_return_loss"
+ITEM_C11 = "c11_affiliate"
+ITEM_C12 = "c12_ad"
+ITEM_C13 = "c13_promo"
+ITEM_C14 = "c14_settlement_fx"
+ITEM_C15 = "c15_lost_damage"
+ITEM_C16 = "c16_sample_amortization"
 
 # 费率卡里必须存在的键(不含 c3:c3 可以来自运费表)。
 REQUIRED_CARD_KEYS: tuple[str, ...] = (
@@ -120,7 +120,7 @@ def compute(inp: CostInput) -> CostResult:
         rate = card.get(key)
         if rate is None or rate.status is ItemStatus.MISSING or rate.value is None:
             missing.append(key)
-    c3_rate = card.get(KEY_C3)
+    c3_rate = card.get(ITEM_C3)
     c3_from_table = (
         inp.ship_table is not None
         and inp.ship_table.price_for(inp.listing.weight_g) is not None
@@ -128,7 +128,7 @@ def compute(inp: CostInput) -> CostResult:
     if not c3_from_table and (
         c3_rate is None or c3_rate.status is ItemStatus.MISSING or c3_rate.value is None
     ):
-        missing.append(KEY_C3)
+        missing.append(ITEM_C3)
     if missing:
         return _unknown(missing, fx_rate_id, tax_regime)
 
@@ -200,22 +200,22 @@ def compute(inp: CostInput) -> CostResult:
     c16 = jpy(dec(listing.sample_cost_jpy) / expected)
 
     items = (
-        _item(KEY_C1, c1, card["c1_goods"]),
-        _item(KEY_C2, c2, card["c2_domestic_ship"]),
-        _item(KEY_C3, c3, c3_rate),
-        _item(KEY_C4, c4, card["c4_customs_duty_rate"]),
-        _item(KEY_C5, c5, c5_rate),
-        _item(KEY_C6, c6, card["c6_customs_fee"]),
-        _item(KEY_C7, c7, card["c7_packaging"]),
-        _item(KEY_C8, c8, card["c8_commission_rate"]),
-        _item(KEY_C9, c9, card["c9_payment_fee_rate"]),
-        _item(KEY_C10, c10, None),
-        _item(KEY_C11, c11, card.get("c11_affiliate_rate")),
-        _item(KEY_C12, c12, card.get("c12_ad_per_unit")),
-        _item(KEY_C13, c13, card.get("c13_promo_per_unit")),
-        _item(KEY_C14, c14, card["c14_settlement_rate"]),
-        _item(KEY_C15, c15, card["c15_loss_rate"]),
-        _item(KEY_C16, c16, None),
+        _item(ITEM_C1, c1, card["c1_goods"]),
+        _item(ITEM_C2, c2, card["c2_domestic_ship"]),
+        _item(ITEM_C3, c3, c3_rate),
+        _item(ITEM_C4, c4, card["c4_customs_duty_rate"]),
+        _item(ITEM_C5, c5, c5_rate),
+        _item(ITEM_C6, c6, card["c6_customs_fee"]),
+        _item(ITEM_C7, c7, card["c7_packaging"]),
+        _item(ITEM_C8, c8, card["c8_commission_rate"]),
+        _item(ITEM_C9, c9, card["c9_payment_fee_rate"]),
+        _item(ITEM_C10, c10, None),
+        _item(ITEM_C11, c11, card.get("c11_affiliate_rate")),
+        _item(ITEM_C12, c12, card.get("c12_ad_per_unit")),
+        _item(ITEM_C13, c13, card.get("c13_promo_per_unit")),
+        _item(ITEM_C14, c14, card["c14_settlement_rate"]),
+        _item(ITEM_C15, c15, card["c15_loss_rate"]),
+        _item(ITEM_C16, c16, None),
     )
 
     total_cost = sum(int(item.value_jpy or 0) for item in items)
