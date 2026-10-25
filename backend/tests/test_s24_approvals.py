@@ -41,6 +41,14 @@ class ApprovalDetail(unittest.TestCase):
         self.assertEqual(payload["evidence"][0]["status"], "COMPUTED")
         self.assertEqual(len(payload["evidence"][0]["cost_items"]), 16)
 
+    def test_TC_24_09_record_view_tracks_section(self):
+        # TC-24-09: 记录已查看后,viewed 增加
+        before = approvals_api.detail(self.approval_id)["viewed"]
+        self.assertNotIn("cost_breakdown", before)
+        approvals_api.record_view(self.approval_id, "cost_breakdown")
+        after = approvals_api.detail(self.approval_id)["viewed"]
+        self.assertIn("cost_breakdown", after)
+
     def test_TC_24_02_unknown_id(self):
         # TC-24-02: 不存在的单
         with self.assertRaises(approvals_api.ApprovalNotFound):
